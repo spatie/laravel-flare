@@ -1,0 +1,23 @@
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: 8
+    paths:
+        - src
+        - config
+    excludePaths:
+        - src/Renderers/IgnitionExceptionRenderer
+        - src/Recorders/JobRecorder/JobRecorder
+        - src/Recorders/DumpRecorder/HtmlDumper
+        - src/Recorders/DumpRecorder/DumpRecorder
+        - src/IgnitionServiceProvider
+        - src/Http
+        - src/FlareMiddleware
+        - src/Support/LivewireComponentParser
+        - src/Solutions/SolutionProviders/SolutionProviderRepository
+        - src/Commands/TestCommand
+
+    tmpDir: build/phpstan
+    checkMissingIterableValueType: true
+

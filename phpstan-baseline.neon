@@ -1,0 +1,162 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined method Livewire\\\\LivewireManager\\:\\:getClass\\(\\)\\.$#"
+			count: 1
+			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
+
+		-
+			message: "#^Cannot call method get\\(\\) on Symfony\\\\Component\\\\HttpFoundation\\\\Request\\|null\\.$#"
+			count: 1
+			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
+
+		-
+			message: "#^Cannot call method has\\(\\) on Symfony\\\\Component\\\\HttpFoundation\\\\Request\\|null\\.$#"
+			count: 1
+			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
+
+		-
+			message: "#^Method Spatie\\\\LaravelIgnition\\\\ContextProviders\\\\LaravelLivewireRequestContextProvider\\:\\:resolveUpdates\\(\\) has parameter \\$updates with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
+
+		-
+			message: "#^Cannot call method toFlare\\(\\) on class\\-string\\|object\\.$#"
+			count: 1
+			path: src/ContextProviders/LaravelRequestContextProvider.php
+
+		-
+			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
+			count: 1
+			path: src/ContextProviders/LaravelRequestContextProvider.php
+
+		-
+			message: "#^Method Spatie\\\\LaravelIgnition\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should return array\\<int, mixed\\> but returns array\\<string, mixed\\>\\.$#"
+			count: 1
+			path: src/ContextProviders/LaravelRequestContextProvider.php
+
+		-
+			message: "#^Return type \\(array\\<int, mixed\\>\\) of method Spatie\\\\LaravelIgnition\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should be compatible with return type \\(array\\<string, mixed\\>\\) of method Spatie\\\\FlareClient\\\\Context\\\\RequestContextProvider\\:\\:toArray\\(\\)$#"
+			count: 1
+			path: src/ContextProviders/LaravelRequestContextProvider.php
+
+		-
+			message: "#^Parameter \\#1 \\$callback of function array_map expects \\(callable\\(0\\|1\\|2\\|3\\|4\\|5\\|6\\|7\\)\\: mixed\\)\\|null, Closure\\(string\\)\\: string given\\.$#"
+			count: 1
+			path: src/Exceptions/InvalidConfig.php
+
+		-
+			message: "#^Class Livewire\\\\LivewireComponentsFinder not found\\.$#"
+			count: 1
+			path: src/Solutions/LivewireDiscoverSolution.php
+
+		-
+			message: "#^Parameter \\#1 \\$invalidController of method Spatie\\\\LaravelIgnition\\\\Solutions\\\\SolutionProviders\\\\InvalidRouteActionSolutionProvider\\:\\:findRelatedController\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TKey in call to function collect$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TValue in call to function collect$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
+
+		-
+			message: "#^Method Spatie\\\\LaravelIgnition\\\\Solutions\\\\SolutionProviders\\\\UnknownValidationSolutionProvider\\:\\:getAvailableMethods\\(\\) return type with generic class Illuminate\\\\Support\\\\Collection does not specify its types\\: TKey, TValue$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
+
+		-
+			message: "#^Parameter \\#1 \\$callback of method Illuminate\\\\Support\\\\Collection\\<int,ReflectionMethod\\>\\:\\:filter\\(\\) expects \\(callable\\(ReflectionMethod, int\\)\\: bool\\)\\|null, Closure\\(ReflectionMethod\\)\\: \\(0\\|1\\|false\\) given\\.$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TMakeKey in call to method static method Illuminate\\\\Support\\\\Collection\\<\\(int\\|string\\),mixed\\>\\:\\:make\\(\\)$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TMakeValue in call to method static method Illuminate\\\\Support\\\\Collection\\<\\(int\\|string\\),mixed\\>\\:\\:make\\(\\)$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
+
+		-
+			message: "#^Parameter \\#1 \\$missingView of method Spatie\\\\LaravelIgnition\\\\Solutions\\\\SolutionProviders\\\\ViewNotFoundSolutionProvider\\:\\:findRelatedView\\(\\) expects string, string\\|null given\\.$#"
+			count: 1
+			path: src/Solutions/SolutionProviders/ViewNotFoundSolutionProvider.php
+
+		-
+			message: "#^Argument of an invalid type array\\|DateTimeImmutable\\|int\\|string\\|null supplied for foreach, only iterables are supported\\.$#"
+			count: 1
+			path: src/Support/FlareLogHandler.php
+
+		-
+			message: "#^Cannot access offset 'exception' on array\\|DateTimeImmutable\\|int\\|string\\|null\\.$#"
+			count: 1
+			path: src/Support/FlareLogHandler.php
+
+		-
+			message: "#^Parameter \\#1 \\$level of static method Monolog\\\\Logger\\:\\:toMonologLevel\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
+			count: 1
+			path: src/Support/FlareLogHandler.php
+
+		-
+			message: "#^Parameter \\#1 \\$message of method Spatie\\\\FlareClient\\\\Flare\\:\\:reportMessage\\(\\) expects string, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
+			count: 1
+			path: src/Support/FlareLogHandler.php
+
+		-
+			message: "#^Cannot call method getMessage\\(\\) on Throwable\\|null\\.$#"
+			count: 1
+			path: src/Support/LaravelDocumentationLinkFinder.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\View\\\\Engine\\:\\:getCompiler\\(\\)\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Cannot call method getTrace\\(\\) on Throwable\\|null\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:getKnownPaths\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:getViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Offset 'line' does not exist on array\\{function\\: string, line\\?\\: int, file\\: non\\-falsy\\-string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array, object\\?\\: object\\}\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Property Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:\\$knownPaths type has no value type specified in iterable type array\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Function ddd\\(\\) has no return type specified\\.$#"
+			count: 1
+			path: src/helpers.php
+
