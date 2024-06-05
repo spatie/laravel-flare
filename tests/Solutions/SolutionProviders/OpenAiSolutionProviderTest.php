@@ -9,7 +9,7 @@ it('can solve an an exception using ai', function () {
         return;
     }
 
-    config()->set('ignition.open_ai_key', env('OPEN_API_KEY'));
+    config()->set('flare.open_ai_key', env('OPEN_API_KEY'));
 
     $solutionProvider = new OpenAiSolutionProvider();
 

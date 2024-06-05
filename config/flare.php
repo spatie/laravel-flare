@@ -158,7 +158,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | You may specify a list of solution providers (as fully qualified class
-    | names) that shouldn't be loaded. Ignition will ignore these classes
+    | names) that shouldn't be loaded. Flare will ignore these classes
     | and possible solutions provided by them will never be displayed.
     |
     */
@@ -172,7 +172,7 @@ return [
     | Recorders
     |--------------------------------------------------------------------------
     |
-    | Ignition registers a couple of recorders when it is enabled. Below you may
+    | Flare registers a couple of recorders when it is enabled. Below you may
     | specify a recorders will be used to record specific events.
     |
     */
@@ -188,14 +188,14 @@ return [
      * When a key is set, we'll send your exceptions to Open AI to generate a solution
      */
 
-    'open_ai_key' => env('IGNITION_OPEN_AI_KEY'),
+    'open_ai_key' => env('FLARE_OPEN_AI_KEY'),
 
     /*
    |--------------------------------------------------------------------------
    | Include arguments
    |--------------------------------------------------------------------------
    |
-   | Ignition show you stack traces of exceptions with the arguments that were
+   | Flare show you stack traces of exceptions with the arguments that were
    | passed to each method. This feature can be disabled here.
    |
    */
@@ -207,7 +207,7 @@ return [
    | Argument reducers
    |--------------------------------------------------------------------------
    |
-   | Ignition show you stack traces of exceptions with the arguments that were
+   | Flare show you stack traces of exceptions with the arguments that were
    | passed to each method. To make these variables more readable, you can
    | specify a list of classes here which summarize the variables.
    |

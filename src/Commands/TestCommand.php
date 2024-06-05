@@ -100,7 +100,7 @@ class TestCommand extends Command
 
             $this->warn('Make sure that your key is correct and that you have a valid subscription.');
             $this->info('');
-            $this->info('For more info visit the docs on https://flareapp.io/docs/ignition-for-laravel/introduction');
+            $this->info('For more info visit the docs on https://flareapp.io/docs/flare-for-laravel/introduction');
             $this->info('You can see the status page of Flare at https://status.flareapp.io');
             $this->info('Flare support can be reached at support@flareapp.io');
 
