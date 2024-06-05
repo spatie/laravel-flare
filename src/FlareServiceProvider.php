@@ -63,22 +63,20 @@ class FlareServiceProvider extends ServiceProvider
 
     protected function registerConfig(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/flare.php', 'flare');
+        $this->mergeConfigFrom(__DIR__.'/../config/flare.php', 'flare');
     }
 
     protected function registerCommands(): void
     {
-        if ($this->app['config']->get('flare.key')) {
-            $this->commands([
-                TestCommand::class,
-            ]);
-        }
+        $this->commands([
+            TestCommand::class,
+        ]);
     }
 
     protected function publishConfigs(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/flare.php' => config_path('flare.php'),
+            __DIR__.'/../config/flare.php' => config_path('flare.php'),
         ], 'flare-config');
     }
 
@@ -129,7 +127,7 @@ class FlareServiceProvider extends ServiceProvider
         $this->app->singleton(LogRecorder::class, function (Application $app): LogRecorder {
             return new LogRecorder(
                 $app,
-                config()->get('flare.flare_middleware.' . AddLogs::class . '.maximum_number_of_collected_logs')
+                config()->get('flare.flare_middleware.'.AddLogs::class.'.maximum_number_of_collected_logs')
             );
         });
 
@@ -138,8 +136,8 @@ class FlareServiceProvider extends ServiceProvider
             function (Application $app): QueryRecorder {
                 return new QueryRecorder(
                     $app,
-                    config('flare.flare_middleware.' . AddQueries::class . '.report_query_bindings', true),
-                    config('flare.flare_middleware.' . AddQueries::class . '.maximum_number_of_collected_queries', 200)
+                    config('flare.flare_middleware.'.AddQueries::class.'.report_query_bindings', true),
+                    config('flare.flare_middleware.'.AddQueries::class.'.maximum_number_of_collected_queries', 200)
                 );
             }
         );
@@ -147,7 +145,7 @@ class FlareServiceProvider extends ServiceProvider
         $this->app->singleton(JobRecorder::class, function (Application $app): JobRecorder {
             return new JobRecorder(
                 $app,
-                config('flare.flare_middleware.' . AddJobs::class . '.max_chained_job_reporting_depth', 5)
+                config('flare.flare_middleware.'.AddJobs::class.'.max_chained_job_reporting_depth', 5)
             );
         });
     }
@@ -300,15 +298,15 @@ class FlareServiceProvider extends ServiceProvider
         $this->app->get(SentReports::class)->clear();
         $this->app->get(Ignition::class)->reset();
 
-        if (config('flare.flare_middleware.' . AddLogs::class)) {
+        if (config('flare.flare_middleware.'.AddLogs::class)) {
             $this->app->make(LogRecorder::class)->reset();
         }
 
-        if (config('flare.flare_middleware.' . AddQueries::class)) {
+        if (config('flare.flare_middleware.'.AddQueries::class)) {
             $this->app->make(QueryRecorder::class)->reset();
         }
 
-        if (config('flare.flare_middleware.' . AddJobs::class)) {
+        if (config('flare.flare_middleware.'.AddJobs::class)) {
             $this->app->make(JobRecorder::class)->reset();
         }
 
