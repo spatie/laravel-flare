@@ -49,7 +49,7 @@ return [
     |
     | Specify Flare's API key below to enable error reporting to the service.
     |
-    | More info: https://flareapp.io/docs/general/projects
+    | More info: https://flareapp.io/docs/flare/general/getting-started
     |
     */
 

@@ -83,6 +83,6 @@
         "issues": "https://github.com/spatie/laravel-flare/issues",
         "forum": "https://twitter.com/flareappio",
         "source": "https://github.com/spatie/laravel-flare",
-        "docs": "https://flareapp.io/docs/flare-for-laravel/introduction"
+        "docs": "https://flareapp.io/docs/integration/laravel-customizations/introduction"
     }
 }
