@@ -16,7 +16,7 @@ parameters:
 			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
 
 		-
-			message: "#^Method Spatie\\\\LaravelIgnition\\\\ContextProviders\\\\LaravelLivewireRequestContextProvider\\:\\:resolveUpdates\\(\\) has parameter \\$updates with no value type specified in iterable type array\\.$#"
+			message: "#^Method Spatie\\\\LaravelFlare\\\\ContextProviders\\\\LaravelLivewireRequestContextProvider\\:\\:resolveUpdates\\(\\) has parameter \\$updates with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
 
@@ -31,12 +31,12 @@ parameters:
 			path: src/ContextProviders/LaravelRequestContextProvider.php
 
 		-
-			message: "#^Method Spatie\\\\LaravelIgnition\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should return array\\<int, mixed\\> but returns array\\<string, mixed\\>\\.$#"
+			message: "#^Method Spatie\\\\LaravelFlare\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should return array\\<int, mixed\\> but returns array\\<string, mixed\\>\\.$#"
 			count: 1
 			path: src/ContextProviders/LaravelRequestContextProvider.php
 
 		-
-			message: "#^Return type \\(array\\<int, mixed\\>\\) of method Spatie\\\\LaravelIgnition\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should be compatible with return type \\(array\\<string, mixed\\>\\) of method Spatie\\\\FlareClient\\\\Context\\\\RequestContextProvider\\:\\:toArray\\(\\)$#"
+			message: "#^Return type \\(array\\<int, mixed\\>\\) of method Spatie\\\\LaravelFlare\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should be compatible with return type \\(array\\<string, mixed\\>\\) of method Spatie\\\\FlareClient\\\\Context\\\\RequestContextProvider\\:\\:toArray\\(\\)$#"
 			count: 1
 			path: src/ContextProviders/LaravelRequestContextProvider.php
 
@@ -46,12 +46,7 @@ parameters:
 			path: src/Exceptions/InvalidConfig.php
 
 		-
-			message: "#^Class Livewire\\\\LivewireComponentsFinder not found\\.$#"
-			count: 1
-			path: src/Solutions/LivewireDiscoverSolution.php
-
-		-
-			message: "#^Parameter \\#1 \\$invalidController of method Spatie\\\\LaravelIgnition\\\\Solutions\\\\SolutionProviders\\\\InvalidRouteActionSolutionProvider\\:\\:findRelatedController\\(\\) expects string, string\\|null given\\.$#"
+			message: "#^Parameter \\#1 \\$invalidController of method Spatie\\\\LaravelFlare\\\\Solutions\\\\SolutionProviders\\\\InvalidRouteActionSolutionProvider\\:\\:findRelatedController\\(\\) expects string, string\\|null given\\.$#"
 			count: 1
 			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
 
@@ -66,7 +61,7 @@ parameters:
 			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
 
 		-
-			message: "#^Method Spatie\\\\LaravelIgnition\\\\Solutions\\\\SolutionProviders\\\\UnknownValidationSolutionProvider\\:\\:getAvailableMethods\\(\\) return type with generic class Illuminate\\\\Support\\\\Collection does not specify its types\\: TKey, TValue$#"
+			message: "#^Method Spatie\\\\LaravelFlare\\\\Solutions\\\\SolutionProviders\\\\UnknownValidationSolutionProvider\\:\\:getAvailableMethods\\(\\) return type with generic class Illuminate\\\\Support\\\\Collection does not specify its types\\: TKey, TValue$#"
 			count: 1
 			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
 
@@ -86,7 +81,7 @@ parameters:
 			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
 
 		-
-			message: "#^Parameter \\#1 \\$missingView of method Spatie\\\\LaravelIgnition\\\\Solutions\\\\SolutionProviders\\\\ViewNotFoundSolutionProvider\\:\\:findRelatedView\\(\\) expects string, string\\|null given\\.$#"
+			message: "#^Parameter \\#1 \\$missingView of method Spatie\\\\LaravelFlare\\\\Solutions\\\\SolutionProviders\\\\ViewNotFoundSolutionProvider\\:\\:findRelatedView\\(\\) expects string, string\\|null given\\.$#"
 			count: 1
 			path: src/Solutions/SolutionProviders/ViewNotFoundSolutionProvider.php
 
@@ -126,22 +121,22 @@ parameters:
 			path: src/Views/ViewExceptionMapper.php
 
 		-
-			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
+			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Views/ViewExceptionMapper.php
 
 		-
-			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Views/ViewExceptionMapper.php
 
 		-
-			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:getKnownPaths\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:getKnownPaths\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Views/ViewExceptionMapper.php
 
 		-
-			message: "#^Method Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:getViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
+			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:getViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Views/ViewExceptionMapper.php
 
@@ -151,12 +146,7 @@ parameters:
 			path: src/Views/ViewExceptionMapper.php
 
 		-
-			message: "#^Property Spatie\\\\LaravelIgnition\\\\Views\\\\ViewExceptionMapper\\:\\:\\$knownPaths type has no value type specified in iterable type array\\.$#"
+			message: "#^Property Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:\\$knownPaths type has no value type specified in iterable type array\\.$#"
 			count: 1
 			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Function ddd\\(\\) has no return type specified\\.$#"
-			count: 1
-			path: src/helpers.php
 

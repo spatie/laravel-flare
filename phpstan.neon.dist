@@ -7,12 +7,10 @@ parameters:
         - src
         - config
     excludePaths:
-        - src/Renderers/IgnitionExceptionRenderer
         - src/Recorders/JobRecorder/JobRecorder
         - src/Recorders/DumpRecorder/HtmlDumper
         - src/Recorders/DumpRecorder/DumpRecorder
-        - src/IgnitionServiceProvider
-        - src/Http
+        - src/FlareServiceProvider
         - src/FlareMiddleware
         - src/Support/LivewireComponentParser
         - src/Solutions/SolutionProviders/SolutionProviderRepository
