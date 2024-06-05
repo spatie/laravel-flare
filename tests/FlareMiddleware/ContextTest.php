@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Context;
-use Spatie\LaravelIgnition\Facades\Flare;
+use Spatie\LaravelFlare\Facades\Flare;
 
 beforeEach(function () {
     // We need to duplicate the class check here because this runs before the skip check

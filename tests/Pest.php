@@ -2,7 +2,7 @@
 
 use Dotenv\Dotenv;
 use Livewire\Mechanisms\ComponentRegistry;
-use Spatie\LaravelIgnition\Tests\TestCase;
+use Spatie\LaravelFlare\Tests\TestCase;
 
 define('LIVEWIRE_VERSION_2', ! class_exists(ComponentRegistry::class));
 define('LIVEWIRE_VERSION_3', class_exists(ComponentRegistry::class));

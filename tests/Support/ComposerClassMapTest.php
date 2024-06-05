@@ -1,6 +1,6 @@
 <?php
 
-use Spatie\LaravelIgnition\Support\Composer\ComposerClassMap;
+use Spatie\LaravelFlare\Support\Composer\ComposerClassMap;
 
 it('uses fake classmap if the autoloader does not exist', function () {
     $classMap = new ComposerClassMap('invalid');

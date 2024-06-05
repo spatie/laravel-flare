@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\LaravelIgnition\Tests\stubs\Controllers;
+namespace Spatie\LaravelFlare\Tests\stubs\Controllers;
 
 class TestTypoController
 {

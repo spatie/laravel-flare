@@ -7,38 +7,38 @@ use Spatie\FlareClient\FlareMiddleware\CensorRequestHeaders;
 use Spatie\Ignition\Solutions\SolutionProviders\BadMethodCallSolutionProvider;
 use Spatie\Ignition\Solutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\Ignition\Solutions\SolutionProviders\UndefinedPropertySolutionProvider;
-use Spatie\LaravelIgnition\FlareMiddleware\AddDumps;
-use Spatie\LaravelIgnition\FlareMiddleware\AddEnvironmentInformation;
-use Spatie\LaravelIgnition\FlareMiddleware\AddExceptionHandledStatus;
-use Spatie\LaravelIgnition\FlareMiddleware\AddExceptionInformation;
-use Spatie\LaravelIgnition\FlareMiddleware\AddJobs;
-use Spatie\LaravelIgnition\FlareMiddleware\AddLogs;
-use Spatie\LaravelIgnition\FlareMiddleware\AddQueries;
-use Spatie\LaravelIgnition\FlareMiddleware\AddContext;
-use Spatie\LaravelIgnition\FlareMiddleware\AddNotifierName;
-use Spatie\LaravelIgnition\Recorders\DumpRecorder\DumpRecorder;
-use Spatie\LaravelIgnition\Recorders\JobRecorder\JobRecorder;
-use Spatie\LaravelIgnition\Recorders\LogRecorder\LogRecorder;
-use Spatie\LaravelIgnition\Recorders\QueryRecorder\QueryRecorder;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\DefaultDbNameSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\GenericLaravelExceptionSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\IncorrectValetDbCredentialsSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\InvalidRouteActionSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingAppKeySolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingColumnSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingImportSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingLivewireComponentSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingMixManifestSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingViteManifestSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\OpenAiSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\RunningLaravelDuskInProductionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\SailNetworkSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\TableNotFoundSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\UndefinedViewVariableSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\UnknownMariadbCollationSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\UnknownMysql8CollationSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\UnknownValidationSolutionProvider;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\ViewNotFoundSolutionProvider;
+use Spatie\LaravelFlare\FlareMiddleware\AddDumps;
+use Spatie\LaravelFlare\FlareMiddleware\AddEnvironmentInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
+use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddJobs;
+use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
+use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
+use Spatie\LaravelFlare\FlareMiddleware\AddContext;
+use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
+use Spatie\LaravelFlare\Recorders\DumpRecorder\DumpRecorder;
+use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
+use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
+use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\DefaultDbNameSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\GenericLaravelExceptionSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\IncorrectValetDbCredentialsSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\InvalidRouteActionSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingAppKeySolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingColumnSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingImportSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingLivewireComponentSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingMixManifestSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingViteManifestSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\OpenAiSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\RunningLaravelDuskInProductionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\SailNetworkSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\TableNotFoundSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\UndefinedViewVariableSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\UnknownMariadbCollationSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\UnknownMysql8CollationSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\UnknownValidationSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\ViewNotFoundSolutionProvider;
 
 return [
     /*
@@ -222,8 +222,8 @@ return [
         \Spatie\Backtrace\Arguments\Reducers\DateTimeArgumentReducer::class,
         \Spatie\Backtrace\Arguments\Reducers\DateTimeZoneArgumentReducer::class,
         \Spatie\Backtrace\Arguments\Reducers\SymphonyRequestArgumentReducer::class,
-        \Spatie\LaravelIgnition\ArgumentReducers\ModelArgumentReducer::class,
-        \Spatie\LaravelIgnition\ArgumentReducers\CollectionArgumentReducer::class,
+        \Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer::class,
+        \Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer::class,
         \Spatie\Backtrace\Arguments\Reducers\StringableArgumentReducer::class,
     ],
 ];

@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
 use Spatie\FlareClient\Flare;
-use Spatie\LaravelIgnition\Tests\Mocks\FakeClient;
+use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
 
 beforeEach(function () {
     Artisan::call('view:clear');
@@ -27,9 +27,9 @@ beforeEach(function () {
 });
 
 it('can manually report exceptions', function () {
-    \Spatie\LaravelIgnition\Facades\Flare::sendReportsImmediately();
+    \Spatie\LaravelFlare\Facades\Flare::sendReportsImmediately();
 
-    \Spatie\LaravelIgnition\Facades\Flare::report(new Exception());
+    \Spatie\LaravelFlare\Facades\Flare::report(new Exception());
 
     $this->fakeClient->assertRequestsSent(1);
 });

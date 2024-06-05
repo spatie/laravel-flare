@@ -1,6 +1,6 @@
 <?php
 
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\OpenAiSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\OpenAiSolutionProvider;
 
 it('can solve an an exception using ai', function () {
     if (! canRunOpenAiTest()) {

@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Spatie\FlareClient\Flare;
-use Spatie\LaravelIgnition\Support\SentReports;
-use Spatie\LaravelIgnition\Tests\Mocks\FakeClient;
+use Spatie\LaravelFlare\Support\SentReports;
+use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
 
 beforeEach(function () {
     config()->set('logging.channels.flare.driver', 'flare');
@@ -149,7 +149,7 @@ it('will keep sent reports', function () {
     $this->fakeClient->assertRequestsSent(1);
 
     expect(app(SentReports::class)->all())->toHaveCount(1);
-    expect(\Spatie\LaravelIgnition\Facades\Flare::sentReports()->all())->toHaveCount(1);
+    expect(\Spatie\LaravelFlare\Facades\Flare::sentReports()->all())->toHaveCount(1);
 });
 
 // Datasets

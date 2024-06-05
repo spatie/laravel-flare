@@ -22,6 +22,6 @@ class GenerateAppKeySolution implements Solution
 
     public function getSolutionDescription(): string
     {
-        return '';
+        return 'Generate your application encryption key using `php artisan key:generate`.';
     }
 }

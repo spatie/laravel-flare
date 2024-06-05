@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Validator;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\UnknownValidationSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\UnknownValidationSolutionProvider;
 
 it('can solve the exception', function () {
     $canSolve = app(UnknownValidationSolutionProvider::class)->canSolve(getBadMethodCallException());

@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\InvalidRouteActionSolutionProvider;
-use Spatie\LaravelIgnition\Support\Composer\ComposerClassMap;
-use Spatie\LaravelIgnition\Tests\stubs\Controllers\TestTypoController;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\InvalidRouteActionSolutionProvider;
+use Spatie\LaravelFlare\Support\Composer\ComposerClassMap;
+use Spatie\LaravelFlare\Tests\stubs\Controllers\TestTypoController;
 
 beforeEach(function () {
     app()->bind(

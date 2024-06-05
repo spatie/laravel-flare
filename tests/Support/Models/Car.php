@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\LaravelIgnition\Tests\Support\Models;
+namespace Spatie\LaravelFlare\Tests\Support\Models;
 
 class Car
 {

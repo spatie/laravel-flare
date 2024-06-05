@@ -18,7 +18,7 @@ it('can recommend a property name when there is a similar property', function ()
     /** @var \Spatie\Ignition\Contracts\Solution $solution */
     $solution = app(UndefinedPropertySolutionProvider::class)->getSolutions(getUndefinedPropertyException())[0];
 
-    expect($solution->getSolutionDescription())->toEqual('Did you mean Spatie\LaravelIgnition\Tests\Support\Models\Car::$color ?');
+    expect($solution->getSolutionDescription())->toEqual('Did you mean Spatie\LaravelFlare\Tests\Support\Models\Car::$color ?');
 });
 
 it('cannot recommend a property name when there is no similar property', function () {
@@ -31,5 +31,5 @@ it('cannot recommend a property name when there is no similar property', functio
 // Helpers
 function getUndefinedPropertyException(string $property = 'colro'): ErrorException
 {
-    return new ErrorException("Undefined property: Spatie\LaravelIgnition\Tests\Support\Models\Car::$$property ");
+    return new ErrorException("Undefined property: Spatie\LaravelFlare\Tests\Support\Models\Car::$$property ");
 }

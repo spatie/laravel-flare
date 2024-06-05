@@ -4,9 +4,9 @@ use Illuminate\Foundation\Auth\User;
 use Spatie\Ignition\Contracts\BaseSolution;
 use Spatie\Ignition\Solutions\SolutionProviders\BadMethodCallSolutionProvider;
 use Spatie\Ignition\Solutions\SolutionProviders\SolutionProviderRepository;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingAppKeySolutionProvider;
-use Spatie\LaravelIgnition\Tests\Exceptions\AlwaysFalseSolutionProvider;
-use Spatie\LaravelIgnition\Tests\Exceptions\AlwaysTrueSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingAppKeySolutionProvider;
+use Spatie\LaravelFlare\Tests\Exceptions\AlwaysFalseSolutionProvider;
+use Spatie\LaravelFlare\Tests\Exceptions\AlwaysTrueSolutionProvider;
 
 it('returns possible solutions', function () {
     $repository = new SolutionProviderRepository();
@@ -76,5 +76,5 @@ it('can propose a solution for missing app key exceptions', function () {
 
     $solution = new MissingAppKeySolutionProvider();
 
-    expect($solution->getSolutions($exception)[0]->getSolutionActionDescription())->toBe('Generate your application encryption key using `php artisan key:generate`.');
+    expect($solution->getSolutions($exception)[0]->getSolutionDescription())->toBe('Generate your application encryption key using `php artisan key:generate`.');
 });

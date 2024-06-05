@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Auth\AuthenticationException;
-use Spatie\LaravelIgnition\Support\LaravelDocumentationLinkFinder;
-use Spatie\LaravelIgnition\Support\LaravelVersion;
+use Spatie\LaravelFlare\Support\LaravelDocumentationLinkFinder;
+use Spatie\LaravelFlare\Support\LaravelVersion;
 
 beforeEach(function () {
     $this->finder = new LaravelDocumentationLinkFinder();

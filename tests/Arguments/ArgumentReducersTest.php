@@ -2,8 +2,8 @@
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Collection;
-use Spatie\LaravelIgnition\Facades\Flare;
-use Spatie\LaravelIgnition\Tests\TestClasses\FakeArgumentsReducer;
+use Spatie\LaravelFlare\Facades\Flare;
+use Spatie\LaravelFlare\Tests\TestClasses\FakeArgumentsReducer;
 
 beforeEach(function () {
     ini_set('zend.exception_ignore_args', 0); // Enabled on GH actions
@@ -54,7 +54,7 @@ it('can disable the use of arguments', function () {
         return new Exception('Whoops');
     }
 
-    config()->set('ignition.with_stack_frame_arguments', false);
+    config()->set('flare.with_stack_frame_arguments', false);
 
     $report = Flare::createReport(exceptionWithArgumentsDisabled('Hello World'));
 
@@ -67,7 +67,7 @@ it('can set a custom arguments reducer', function () {
         return new Exception('Whoops');
     }
 
-    config()->set('ignition.argument_reducers', [
+    config()->set('flare.argument_reducers', [
         FakeArgumentsReducer::class,
     ]);
 

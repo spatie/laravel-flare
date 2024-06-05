@@ -1,6 +1,6 @@
 <?php
 
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\RunningLaravelDuskInProductionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\RunningLaravelDuskInProductionProvider;
 
 it('can solve dusk in production exception', function () {
     $exception = generate_dusk_exception();

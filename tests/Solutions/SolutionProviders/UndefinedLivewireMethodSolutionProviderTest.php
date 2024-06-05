@@ -1,9 +1,9 @@
 <?php
 
 use Livewire\Exceptions\MethodNotFoundException;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\UndefinedLivewireMethodSolutionProvider;
-use Spatie\LaravelIgnition\Tests\stubs\Components\TestLivewireComponent;
-use Spatie\LaravelIgnition\Tests\TestClasses\FakeLivewireManager;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\UndefinedLivewireMethodSolutionProvider;
+use Spatie\LaravelFlare\Tests\stubs\Components\TestLivewireComponent;
+use Spatie\LaravelFlare\Tests\TestClasses\FakeLivewireManager;
 
 it('can solve an unknown livewire method', function () {
     FakeLivewireManager::setUp()->addAlias('test-livewire-component', TestLivewireComponent::class);
@@ -15,6 +15,6 @@ it('can solve an unknown livewire method', function () {
 
     expect($canSolve)->toBeTrue();
 
-    expect($solution->getSolutionTitle())->toBe('Possible typo `Spatie\LaravelIgnition\Tests\stubs\Components\TestLivewireComponent::chnge`');
-    expect($solution->getSolutionDescription())->toBe('Did you mean `Spatie\LaravelIgnition\Tests\stubs\Components\TestLivewireComponent::change`?');
+    expect($solution->getSolutionTitle())->toBe('Possible typo `Spatie\LaravelFlare\Tests\stubs\Components\TestLivewireComponent::chnge`');
+    expect($solution->getSolutionDescription())->toBe('Did you mean `Spatie\LaravelFlare\Tests\stubs\Components\TestLivewireComponent::change`?');
 })->skip(LIVEWIRE_VERSION_3, 'Missing Livewire 3 support.');

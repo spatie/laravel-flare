@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\LaravelIgnition\Tests\stubs\Components;
+namespace Spatie\LaravelFlare\Tests\stubs\Components;
 
 use Livewire\Component;
 

@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Events\QueryExecuted;
-use Spatie\LaravelIgnition\Recorders\QueryRecorder\QueryRecorder;
+use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 
 it('limits the amount of recorded queries', function () {
     $recorder = new QueryRecorder(app(), true, 200);

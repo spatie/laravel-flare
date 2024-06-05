@@ -2,8 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Spatie\LaravelIgnition\ContextProviders\LaravelLivewireRequestContextProvider;
-use Spatie\LaravelIgnition\Tests\TestClasses\FakeLivewireManager;
+use Spatie\LaravelFlare\ContextProviders\LaravelLivewireRequestContextProvider;
+use Spatie\LaravelFlare\Tests\TestClasses\FakeLivewireManager;
 
 beforeEach(function () {
     $this->livewireManager = resolve(FakeLivewireManager::class);

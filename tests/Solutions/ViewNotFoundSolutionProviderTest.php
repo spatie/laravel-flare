@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\ViewNotFoundSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\ViewNotFoundSolutionProvider;
 
 beforeEach(function () {
     View::addLocation(__DIR__.'/../stubs/views');

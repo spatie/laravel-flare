@@ -3,7 +3,7 @@
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Orchestra\Testbench\Exceptions\Handler;
 use Spatie\FlareClient\Report;
-use Spatie\LaravelIgnition\Facades\Flare;
+use Spatie\LaravelFlare\Facades\Flare;
 
 it('can see when an exception is handled, meaning it is reported', function () {
     $handler = new class(app()) extends Handler {

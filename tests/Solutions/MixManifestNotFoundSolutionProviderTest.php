@@ -2,7 +2,7 @@
 
 
 use Illuminate\Support\Str;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingMixManifestSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingMixManifestSolutionProvider;
 
 it('can solve a missing mix manifest exception', function () {
     $canSolve = app(MissingMixManifestSolutionProvider::class)

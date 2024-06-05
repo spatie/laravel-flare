@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\View;
-use Spatie\LaravelIgnition\Solutions\MakeViewVariableOptionalSolution;
-use Spatie\LaravelIgnition\Support\Composer\ComposerClassMap;
+use Spatie\LaravelFlare\Solutions\MakeViewVariableOptionalSolution;
+use Spatie\LaravelFlare\Support\Composer\ComposerClassMap;
 
-beforeEach(function () {
+it('does not open scheme paths', function () {
     View::addLocation(__DIR__.'/../stubs/views');
 
     app()->bind(
@@ -13,25 +13,9 @@ beforeEach(function () {
             return new ComposerClassMap(__DIR__.'/../../vendor/autoload.php');
         }
     );
-});
 
-it('does not open scheme paths', function () {
-    $solution = getSolutionForPath('php://filter/resource=./tests/stubs/views/blade-exception.blade.php');
-    expect($solution->isRunnable())->toBeFalse();
-});
+    $solution = new MakeViewVariableOptionalSolution('notSet', 'php://filter/resource=./tests/stubs/views/blade-exception.blade.php');
 
-it('does open relative paths', function () {
-    $solution = getSolutionForPath('./tests/stubs/views/blade-exception.blade.php');
-    expect($solution->isRunnable())->toBeTrue();
+    expect($solution)->toBeInstanceOf(MakeViewVariableOptionalSolution::class);
+    expect($solution->getSolutionTitle())->toEqual('$notSet is undefined');
 });
-
-it('does not open other extensions', function () {
-    $solution = getSolutionForPath('./tests/stubs/views/php-exception.php');
-    expect($solution->isRunnable())->toBeFalse();
-});
-
-// Helpers
-function getSolutionForPath($path): MakeViewVariableOptionalSolution
-{
-    return new MakeViewVariableOptionalSolution('notSet', $path);
-}

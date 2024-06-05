@@ -2,7 +2,7 @@
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Route;
-use Spatie\LaravelIgnition\ContextProviders\LaravelRequestContextProvider;
+use Spatie\LaravelFlare\ContextProviders\LaravelRequestContextProvider;
 
 it('returns route name in context data', function () {
     $route = Route::get('/route/', fn () => null)->name('routeName');

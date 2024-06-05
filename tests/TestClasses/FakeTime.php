@@ -1,6 +1,6 @@
 <?php
 
-namespace Spatie\LaravelIgnition\Tests\TestClasses;
+namespace Spatie\LaravelFlare\Tests\TestClasses;
 
 use DateTimeImmutable;
 use Spatie\FlareClient\Time\Time;

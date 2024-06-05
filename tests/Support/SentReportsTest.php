@@ -1,7 +1,7 @@
 <?php
 
 use Spatie\FlareClient\Report;
-use Spatie\LaravelIgnition\Support\SentReports;
+use Spatie\LaravelFlare\Support\SentReports;
 
 beforeEach(function () {
     $this->sentReports = new SentReports();

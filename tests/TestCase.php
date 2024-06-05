@@ -1,14 +1,15 @@
 <?php
 
-namespace Spatie\LaravelIgnition\Tests;
+namespace Spatie\LaravelFlare\Tests;
 
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Illuminate\Http\Request;
 use Spatie\FlareClient\Glows\Glow;
 use Spatie\FlareClient\Report;
-use Spatie\LaravelIgnition\Facades\Flare;
-use Spatie\LaravelIgnition\IgnitionServiceProvider;
-use Spatie\LaravelIgnition\Tests\TestClasses\FakeTime;
+use Spatie\LaravelFlare\FlareServiceProvider;
+use Spatie\LaravelFlare\Facades\Flare;
+use Spatie\LaravelFlare\IgnitionServiceProvider;
+use Spatie\LaravelFlare\Tests\TestClasses\FakeTime;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class TestCase extends \Orchestra\Testbench\TestCase
@@ -28,7 +29,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         config()->set('flare.key', 'dummy-key');
 
-        return [IgnitionServiceProvider::class];
+        return [FlareServiceProvider::class];
     }
 
     protected function getPackageAliases($app)

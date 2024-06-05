@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Database\QueryException;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\UnknownMariadbCollationSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\UnknownMariadbCollationSolutionProvider;
 
 it('can solve an an unknown mariadb collation ', function () {
     $solutionProvider = new UnknownMariadbCollationSolutionProvider();

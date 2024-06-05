@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Log\Events\MessageLogged;
-use Spatie\LaravelIgnition\Recorders\LogRecorder\LogRecorder;
+use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 
 it('limits the amount of recorded logs', function () {
     $recorder = new LogRecorder(app(), 200);

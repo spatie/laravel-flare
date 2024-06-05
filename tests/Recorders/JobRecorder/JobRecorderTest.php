@@ -6,8 +6,8 @@ use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Jobs\RedisJob;
 use Illuminate\Queue\RedisQueue;
 use Illuminate\Support\Facades\Event;
-use Spatie\LaravelIgnition\Recorders\JobRecorder\JobRecorder;
-use Spatie\LaravelIgnition\Tests\stubs\Jobs\QueueableJob;
+use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
+use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
 
 it('can record a failed job', function () {
     $recorder = (new JobRecorder(app()));
@@ -18,7 +18,7 @@ it('can record a failed job', function () {
 
     $recorded = $recorder->getJob();
 
-    expect($recorded['name'])->toEqual('Spatie\LaravelIgnition\Tests\stubs\Jobs\QueueableJob');
+    expect($recorded['name'])->toEqual('Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob');
     expect($recorded['connection'])->toEqual('sync');
     expect($recorded['queue'])->toEqual('sync');
     $this->assertNotEmpty($recorded['uuid']);
@@ -141,7 +141,7 @@ it('can restrict the recorded chained jobs depth', function () {
     expect($chained[1]['data']['property'])->toEqual(['level-two-b']);
 
     expect($chained = $chained[1]['data']['chained'])->toHaveCount(1);
-    expect($chained)->toEqual(['Ignition stopped recording jobs after this point since the max chain depth was reached']);
+    expect($chained)->toEqual(['Flare stopped recording jobs after this point since the max chain depth was reached']);
 });
 
 it('can disable recording chained jobs', function () {
@@ -159,7 +159,7 @@ it('can disable recording chained jobs', function () {
     $recorded = $recorder->getJob();
 
     expect($chained = $recorded['data']['chained'])->toHaveCount(1);
-    expect($chained)->toEqual(['Ignition stopped recording jobs after this point since the max chain depth was reached']);
+    expect($chained)->toEqual(['Flare stopped recording jobs after this point since the max chain depth was reached']);
 });
 
 it('can handle a job with an unserializeable payload', function () {

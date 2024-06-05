@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
-use Spatie\LaravelIgnition\Solutions\SolutionProviders\MissingViteManifestSolutionProvider;
+use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingViteManifestSolutionProvider;
 
 it('can solve a missing Vite manifest exception', function () {
     $canSolve = app(MissingViteManifestSolutionProvider::class)
