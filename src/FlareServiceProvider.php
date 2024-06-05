@@ -45,6 +45,7 @@ class FlareServiceProvider extends ServiceProvider
         $this->registerIgnition();
         $this->registerRecorders();
         $this->registerLogHandler();
+        $this->registerShareButton();
     }
 
     public function boot(): void
@@ -200,6 +201,11 @@ class FlareServiceProvider extends ServiceProvider
         });
 
         Log::extend('flare', fn ($app) => $app['flare.logger']);
+    }
+
+    protected function registerShareButton()
+    {
+        config()->set('error-share.enabled', config('flare.enable_share_button'));
     }
 
     protected function startRecorders(): void

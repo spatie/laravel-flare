@@ -226,4 +226,17 @@ return [
         \Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer::class,
         \Spatie\Backtrace\Arguments\Reducers\StringableArgumentReducer::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Share button
+    |--------------------------------------------------------------------------
+    |
+    | Flare automatically adds a Share button to the laravel error page. This
+    | button allows you to easily share errors with colleagues or friends. It
+    | is enabled by default, but you can disable it here.
+    |
+    */
+
+    'enable_share_button' => true,
 ];
