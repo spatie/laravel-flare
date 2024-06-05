@@ -2,8 +2,6 @@
 
 namespace Spatie\LaravelFlare\Solutions;
 
-use Illuminate\Support\Facades\Artisan;
-use Spatie\Ignition\Contracts\RunnableSolution;
 use Spatie\Ignition\Contracts\Solution;
 
 class GenerateAppKeySolution implements Solution

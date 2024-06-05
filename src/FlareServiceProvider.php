@@ -21,8 +21,6 @@ use Spatie\Ignition\Config\IgnitionConfig;
 use Spatie\Ignition\Contracts\ConfigManager;
 use Spatie\Ignition\Contracts\SolutionProviderRepository as SolutionProviderRepositoryContract;
 use Spatie\Ignition\Ignition;
-use Spatie\LaravelFlare\Commands\SolutionMakeCommand;
-use Spatie\LaravelFlare\Commands\SolutionProviderMakeCommand;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\ContextProviders\LaravelContextProviderDetector;
 use Spatie\LaravelFlare\Exceptions\InvalidConfig;

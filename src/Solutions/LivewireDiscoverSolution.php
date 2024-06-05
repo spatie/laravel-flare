@@ -2,8 +2,6 @@
 
 namespace Spatie\LaravelFlare\Solutions;
 
-use Livewire\LivewireComponentsFinder;
-use Spatie\Ignition\Contracts\RunnableSolution;
 use Spatie\Ignition\Contracts\Solution;
 
 class LivewireDiscoverSolution implements Solution

@@ -4,7 +4,6 @@ namespace Spatie\LaravelFlare\Solutions;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Str;
-use Spatie\Ignition\Contracts\RunnableSolution;
 use Spatie\Ignition\Contracts\Solution;
 
 class MakeViewVariableOptionalSolution implements Solution

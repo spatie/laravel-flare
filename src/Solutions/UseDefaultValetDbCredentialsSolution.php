@@ -2,8 +2,6 @@
 
 namespace Spatie\LaravelFlare\Solutions;
 
-use Illuminate\Support\Str;
-use Spatie\Ignition\Contracts\RunnableSolution;
 use Spatie\Ignition\Contracts\Solution;
 
 class UseDefaultValetDbCredentialsSolution implements Solution
