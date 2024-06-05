@@ -6,7 +6,6 @@ composer.lock
 .php_cs.cache
 phpstan.neon
 .phpunit.result.cache
-tests/stubs/Controllers/GitConflictController.php
 package-lock.json
 .php-cs-fixer.cache
 .env
