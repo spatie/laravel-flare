@@ -117,7 +117,9 @@ class FlareServiceProvider extends ServiceProvider
 
         $this->app->singleton(
             Ignition::class,
-            fn () => (new Ignition($this->app->make(Flare::class)))->applicationPath(base_path())
+            fn () => (new Ignition($this->app->make(Flare::class)))
+                ->shouldDisplayException(false)
+                ->applicationPath(base_path())
         );
     }
 

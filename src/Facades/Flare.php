@@ -2,8 +2,12 @@
 
 namespace Spatie\LaravelFlare\Facades;
 
+use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
+use Spatie\FlareClient\Flare as FlareClient;
+use Spatie\Ignition\Ignition;
 use Spatie\LaravelFlare\Support\SentReports;
+use Throwable;
 
 /**
  * @method static void glow(string $name, string $messageLevel = \Spatie\FlareClient\Enums\MessageLevels::INFO, array $metaData = [])
@@ -16,7 +20,18 @@ class Flare extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return \Spatie\FlareClient\Flare::class;
+        return FlareClient::class;
+    }
+
+    public static function handles(Exceptions $exceptions): void
+    {
+        $exceptions->reportable(static function (Throwable $exception): Ignition {
+            $flare = app(Ignition::class);
+
+            $flare->handleException($exception);
+
+            return $flare;
+        });
     }
 
     public static function sentReports(): SentReports
