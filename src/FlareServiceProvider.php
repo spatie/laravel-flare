@@ -89,7 +89,10 @@ class FlareServiceProvider extends ServiceProvider
                 ->registerMiddleware($this->getFlareMiddleware())
                 ->registerMiddleware(new AddSolutions(new SolutionProviderRepository($this->getSolutionProviders())))
                 ->argumentReducers(config('flare.argument_reducers', []))
-                ->withStackFrameArguments(config('flare.with_stack_frame_arguments', true));
+                ->withStackFrameArguments(
+                    config('flare.with_stack_frame_arguments', true),
+                    config('flare.force_stack_frame_arguments_ini_setting', true)
+                );
         });
 
         $this->app->singleton(SentReports::class);

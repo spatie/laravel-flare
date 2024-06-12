@@ -203,6 +203,19 @@ return [
     'with_stack_frame_arguments' => true,
 
     /*
+    |--------------------------------------------------------------------------
+    | Force stack frame arguments ini setting
+    |--------------------------------------------------------------------------
+    |
+    | On some machines, the `zend.exception_ignore_args` ini setting is
+    | enabled by default making it impossible to get the arguments of stack
+    | frames. You can force this setting to be disabled here.
+    |
+    */
+
+    'force_stack_frame_arguments_ini_setting' => true,
+
+    /*
    |--------------------------------------------------------------------------
    | Argument reducers
    |--------------------------------------------------------------------------
