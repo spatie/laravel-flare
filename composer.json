@@ -21,7 +21,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "illuminate/support": "^11.0",
-        "spatie/flare-client-php": "dev-main",
+        "spatie/flare-client-php": "dev-solutions-refactor",
         "symfony/console": "^7.0",
         "symfony/var-dumper": "^7.0",
         "spatie/laravel-error-share": "dev-main",
