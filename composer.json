@@ -22,13 +22,13 @@
         "ext-mbstring": "*",
         "illuminate/support": "^11.0",
         "spatie/flare-client-php": "^1.5",
-        "spatie/ignition": "^1.14",
-        "symfony/console": "^6.2.3|^7.0",
-        "symfony/var-dumper": "^6.2.3|^7.0",
-        "spatie/laravel-error-share": "@dev"
+        "symfony/console": "^7.0",
+        "symfony/var-dumper": "^7.0",
+        "spatie/laravel-error-share": "^1.0",
+        "spatie/error-solutions": "dev-main"
     },
     "require-dev": {
-        "livewire/livewire": "^2.11|^3.3.5",
+        "livewire/livewire": "^3.3.5",
         "mockery/mockery": "^1.5.1",
         "openai-php/client": "^0.8.1",
         "orchestra/testbench": "8.22.3|^9.0",

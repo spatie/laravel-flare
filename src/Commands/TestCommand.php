@@ -26,17 +26,19 @@ class TestCommand extends Command
 
     protected Repository $config;
 
-    public function handle(Repository $config): void
+    public function handle(Repository $config): int
     {
         $this->config = $config;
 
         $this->checkFlareKey();
 
-        if (app()->make('log') instanceof LogManager) {
-            $this->checkFlareLogger();
+        if ($this->checkFlareLogger() === false) {
+            return Command::FAILURE;
         }
 
         $this->sendTestException();
+
+        return Command::SUCCESS;
     }
 
     protected function checkFlareKey(): self
@@ -50,14 +52,18 @@ class TestCommand extends Command
         return $this;
     }
 
-    public function checkFlareLogger(): self
+    public function checkFlareLogger(): bool
     {
+        if(! app()->make('log') instanceof LogManager){
+            return true;
+        }
+
         $configuredCorrectly = $this->shouldUseReportableCallbackLogger()
             ? $this->isValidReportableCallbackFlareLogger()
             : $this->isValidConfigFlareLogger();
 
         if($configuredCorrectly === false) {
-            die();
+            return false;
         }
 
         if ($this->config->get('flare.with_stack_frame_arguments') && ini_get('zend.exception_ignore_args')) {
@@ -66,7 +72,7 @@ class TestCommand extends Command
 
         $this->info('✅ The Flare logging driver was configured correctly.');
 
-        return $this;
+        return true;
     }
 
     protected function shouldUseReportableCallbackLogger(): bool
@@ -169,7 +175,7 @@ class TestCommand extends Command
                     return false;
                 }
 
-                return $closureReturnTypeReflection->getName() === Ignition::class;
+                return $closureReturnTypeReflection->getName() === Flare::class;
             }
         } catch (ReflectionException $exception) {
             return false;
@@ -215,7 +221,6 @@ class TestCommand extends Command
                 ['Platform', PHP_OS],
                 ['PHP', phpversion()],
                 ['Laravel', app()->version()],
-                ['spatie/ignition', InstalledVersions::getVersion('spatie/ignition')],
                 ['spatie/laravel-flare', InstalledVersions::getVersion('spatie/laravel-flare')],
                 ['spatie/flare-client-php', InstalledVersions::getVersion('spatie/flare-client-php')],
                 /** @phpstan-ignore-next-line */

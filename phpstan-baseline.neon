@@ -46,46 +46,6 @@ parameters:
 			path: src/Exceptions/InvalidConfig.php
 
 		-
-			message: "#^Parameter \\#1 \\$invalidController of method Spatie\\\\LaravelFlare\\\\Solutions\\\\SolutionProviders\\\\InvalidRouteActionSolutionProvider\\:\\:findRelatedController\\(\\) expects string, string\\|null given\\.$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
-
-		-
-			message: "#^Unable to resolve the template type TKey in call to function collect$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
-
-		-
-			message: "#^Unable to resolve the template type TValue in call to function collect$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/InvalidRouteActionSolutionProvider.php
-
-		-
-			message: "#^Method Spatie\\\\LaravelFlare\\\\Solutions\\\\SolutionProviders\\\\UnknownValidationSolutionProvider\\:\\:getAvailableMethods\\(\\) return type with generic class Illuminate\\\\Support\\\\Collection does not specify its types\\: TKey, TValue$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
-
-		-
-			message: "#^Parameter \\#1 \\$callback of method Illuminate\\\\Support\\\\Collection\\<int,ReflectionMethod\\>\\:\\:filter\\(\\) expects \\(callable\\(ReflectionMethod, int\\)\\: bool\\)\\|null, Closure\\(ReflectionMethod\\)\\: \\(0\\|1\\|false\\) given\\.$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
-
-		-
-			message: "#^Unable to resolve the template type TMakeKey in call to method static method Illuminate\\\\Support\\\\Collection\\<\\(int\\|string\\),mixed\\>\\:\\:make\\(\\)$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
-
-		-
-			message: "#^Unable to resolve the template type TMakeValue in call to method static method Illuminate\\\\Support\\\\Collection\\<\\(int\\|string\\),mixed\\>\\:\\:make\\(\\)$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/UnknownValidationSolutionProvider.php
-
-		-
-			message: "#^Parameter \\#1 \\$missingView of method Spatie\\\\LaravelFlare\\\\Solutions\\\\SolutionProviders\\\\ViewNotFoundSolutionProvider\\:\\:findRelatedView\\(\\) expects string, string\\|null given\\.$#"
-			count: 1
-			path: src/Solutions/SolutionProviders/ViewNotFoundSolutionProvider.php
-
-		-
 			message: "#^Argument of an invalid type array\\|DateTimeImmutable\\|int\\|string\\|null supplied for foreach, only iterables are supported\\.$#"
 			count: 1
 			path: src/Support/FlareLogHandler.php
@@ -104,11 +64,6 @@ parameters:
 			message: "#^Parameter \\#1 \\$message of method Spatie\\\\FlareClient\\\\Flare\\:\\:reportMessage\\(\\) expects string, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
 			count: 1
 			path: src/Support/FlareLogHandler.php
-
-		-
-			message: "#^Cannot call method getMessage\\(\\) on Throwable\\|null\\.$#"
-			count: 1
-			path: src/Support/LaravelDocumentationLinkFinder.php
 
 		-
 			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\View\\\\Engine\\:\\:getCompiler\\(\\)\\.$#"

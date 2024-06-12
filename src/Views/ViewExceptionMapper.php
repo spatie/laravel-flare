@@ -10,8 +10,8 @@ use Illuminate\View\Engines\PhpEngine;
 use Illuminate\View\ViewException;
 use ReflectionClass;
 use ReflectionProperty;
-use Spatie\Ignition\Contracts\ProvidesSolution;
-use Spatie\LaravelFlare\Exceptions\ViewException as IgnitionViewException;
+use Spatie\ErrorSolutions\Contracts\ProvidesSolution;
+use Spatie\LaravelFlare\Exceptions\ViewException as FlareViewException;
 use Spatie\LaravelFlare\Exceptions\ViewExceptionWithSolution;
 use Throwable;
 
@@ -32,11 +32,11 @@ class ViewExceptionMapper
         $this->bladeSourceMapCompiler = $bladeSourceMapCompiler;
     }
 
-    public function map(ViewException $viewException): IgnitionViewException
+    public function map(ViewException $viewException): FlareViewException
     {
         $baseException = $this->getRealException($viewException);
 
-        if ($baseException instanceof IgnitionViewException) {
+        if ($baseException instanceof FlareViewException) {
             return $baseException;
         }
 
@@ -59,11 +59,11 @@ class ViewExceptionMapper
         return $exception;
     }
 
-    protected function createException(Throwable $baseException): IgnitionViewException
+    protected function createException(Throwable $baseException): FlareViewException
     {
         $viewExceptionClass = $baseException instanceof ProvidesSolution
             ? ViewExceptionWithSolution::class
-            : IgnitionViewException::class;
+            : FlareViewException::class;
 
         $viewFile = $this->findCompiledView($baseException->getFile());
         $file = $viewFile ?? $baseException->getFile();
@@ -79,7 +79,7 @@ class ViewExceptionMapper
         );
     }
 
-    protected function modifyViewsInTrace(IgnitionViewException $exception): void
+    protected function modifyViewsInTrace(FlareViewException $exception): void
     {
         $viewIndex = null;
 

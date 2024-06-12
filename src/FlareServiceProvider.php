@@ -14,11 +14,9 @@ use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
 use Monolog\Level;
 use Monolog\Logger;
+use Spatie\ErrorSolutions\SolutionProviderRepository;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareMiddleware\AddSolutions;
-use Spatie\Ignition\Config\FileConfigManager;
-use Spatie\Ignition\Config\IgnitionConfig;
-use Spatie\Ignition\Contracts\ConfigManager;
 use Spatie\Ignition\Contracts\SolutionProviderRepository as SolutionProviderRepositoryContract;
 use Spatie\Ignition\Ignition;
 use Spatie\LaravelFlare\Commands\TestCommand;
@@ -31,7 +29,6 @@ use Spatie\LaravelFlare\Recorders\DumpRecorder\DumpRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
-use Spatie\LaravelFlare\Solutions\SolutionProviders\SolutionProviderRepository;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 use Spatie\LaravelFlare\Support\SentReports;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
@@ -42,7 +39,7 @@ class FlareServiceProvider extends ServiceProvider
     {
         $this->registerConfig();
         $this->registerFlare();
-        $this->registerIgnition();
+        $this->registerSolutions();
         $this->registerRecorders();
         $this->registerLogHandler();
         $this->registerShareButton();
@@ -99,28 +96,12 @@ class FlareServiceProvider extends ServiceProvider
         $this->app->singleton(SentReports::class);
     }
 
-    protected function registerIgnition(): void
+    protected function registerSolutions(): void
     {
-        $this->app->singleton(
-            ConfigManager::class,
-            fn () => new FileConfigManager()
-        );
-
-        $ignitionConfig = (new IgnitionConfig())->loadConfigFile();
-
         $solutionProviders = $this->getSolutionProviders();
         $solutionProviderRepository = new SolutionProviderRepository($solutionProviders);
 
-        $this->app->singleton(IgnitionConfig::class, fn () => $ignitionConfig);
-
         $this->app->singleton(SolutionProviderRepositoryContract::class, fn () => $solutionProviderRepository);
-
-        $this->app->singleton(
-            Ignition::class,
-            fn () => (new Ignition($this->app->make(Flare::class)))
-                ->shouldDisplayException(false)
-                ->applicationPath(base_path())
-        );
     }
 
     protected function registerRecorders(): void
@@ -228,13 +209,13 @@ class FlareServiceProvider extends ServiceProvider
         // Reset before executing a queue job to make sure the job's log/query/dump recorders are empty.
         // When using a sync queue this also reports the queued reports from previous exceptions.
         $queue->before(function () {
-            $this->resetFlareAndLaravelIgnition();
+            $this->resetFlare();
             app(Flare::class)->sendReportsImmediately();
         });
 
         // Send queued reports (and reset) after executing a queue job.
         $queue->after(function () {
-            $this->resetFlareAndLaravelIgnition();
+            $this->resetFlare();
         });
 
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
@@ -285,26 +266,25 @@ class FlareServiceProvider extends ServiceProvider
     protected function setupOctane(): void
     {
         $this->app['events']->listen(RequestReceived::class, function () {
-            $this->resetFlareAndLaravelIgnition();
+            $this->resetFlare();
         });
 
         $this->app['events']->listen(TaskReceived::class, function () {
-            $this->resetFlareAndLaravelIgnition();
+            $this->resetFlare();
         });
 
         $this->app['events']->listen(TickReceived::class, function () {
-            $this->resetFlareAndLaravelIgnition();
+            $this->resetFlare();
         });
 
         $this->app['events']->listen(RequestTerminated::class, function () {
-            $this->resetFlareAndLaravelIgnition();
+            $this->resetFlare();
         });
     }
 
-    protected function resetFlareAndLaravelIgnition(): void
+    protected function resetFlare(): void
     {
         $this->app->get(SentReports::class)->clear();
-        $this->app->get(Ignition::class)->reset();
 
         if (config('flare.flare_middleware.'.AddLogs::class)) {
             $this->app->make(LogRecorder::class)->reset();

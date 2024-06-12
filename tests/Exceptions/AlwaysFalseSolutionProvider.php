@@ -2,8 +2,8 @@
 
 namespace Spatie\LaravelFlare\Tests\Exceptions;
 
-use Spatie\Ignition\Contracts\BaseSolution;
-use Spatie\Ignition\Contracts\HasSolutionsForThrowable;
+use Spatie\ErrorSolutions\Contracts\BaseSolution;
+use Spatie\ErrorSolutions\Contracts\HasSolutionsForThrowable;
 use Throwable;
 
 class AlwaysFalseSolutionProvider implements HasSolutionsForThrowable

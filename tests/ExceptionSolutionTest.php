@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Foundation\Auth\User;
-use Spatie\Ignition\Contracts\BaseSolution;
-use Spatie\Ignition\Solutions\SolutionProviders\BadMethodCallSolutionProvider;
-use Spatie\Ignition\Solutions\SolutionProviders\SolutionProviderRepository;
-use Spatie\LaravelFlare\Solutions\SolutionProviders\MissingAppKeySolutionProvider;
+use Spatie\ErrorSolutions\Contracts\BaseSolution;
+use Spatie\ErrorSolutions\SolutionProviders\BadMethodCallSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviderRepository;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingAppKeySolutionProvider;
 use Spatie\LaravelFlare\Tests\Exceptions\AlwaysFalseSolutionProvider;
 use Spatie\LaravelFlare\Tests\Exceptions\AlwaysTrueSolutionProvider;
 
