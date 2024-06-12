@@ -18,7 +18,6 @@ use Spatie\ErrorSolutions\SolutionProviderRepository;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareMiddleware\AddSolutions;
 use Spatie\Ignition\Contracts\SolutionProviderRepository as SolutionProviderRepositoryContract;
-use Spatie\Ignition\Ignition;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\ContextProviders\LaravelContextProviderDetector;
 use Spatie\LaravelFlare\Exceptions\InvalidConfig;

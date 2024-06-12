@@ -16,7 +16,6 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Http\Exceptions\BadResponseCode;
-use Spatie\Ignition\Ignition;
 
 class TestCommand extends Command
 {
@@ -54,7 +53,7 @@ class TestCommand extends Command
 
     public function checkFlareLogger(): bool
     {
-        if(! app()->make('log') instanceof LogManager){
+        if(! app()->make('log') instanceof LogManager) {
             return true;
         }
 
