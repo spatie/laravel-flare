@@ -21,11 +21,11 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "illuminate/support": "^11.0",
-        "spatie/flare-client-php": "dev-solutions-refactor",
+        "spatie/flare-client-php": "^1.7",
         "symfony/console": "^7.0",
         "symfony/var-dumper": "^7.0",
-        "spatie/laravel-error-share": "dev-main",
-        "spatie/error-solutions": "dev-main"
+        "spatie/laravel-error-share": "^1.0",
+        "spatie/error-solutions": "^1.0"
     },
     "require-dev": {
         "livewire/livewire": "^3.3.5",
