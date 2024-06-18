@@ -4,31 +4,25 @@ namespace Spatie\LaravelFlare\Recorders\QueryRecorder;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
+use Spatie\FlareClient\Performance\Tracer;
 
 class QueryRecorder
 {
-    /** @var \Spatie\LaravelFlare\Recorders\QueryRecorder\Query[] */
-    protected array $queries = [];
-
-    protected Application $app;
-
-    protected bool $reportBindings = true;
-
-    protected ?int $maxQueries;
+    /** @var QuerySpan[] */
+    protected array $spans = [];
 
     public function __construct(
-        Application $app,
-        bool $reportBindings = true,
-        ?int $maxQueries = 200
+        protected Application $app,
+        protected Tracer $tracer,
+        protected bool $reportBindings = true,
+        protected ?int $maxQueries = 200,
+        protected ?int $traceQueryOriginThreshold = 300,
     ) {
-        $this->app = $app;
-        $this->reportBindings = $reportBindings;
-        $this->maxQueries = $maxQueries;
+        $this->traceQueryOriginThreshold *= 1000_000; // Milliseconds to microseconds
     }
 
     public function start(): self
     {
-        /** @phpstan-ignore-next-line  */
         $this->app['events']->listen(QueryExecuted::class, [$this, 'record']);
 
         return $this;
@@ -36,10 +30,16 @@ class QueryRecorder
 
     public function record(QueryExecuted $queryExecuted): void
     {
-        $this->queries[] = Query::fromQueryExecutedEvent($queryExecuted, $this->reportBindings);
+        $span = $this->buildSpan($queryExecuted);
 
-        if (is_int($this->maxQueries)) {
-            $this->queries = array_slice($this->queries, -$this->maxQueries);
+        $this->spans[] = $span;
+
+        if ($this->tracer->isSamping()) {
+            $this->tracer->addSpan($span);
+        }
+
+        if ($this->maxQueries && count($this->spans) > $this->maxQueries) {
+            $this->removeOldestSpan();
         }
     }
 
@@ -48,41 +48,72 @@ class QueryRecorder
      */
     public function getQueries(): array
     {
+        // TODO: maybe embrace the span format for error reporting
+
         $queries = [];
 
-        foreach ($this->queries as $query) {
-            $queries[] = $query->toArray();
+        foreach ($this->spans as $query) {
+            $queries[] = $query->toOriginalFlareFormat();
         }
 
         return $queries;
     }
 
+    /** @return QuerySpan[] */
+    public function getSpans(): array
+    {
+        return $this->spans;
+    }
+
     public function reset(): void
     {
-        $this->queries = [];
+        $this->spans = [];
     }
 
-    public function getReportBindings(): bool
+    protected function buildSpan(QueryExecuted $queryExecuted): QuerySpan
     {
-        return $this->reportBindings;
+        $isSampling = $this->tracer->isSamping();
+
+        $duration = $queryExecuted->time * 1000_000;
+
+        $span = new QuerySpan(
+            traceId: $isSampling ? $this->tracer->currentTraceId() : '',
+            parentSpanId: $isSampling ? $this->tracer->currentSpanId() : '',
+            sql: $queryExecuted->sql,
+            duration: $duration,
+            bindings: $this->reportBindings ? $queryExecuted->bindings : null,
+            databaseName: $queryExecuted->connection->getDatabaseName(),
+            driverName: $queryExecuted->connection->getDriverName(),
+            connectionName: $queryExecuted->connectionName,
+        );
+
+        if (! $this->shouldTraceOrigins($duration)) {
+            return $span;
+        }
+
+        $frame = $this->tracer->backTracer->firstApplicationFrame(20);
+
+        if ($frame) {
+            $span->setOriginFrame($frame);
+        }
+
+        return $span;
     }
 
-    public function setReportBindings(bool $reportBindings): self
+    protected function shouldTraceOrigins(int $duration): bool
     {
-        $this->reportBindings = $reportBindings;
-
-        return $this;
+        return $this->tracer->isSamping()
+            && $this->tracer->currentSpanId()
+            && $this->traceQueryOriginThreshold !== null
+            && $duration >= $this->traceQueryOriginThreshold;
     }
 
-    public function getMaxQueries(): ?int
+    protected function removeOldestSpan(): void
     {
-        return $this->maxQueries;
-    }
+        $span = array_shift($this->spans);
 
-    public function setMaxQueries(?int $maxQueries): self
-    {
-        $this->maxQueries = $maxQueries;
-
-        return $this;
+        if ($this->tracer->isSamping()) {
+            unset($this->tracer[$span->traceId][$span->spanId]);
+        }
     }
 }

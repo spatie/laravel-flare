@@ -4,7 +4,9 @@ namespace Spatie\LaravelFlare;
 
 use Exception;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
 use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\View\ViewException;
@@ -17,13 +19,20 @@ use Monolog\Logger;
 use Spatie\ErrorSolutions\SolutionProviderRepository;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareMiddleware\AddSolutions;
-use Spatie\Ignition\Contracts\SolutionProviderRepository as SolutionProviderRepositoryContract;
+use Spatie\FlareClient\Http\Client;
+use Spatie\FlareClient\Performance\Sampling\Sampler;
+use Spatie\FlareClient\Performance\Support\BackTracer as BaseBackTracer;
+use Spatie\FlareClient\Performance\Tracer;
+use Spatie\FlareClient\Senders\Sender;
+use Spatie\ErrorSolutions\Contracts\SolutionProviderRepository as SolutionProviderRepositoryContract;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\ContextProviders\LaravelContextProviderDetector;
 use Spatie\LaravelFlare\Exceptions\InvalidConfig;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobs;
 use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
 use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
+use Spatie\LaravelFlare\Performance\Http\Middleware\FlareTracingMiddleware;
+use Spatie\LaravelFlare\Performance\Support\BackTracer;
 use Spatie\LaravelFlare\Recorders\DumpRecorder\DumpRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
@@ -31,6 +40,7 @@ use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 use Spatie\LaravelFlare\Support\SentReports;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
+use Spatie\LaravelFlare\Views\ViewFrameMapper;
 
 class FlareServiceProvider extends ServiceProvider
 {
@@ -42,6 +52,21 @@ class FlareServiceProvider extends ServiceProvider
         $this->registerRecorders();
         $this->registerLogHandler();
         $this->registerShareButton();
+        $this->registerSender();
+
+        $this->registerSampler();
+        $this->registerBackTracer();
+        $this->registerTracer();
+
+        if (config('flare.performance.enabled') === false) {
+            return;
+        }
+
+        $this->registerTracingMiddleware();
+
+        register_shutdown_function(function () {
+            $this->app->make(Tracer::class)->transmit();
+        });
     }
 
     public function boot(): void
@@ -56,6 +81,12 @@ class FlareServiceProvider extends ServiceProvider
         $this->registerViewExceptionMapper();
         $this->startRecorders();
         $this->configureQueue();
+
+        if (config('flare.performance.enabled') === false) {
+            return;
+        }
+
+        $this->prependTracingMiddleware();
     }
 
     protected function registerConfig(): void
@@ -80,12 +111,16 @@ class FlareServiceProvider extends ServiceProvider
     protected function registerFlare(): void
     {
         $this->app->singleton(Flare::class, function () {
-            return Flare::make()
+            $flare = new Flare(
+                client: app()->make(Client::class),
+                contextDetector: new LaravelContextProviderDetector(),
+            );
+
+            return $flare
                 ->setApiToken(config('flare.key') ?? '')
                 ->setBaseUrl(config('flare.base_url', 'https://flareapp.io/api'))
                 ->applicationPath(base_path())
                 ->setStage(app()->environment())
-                ->setContextProviderDetector(new LaravelContextProviderDetector())
                 ->registerMiddleware($this->getFlareMiddleware())
                 ->registerMiddleware(new AddSolutions(new SolutionProviderRepository($this->getSolutionProviders())))
                 ->argumentReducers(config('flare.argument_reducers', []))
@@ -96,6 +131,7 @@ class FlareServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(SentReports::class);
+        $this->app->singleton(ViewFrameMapper::class);
     }
 
     protected function registerSolutions(): void
@@ -113,7 +149,9 @@ class FlareServiceProvider extends ServiceProvider
         $this->app->singleton(LogRecorder::class, function (Application $app): LogRecorder {
             return new LogRecorder(
                 $app,
-                config()->get('flare.flare_middleware.'.AddLogs::class.'.maximum_number_of_collected_logs')
+                $app->make(Tracer::class),
+                config()->get('flare.flare_middleware.'.AddLogs::class.'.maximum_number_of_collected_logs'),
+                config()->get('flare.flare_middleware.'.AddLogs::class.'.trace_logs')
             );
         });
 
@@ -122,8 +160,10 @@ class FlareServiceProvider extends ServiceProvider
             function (Application $app): QueryRecorder {
                 return new QueryRecorder(
                     $app,
+                    $app->make(Tracer::class),
                     config('flare.flare_middleware.'.AddQueries::class.'.report_query_bindings', true),
-                    config('flare.flare_middleware.'.AddQueries::class.'.maximum_number_of_collected_queries', 200)
+                    config('flare.flare_middleware.'.AddQueries::class.'.maximum_number_of_collected_queries', 200),
+                    config('flare.flare_middleware.'.AddQueries::class.'.trace_query_origin_threshold', 200)
                 );
             }
         );
@@ -193,6 +233,44 @@ class FlareServiceProvider extends ServiceProvider
         config()->set('error-share.enabled', config('flare.enable_share_button'));
     }
 
+    protected function registerSender(): void
+    {
+        $this->app->singleton(Sender::class, function (Application $app) {
+            $config = $app->make('config');
+
+            return $this->app->make(
+                $config->get('flare.sender'),
+            );
+        });
+    }
+
+    protected function registerSampler(): void
+    {
+        $this->app->singleton(Sampler::class, function (Application $app) {
+            $config = $app->make('config');
+
+            return $this->app->make(
+                $config->get('flare.performance.sampling.class'),
+                $config->get('flare.performance.sampling')
+            );
+        });
+    }
+
+    protected function registerBackTracer(): void
+    {
+        $this->app->singleton(BaseBackTracer::class, fn (Application $app) => $app->make(BackTracer::class));
+    }
+
+    protected function registerTracer(): void
+    {
+        $this->app->singleton(Tracer::class);
+    }
+
+    protected function registerTracingMiddleware(): void
+    {
+        $this->app->singleton(FlareTracingMiddleware::class);
+    }
+
     protected function startRecorders(): void
     {
         foreach ($this->app->config['flare.recorders'] ?? [] as $recorder) {
@@ -221,6 +299,15 @@ class FlareServiceProvider extends ServiceProvider
         });
 
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
+    }
+
+    protected function prependTracingMiddleware(): void
+    {
+        $kernel = $this->app->make(HttpKernelInterface::class);
+
+        if ($kernel instanceof HttpKernel) {
+            $kernel->prependMiddleware(FlareTracingMiddleware::class);
+        }
     }
 
     protected function getLogLevel(string $logLevelString): int

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\Http\Client;
 use Spatie\LaravelFlare\Support\SentReports;
 use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
 
@@ -11,14 +12,14 @@ beforeEach(function () {
     config()->set('logging.default', 'flare');
     config()->set('flare.key', 'some-key');
 
-    $this->fakeClient = new FakeClient();
+    $this->fakeClient = FakeClient::setup();
 
     $currentFlare = app()->make(Flare::class);
 
     $middleware = $currentFlare->getMiddleware();
 
     app()->singleton(Flare::class, function () use ($middleware) {
-        $flare = new Flare($this->fakeClient, null, []);
+        $flare = new Flare(app(Client::class), null, []);
 
         $flare->sendReportsImmediately();
 
@@ -91,7 +92,7 @@ it('adds log messages to the report', function () {
 
     $this->fakeClient->assertRequestsSent(1);
 
-    $arguments = $this->fakeClient->requests[0]['arguments'];
+    $arguments = $this->fakeClient->getLastPayload();
 
     $logs = $arguments['context']['logs'];
 
@@ -109,7 +110,7 @@ it('can report an exception with logs', function ($logLevel) {
 
     $this->get('/exception');
 
-    $arguments = $this->fakeClient->requests[0]['arguments'];
+    $arguments = $this->fakeClient->getLastPayload();
 
     $logs = $arguments['context']['logs'];
 
@@ -132,7 +133,7 @@ it('can report an exception with logs with metadata', function () {
 
     $this->get('/exception');
 
-    $arguments = $this->fakeClient->requests[0]['arguments'];
+    $arguments = $this->fakeClient->getLastPayload();
 
     $logs = $arguments['context']['logs'];
 

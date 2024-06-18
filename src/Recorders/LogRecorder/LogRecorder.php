@@ -4,27 +4,26 @@ namespace Spatie\LaravelFlare\Recorders\LogRecorder;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Log\Events\MessageLogged;
+use Spatie\FlareClient\Performance\Tracer;
+use SplObjectStorage;
 use Throwable;
 
 class LogRecorder
 {
-    /** @var \Spatie\LaravelFlare\Recorders\LogRecorder\LogMessage[] */
-    protected array $logMessages = [];
+    /** @var SplObjectStorage<LogMessageSpanEvent, string> */
+    protected SplObjectStorage $spanEvents;
 
-    protected Application $app;
-
-    protected ?int $maxLogs;
-
-    public function __construct(Application $app, ?int $maxLogs = null)
-    {
-        $this->app = $app;
-
-        $this->maxLogs = $maxLogs;
+    public function __construct(
+        protected Application $app,
+        protected Tracer $tracer,
+        protected ?int $maxLogs = 200,
+        protected bool $traceLogs = false,
+    ) {
+        $this->spanEvents = new SplObjectStorage();
     }
 
     public function start(): self
     {
-        /** @phpstan-ignore-next-line */
         $this->app['events']->listen(MessageLogged::class, [$this, 'record']);
 
         return $this;
@@ -36,26 +35,29 @@ class LogRecorder
             return;
         }
 
-        $this->logMessages[] = LogMessage::fromMessageLoggedEvent($event);
+        $event = LogMessageSpanEvent::fromMessageLoggedEvent($event);
 
-        if (is_int($this->maxLogs)) {
-            $this->logMessages = array_slice($this->logMessages, -$this->maxLogs);
+        if ($this->shouldTraceLogMessage()) {
+            $span = $this->tracer->currentSpan();
+
+            $span->addEvent($event);
+            $this->spanEvents->attach($event, $span->spanId);
+        } else {
+            $this->spanEvents->attach($event, '');
+        }
+
+        if ($this->maxLogs && count($this->spanEvents) > $this->maxLogs) {
+            $this->removeOldestSpanEvent();
         }
     }
 
     /** @return array<array<int,string>> */
     public function getLogMessages(): array
     {
-        return $this->toArray();
-    }
-
-    /** @return array<int, mixed> */
-    public function toArray(): array
-    {
         $logMessages = [];
 
-        foreach ($this->logMessages as $log) {
-            $logMessages[] = $log->toArray();
+        foreach ($this->spanEvents as $spanEvent) {
+            $logMessages[] = $spanEvent->toOriginalFlareFormat();
         }
 
         return $logMessages;
@@ -76,18 +78,37 @@ class LogRecorder
 
     public function reset(): void
     {
-        $this->logMessages = [];
+        $this->spanEvents = new SplObjectStorage();
     }
 
-    public function getMaxLogs(): ?int
+    protected function shouldTraceLogMessage(): bool
     {
-        return $this->maxLogs;
+        return $this->traceLogs
+            && $this->tracer->isSamping()
+            && $this->tracer->currentSpanId();
     }
 
-    public function setMaxLogs(?int $maxLogs): self
+    protected function removeOldestSpanEvent(): void
     {
-        $this->maxLogs = $maxLogs;
+        $this->spanEvents->rewind();
 
-        return $this;
+        if (! $this->spanEvents->valid()) {
+            return;
+        }
+
+        $spanEvent = $this->spanEvents->current();
+        $spanId = $this->spanEvents->getInfo();
+
+        $this->spanEvents->detach($spanEvent);
+
+        if (! $this->tracer->isSamping()) {
+            return;
+        }
+
+        $span = $this->tracer->traces[$this->tracer->currentTraceId()][$spanId] ?? null;
+
+        if ($span) {
+            $span->events->detach($spanEvent);
+        }
     }
 }

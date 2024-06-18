@@ -15,19 +15,27 @@
     ],
     "homepage": "https://flareapp.io/",
     "license": "MIT",
+    "repositories" : [{
+        "type": "path",
+        "url" : "../flare-client-php",
+        "options" : {
+            "symlink": true
+        }
+    }],
     "require": {
         "php": "^8.1",
         "ext-curl": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "illuminate/support": "^11.0",
-        "spatie/flare-client-php": "^1.7",
+        "spatie/flare-client-php": "@dev",
         "symfony/console": "^7.0",
         "symfony/var-dumper": "^7.0",
         "spatie/laravel-error-share": "^1.0",
         "spatie/error-solutions": "^1.0"
     },
     "require-dev": {
+        "dms/phpunit-arraysubset-asserts": "^0.5.0",
         "livewire/livewire": "^3.3.5",
         "mockery/mockery": "^1.5.1",
         "openai-php/client": "^0.8.1",
