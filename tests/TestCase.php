@@ -5,6 +5,8 @@ namespace Spatie\LaravelFlare\Tests;
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Illuminate\Http\Request;
 use Spatie\FlareClient\Glows\Glow;
+use Spatie\FlareClient\Performance\Spans\Span;
+use Spatie\FlareClient\Performance\Spans\SpanEvent;
 use Spatie\FlareClient\Report;
 use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\FlareServiceProvider;
@@ -43,7 +45,8 @@ class TestCase extends \Orchestra\Testbench\TestCase
         $fakeTime = new FakeTime($dateTime, $format);
 
         Report::useTime($fakeTime);
-        Glow::useTime($fakeTime);
+        Span::useTime($fakeTime);
+        SpanEvent::useTime($fakeTime);
     }
 
     public function createRequest($method, $uri, $parameters = [], $cookies = [], $files = [], $server = [], $content = null): Request

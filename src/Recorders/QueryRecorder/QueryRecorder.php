@@ -4,21 +4,25 @@ namespace Spatie\LaravelFlare\Recorders\QueryRecorder;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
+use Spatie\FlareClient\Concerns\RecordsSpanEvents;
+use Spatie\FlareClient\Concerns\RecordsSpans;
 use Spatie\FlareClient\Performance\Tracer;
+
 
 class QueryRecorder
 {
-    /** @var QuerySpan[] */
-    protected array $spans = [];
+    /**  @use RecordsSpans<QuerySpan> */
+    use RecordsSpans;
 
     public function __construct(
         protected Application $app,
         protected Tracer $tracer,
         protected bool $reportBindings = true,
-        protected ?int $maxQueries = 200,
+        ?int $maxQueries = 200,
         protected ?int $traceQueryOriginThreshold = 300,
     ) {
         $this->traceQueryOriginThreshold *= 1000_000; // Milliseconds to microseconds
+        $this->maxEntries = $maxQueries;
     }
 
     public function start(): self
@@ -30,17 +34,7 @@ class QueryRecorder
 
     public function record(QueryExecuted $queryExecuted): void
     {
-        $span = $this->buildSpan($queryExecuted);
-
-        $this->spans[] = $span;
-
-        if ($this->tracer->isSamping()) {
-            $this->tracer->addSpan($span);
-        }
-
-        if ($this->maxQueries && count($this->spans) > $this->maxQueries) {
-            $this->removeOldestSpan();
-        }
+        $this->persistSpan($this->buildSpan($queryExecuted));
     }
 
     /**
@@ -57,17 +51,6 @@ class QueryRecorder
         }
 
         return $queries;
-    }
-
-    /** @return QuerySpan[] */
-    public function getSpans(): array
-    {
-        return $this->spans;
-    }
-
-    public function reset(): void
-    {
-        $this->spans = [];
     }
 
     protected function buildSpan(QueryExecuted $queryExecuted): QuerySpan
@@ -102,18 +85,8 @@ class QueryRecorder
 
     protected function shouldTraceOrigins(int $duration): bool
     {
-        return $this->tracer->isSamping()
-            && $this->tracer->currentSpanId()
+        return $this->shouldTraceSpans()
             && $this->traceQueryOriginThreshold !== null
             && $duration >= $this->traceQueryOriginThreshold;
-    }
-
-    protected function removeOldestSpan(): void
-    {
-        $span = array_shift($this->spans);
-
-        if ($this->tracer->isSamping()) {
-            unset($this->tracer[$span->traceId][$span->spanId]);
-        }
     }
 }

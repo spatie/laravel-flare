@@ -42,8 +42,7 @@ class QuerySpan extends BaseQuerySpan
 
     public function toOriginalFlareFormat(): array
     {
-        return [
-            parent::toOriginalFlareFormat(),
+        return parent::toOriginalFlareFormat() + [
             'connection_name' => $this->connectionName,
         ];
     }

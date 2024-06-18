@@ -20,7 +20,10 @@ use Spatie\ErrorSolutions\SolutionProviderRepository;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareMiddleware\AddSolutions;
 use Spatie\FlareClient\Http\Client;
+use Spatie\FlareClient\Performance\Exporters\JsonExporter;
+use Spatie\FlareClient\Performance\Resources\Resource;
 use Spatie\FlareClient\Performance\Sampling\Sampler;
+use Spatie\FlareClient\Performance\Scopes\Scope;
 use Spatie\FlareClient\Performance\Support\BackTracer as BaseBackTracer;
 use Spatie\FlareClient\Performance\Tracer;
 use Spatie\FlareClient\Senders\Sender;
@@ -41,22 +44,23 @@ use Spatie\LaravelFlare\Support\FlareLogHandler;
 use Spatie\LaravelFlare\Support\SentReports;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
+use function Symfony\Component\Translation\t;
 
 class FlareServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
         $this->registerConfig();
+        $this->registerSampler();
+        $this->registerSender();
+        $this->registerBackTracer();
         $this->registerFlare();
         $this->registerSolutions();
         $this->registerRecorders();
         $this->registerLogHandler();
         $this->registerShareButton();
-        $this->registerSender();
 
-        $this->registerSampler();
-        $this->registerBackTracer();
-        $this->registerTracer();
+
 
         if (config('flare.performance.enabled') === false) {
             return;
@@ -110,15 +114,37 @@ class FlareServiceProvider extends ServiceProvider
 
     protected function registerFlare(): void
     {
+        $this->app->singleton(Client::class, function (){
+            return new Client(
+                apiToken: config('flare.key'),
+                baseUrl: config('flare.base_url', 'https://flareapp.io/api'),
+                timeout: config('flare.timeout', 10),
+                sender: $this->app->make(Sender::class)
+            );
+        });
+
+        $this->app->singleton(Tracer::class, function (){
+            return new Tracer(
+                client: app()->make(Client::class),
+                exporter: new JsonExporter(),
+                backTracer: app()->make(BackTracer::class),
+                resource: Resource::build(
+                    serviceName: config('app.name'),
+                    serviceVersion: config('app.version'),
+                ),
+                scope: Scope::build()
+            );
+        });
+
+
         $this->app->singleton(Flare::class, function () {
             $flare = new Flare(
-                client: app()->make(Client::class),
-                contextDetector: new LaravelContextProviderDetector(),
+                app()->make(Client::class),
+                app()->make(Tracer::class),
+                new LaravelContextProviderDetector()
             );
 
             return $flare
-                ->setApiToken(config('flare.key') ?? '')
-                ->setBaseUrl(config('flare.base_url', 'https://flareapp.io/api'))
                 ->applicationPath(base_path())
                 ->setStage(app()->environment())
                 ->registerMiddleware($this->getFlareMiddleware())
@@ -259,11 +285,6 @@ class FlareServiceProvider extends ServiceProvider
     protected function registerBackTracer(): void
     {
         $this->app->singleton(BaseBackTracer::class, fn (Application $app) => $app->make(BackTracer::class));
-    }
-
-    protected function registerTracer(): void
-    {
-        $this->app->singleton(Tracer::class);
     }
 
     protected function registerTracingMiddleware(): void

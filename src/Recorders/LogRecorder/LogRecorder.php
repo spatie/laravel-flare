@@ -4,22 +4,26 @@ namespace Spatie\LaravelFlare\Recorders\LogRecorder;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Log\Events\MessageLogged;
+use Spatie\FlareClient\Concerns\RecordsSpanEvents;
 use Spatie\FlareClient\Performance\Tracer;
+use Spatie\FlareClient\Recorders\GlowRecorder\GlowSpanEvent;
 use SplObjectStorage;
 use Throwable;
 
 class LogRecorder
 {
-    /** @var SplObjectStorage<LogMessageSpanEvent, string> */
-    protected SplObjectStorage $spanEvents;
+    /**  @use RecordsSpanEvents<LogMessageSpanEvent> */
+    use RecordsSpanEvents;
 
     public function __construct(
         protected Application $app,
         protected Tracer $tracer,
-        protected ?int $maxLogs = 200,
-        protected bool $traceLogs = false,
+        ?int $maxLogs = 200,
+        bool $traceLogs = false,
     ) {
-        $this->spanEvents = new SplObjectStorage();
+        $this->initializeStorage();
+        $this->maxEntries = $maxLogs;
+        $this->traceSpanEvents = $traceLogs;
     }
 
     public function start(): self
@@ -35,20 +39,9 @@ class LogRecorder
             return;
         }
 
-        $event = LogMessageSpanEvent::fromMessageLoggedEvent($event);
-
-        if ($this->shouldTraceLogMessage()) {
-            $span = $this->tracer->currentSpan();
-
-            $span->addEvent($event);
-            $this->spanEvents->attach($event, $span->spanId);
-        } else {
-            $this->spanEvents->attach($event, '');
-        }
-
-        if ($this->maxLogs && count($this->spanEvents) > $this->maxLogs) {
-            $this->removeOldestSpanEvent();
-        }
+        $this->persistSpanEvent(
+            LogMessageSpanEvent::fromMessageLoggedEvent($event)
+        );
     }
 
     /** @return array<array<int,string>> */
@@ -76,39 +69,4 @@ class LogRecorder
         return true;
     }
 
-    public function reset(): void
-    {
-        $this->spanEvents = new SplObjectStorage();
-    }
-
-    protected function shouldTraceLogMessage(): bool
-    {
-        return $this->traceLogs
-            && $this->tracer->isSamping()
-            && $this->tracer->currentSpanId();
-    }
-
-    protected function removeOldestSpanEvent(): void
-    {
-        $this->spanEvents->rewind();
-
-        if (! $this->spanEvents->valid()) {
-            return;
-        }
-
-        $spanEvent = $this->spanEvents->current();
-        $spanId = $this->spanEvents->getInfo();
-
-        $this->spanEvents->detach($spanEvent);
-
-        if (! $this->tracer->isSamping()) {
-            return;
-        }
-
-        $span = $this->tracer->traces[$this->tracer->currentTraceId()][$spanId] ?? null;
-
-        if ($span) {
-            $span->events->detach($spanEvent);
-        }
-    }
 }

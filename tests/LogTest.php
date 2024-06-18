@@ -14,21 +14,7 @@ beforeEach(function () {
 
     $this->fakeClient = FakeClient::setup();
 
-    $currentFlare = app()->make(Flare::class);
-
-    $middleware = $currentFlare->getMiddleware();
-
-    app()->singleton(Flare::class, function () use ($middleware) {
-        $flare = new Flare(app(Client::class), null, []);
-
-        $flare->sendReportsImmediately();
-
-        foreach ($middleware as $singleMiddleware) {
-            $flare->registerMiddleware($singleMiddleware);
-        }
-
-        return $flare;
-    });
+    $currentFlare = app()->make(Flare::class)->sendReportsImmediately();
 
     $this->useTime('2019-01-01 12:34:56');
 });
