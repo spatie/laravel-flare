@@ -22,12 +22,12 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionPro
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
+use Spatie\FlareClient\FlareMiddleware\AddDumps;
 use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
 use Spatie\FlareClient\FlareMiddleware\CensorRequestBodyFields;
 use Spatie\FlareClient\FlareMiddleware\CensorRequestHeaders;
 use Spatie\FlareClient\FlareMiddleware\RemoveRequestIp;
-use Spatie\LaravelFlare\FlareMiddleware\AddContext;
-use Spatie\LaravelFlare\FlareMiddleware\AddDumps;
+use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddEnvironmentInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
@@ -64,7 +64,7 @@ return [
     |
     */
 
-    'flare_middleware' => [
+    'middleware' => [
         RemoveRequestIp::class,
         AddGitInformation::class,
         AddNotifierName::class,
@@ -83,7 +83,7 @@ return [
         AddJobs::class => [
             'max_chained_job_reporting_depth' => 5,
         ],
-        AddContext::class,
+        AddLaravelContext::class,
         AddExceptionHandledStatus::class,
         CensorRequestBodyFields::class => [
             'censor_fields' => [
@@ -154,43 +154,6 @@ return [
         UnknownMariadbCollationSolutionProvider::class,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Ignored Solution Providers
-    |--------------------------------------------------------------------------
-    |
-    | You may specify a list of solution providers (as fully qualified class
-    | names) that shouldn't be loaded. Flare will ignore these classes
-    | and possible solutions provided by them will never be displayed.
-    |
-    */
-
-    'ignored_solution_providers' => [
-
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Recorders
-    |--------------------------------------------------------------------------
-    |
-    | Flare registers a couple of recorders when it is enabled. Below you may
-    | specify a recorders will be used to record specific events.
-    |
-    */
-
-    'recorders' => [
-        DumpRecorder::class,
-        JobRecorder::class,
-        LogRecorder::class,
-        QueryRecorder::class,
-    ],
-
-    /*
-     * When a key is set, we'll send your exceptions to Open AI to generate a solution
-     */
-
-    'open_ai_key' => env('FLARE_OPEN_AI_KEY'),
 
     /*
    |--------------------------------------------------------------------------

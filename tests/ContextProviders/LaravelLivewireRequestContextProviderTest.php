@@ -161,6 +161,7 @@ function createRequestContext(array $fingerprint, array $updates = [], array $se
         $providedRequest = $request;
     })->name('livewire.message');
 
+
     test()->postJson('livewire', [
         'fingerprint' => $fingerprint,
         'serverMemo' => $serverMemo,

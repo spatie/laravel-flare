@@ -6,10 +6,11 @@ use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Database\Events\QueryExecuted;
 use Spatie\FlareClient\Concerns\RecordsSpanEvents;
 use Spatie\FlareClient\Concerns\RecordsSpans;
+use Spatie\FlareClient\Contracts\Recorder;
 use Spatie\FlareClient\Performance\Tracer;
 
 
-class QueryRecorder
+class QueryRecorder implements Recorder
 {
     /**  @use RecordsSpans<QuerySpan> */
     use RecordsSpans;
@@ -17,19 +18,17 @@ class QueryRecorder
     public function __construct(
         protected Application $app,
         protected Tracer $tracer,
-        protected bool $reportBindings = true,
-        ?int $maxQueries = 200,
-        protected ?int $traceQueryOriginThreshold = 300,
+        protected bool $reportBindings,
+        ?int $maxQueries,
+        protected ?int $traceQueryOriginThreshold,
     ) {
         $this->traceQueryOriginThreshold *= 1000_000; // Milliseconds to microseconds
         $this->maxEntries = $maxQueries;
     }
 
-    public function start(): self
+    public function start(): void
     {
         $this->app['events']->listen(QueryExecuted::class, [$this, 'record']);
-
-        return $this;
     }
 
     public function record(QueryExecuted $queryExecuted): void

@@ -2,7 +2,9 @@
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Collection;
-use Spatie\LaravelFlare\Facades\Flare;
+use Spatie\Backtrace\Arguments\ArgumentReducers;
+use Spatie\FlareClient\Flare;
+use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeArgumentsReducer;
 
 beforeEach(function () {
@@ -15,7 +17,7 @@ it('can reduce a collection', function () {
         return new Exception('Whoops');
     }
 
-    $report = Flare::createReport(collectionException(collect(['a', 'b', 'nested' => ['c', 'd']])));
+    $report = app(Flare::class)->createReport(collectionException(collect(['a', 'b', 'nested' => ['c', 'd']])));
 
     expect($report->toArray()['stacktrace'][1]['arguments'][0])->toBe([
         'name' => 'collection',
@@ -36,7 +38,7 @@ it('can reduce a model', function () {
         return new Exception('Whoops');
     }
 
-    $report = Flare::createReport(userException($user));
+    $report = app(Flare::class)->createReport(userException($user));
 
     expect($report->toArray()['stacktrace'][1]['arguments'][0])->toBe([
         'name' => 'user',
@@ -54,9 +56,9 @@ it('can disable the use of arguments', function () {
         return new Exception('Whoops');
     }
 
-    config()->set('flare.with_stack_frame_arguments', false);
+    app(FlareConfig::class)->addStackFrameArguments(false);
 
-    $report = Flare::createReport(exceptionWithArgumentsDisabled('Hello World'));
+    $report = app(Flare::class)->createReport(exceptionWithArgumentsDisabled('Hello World'));
 
     expect($report->toArray()['stacktrace'][1]['arguments'])->toBeNull();
 });
@@ -67,11 +69,11 @@ it('can set a custom arguments reducer', function () {
         return new Exception('Whoops');
     }
 
-    config()->set('flare.argument_reducers', [
-        FakeArgumentsReducer::class,
-    ]);
+    app(FlareConfig::class)->setArgumentReducers(ArgumentReducers::create([
+        FakeArgumentsReducer::class
+    ]));
 
-    $report = Flare::createReport(exceptionWithCustomArgumentReducer('Hello World'));
+    $report = app(Flare::class)->createReport(exceptionWithCustomArgumentReducer('Hello World'));
 
     expect($report->toArray()['stacktrace'][1]['arguments'][0]['value'])->toBe('FAKE');
 });

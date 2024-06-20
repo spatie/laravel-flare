@@ -85,7 +85,7 @@ it('can trace a log message', function () {
 
     expect($span->events)->toHaveCount(1);
 
-    $event = $span->events->current();
+    $event = $span->events->getIterator()->key();
 
     expect($event)
         ->toBeInstanceOf(LogMessageSpanEvent::class)

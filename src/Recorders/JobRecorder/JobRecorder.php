@@ -15,23 +15,22 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionProperty;
 use RuntimeException;
+use Spatie\FlareClient\Contracts\Recorder;
 
-class JobRecorder
+class JobRecorder implements Recorder
 {
     protected ?Job $job = null;
 
     public function __construct(
         protected Application $app,
-        protected int $maxChainedJobReportingDepth = 5,
+        protected int $maxChainedJobReportingDepth,
     ) {
     }
 
-    public function start(): self
+    public function start(): void
     {
         /** @phpstan-ignore-next-line */
         $this->app['events']->listen(JobExceptionOccurred::class, [$this, 'record']);
-
-        return $this;
     }
 
     public function record(JobExceptionOccurred $event): void

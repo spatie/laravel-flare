@@ -5,12 +5,13 @@ namespace Spatie\LaravelFlare\Recorders\LogRecorder;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Log\Events\MessageLogged;
 use Spatie\FlareClient\Concerns\RecordsSpanEvents;
+use Spatie\FlareClient\Contracts\Recorder;
 use Spatie\FlareClient\Performance\Tracer;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowSpanEvent;
 use SplObjectStorage;
 use Throwable;
 
-class LogRecorder
+class LogRecorder implements Recorder
 {
     /**  @use RecordsSpanEvents<LogMessageSpanEvent> */
     use RecordsSpanEvents;
@@ -21,16 +22,13 @@ class LogRecorder
         ?int $maxLogs = 200,
         bool $traceLogs = false,
     ) {
-        $this->initializeStorage();
         $this->maxEntries = $maxLogs;
         $this->traceSpanEvents = $traceLogs;
     }
 
-    public function start(): self
+    public function start(): void
     {
         $this->app['events']->listen(MessageLogged::class, [$this, 'record']);
-
-        return $this;
     }
 
     public function record(MessageLogged $event): void

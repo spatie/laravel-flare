@@ -14,7 +14,7 @@ beforeEach(function () {
 
     $this->fakeClient = FakeClient::setup();
 
-    $currentFlare = app()->make(Flare::class)->sendReportsImmediately();
+    app()->make(Flare::class)->sendReportsImmediately();
 
     $this->useTime('2019-01-01 12:34:56');
 });

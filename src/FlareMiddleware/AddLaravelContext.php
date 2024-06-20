@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Context;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\Report;
 
-class AddContext implements FlareMiddleware
+class AddLaravelContext implements FlareMiddleware
 {
     public function handle(Report $report, Closure $next)
     {

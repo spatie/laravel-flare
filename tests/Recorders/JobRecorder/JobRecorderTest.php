@@ -10,7 +10,7 @@ use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
 
 it('can record a failed job', function () {
-    $recorder = (new JobRecorder(app()));
+    $recorder = (new JobRecorder(app(), maxChainedJobReportingDepth: 5));
 
     $recorder->record(createEvent(function () {
         dispatch(new QueueableJob([]));
@@ -27,7 +27,7 @@ it('can record a failed job', function () {
 });
 
 it('can record a failed job with data', function () {
-    $recorder = (new JobRecorder(app()));
+    $recorder = (new JobRecorder(app(), maxChainedJobReportingDepth: 5));
 
     $job = new QueueableJob([
         'int' => 42,
@@ -48,7 +48,7 @@ it('can record a failed job with data', function () {
 });
 
 it('can read specific properties from a job', function () {
-    $recorder = (new JobRecorder(app()));
+    $recorder = (new JobRecorder(app(), maxChainedJobReportingDepth: 5));
 
     $date = CarbonImmutable::create(2020, 05, 16, 12, 0, 0);
 
@@ -77,7 +77,7 @@ it('can read specific properties from a job', function () {
 });
 
 it('can record a closure job', function () {
-    $recorder = (new JobRecorder(app()));
+    $recorder = (new JobRecorder(app(), maxChainedJobReportingDepth: 5));
 
     $job = function () {
         throw new Exception('Die');
@@ -93,7 +93,7 @@ it('can record a closure job', function () {
 });
 
 it('can record a chained job', function () {
-    $recorder = (new JobRecorder(app()));
+    $recorder = (new JobRecorder(app(), maxChainedJobReportingDepth: 5));
 
     $recorder->record(createEvent(function () {
         dispatch(new QueueableJob(['level-one']))->chain([
@@ -163,7 +163,7 @@ it('can disable recording chained jobs', function () {
 });
 
 it('can handle a job with an unserializeable payload', function () {
-    $recorder = (new JobRecorder(app()));
+    $recorder = (new JobRecorder(app(), maxChainedJobReportingDepth: 5));
 
     $payload = json_encode([
         'job' => 'Fake Job Name',

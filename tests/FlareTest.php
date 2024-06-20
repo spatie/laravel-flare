@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
+use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Spatie\FlareClient\Api;
 use Spatie\FlareClient\Flare;
 use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
