@@ -2,56 +2,44 @@
 
 namespace Spatie\LaravelFlare\Recorders\LogRecorder;
 
-use Illuminate\Contracts\Foundation\Application;
+use Closure;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Log\Events\MessageLogged;
-use Spatie\FlareClient\Concerns\RecordsSpanEvents;
-use Spatie\FlareClient\Contracts\Recorder;
-use Spatie\FlareClient\Performance\Tracer;
-use Spatie\FlareClient\Recorders\GlowRecorder\GlowSpanEvent;
-use SplObjectStorage;
+use Psr\Container\ContainerInterface;
+use Spatie\FlareClient\Recorders\LogRecorder\LogMessageSpanEvent;
+use Spatie\FlareClient\Recorders\LogRecorder\LogRecorder as BaseLogRecorder;
+use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\Concerns\LaravelRegisteredRecorder;
+use Spatie\FlareClient\Support\BackTracer;
 use Throwable;
 
-class LogRecorder implements Recorder
+class LogRecorder extends BaseLogRecorder
 {
-    /**  @use RecordsSpanEvents<LogMessageSpanEvent> */
-    use RecordsSpanEvents;
-
     public function __construct(
-        protected Application $app,
-        protected Tracer $tracer,
-        ?int $maxLogs = 200,
-        bool $traceLogs = false,
+        Tracer $tracer,
+        BackTracer $backTracer,
+        protected Dispatcher $dispatcher,
+        ?array $config = null
     ) {
-        $this->maxEntries = $maxLogs;
-        $this->traceSpanEvents = $traceLogs;
+        parent::__construct($tracer, $backTracer, $config);
     }
 
     public function start(): void
     {
-        $this->app['events']->listen(MessageLogged::class, [$this, 'record']);
+        $this->dispatcher->listen(MessageLogged::class, fn (MessageLogged $event) => $this->recordEvent($event));
     }
 
-    public function record(MessageLogged $event): void
+    public function recordEvent(MessageLogged $event): ?LogMessageSpanEvent
     {
         if ($this->shouldIgnore($event)) {
-            return;
+            return null;
         }
 
-        $this->persistSpanEvent(
-            LogMessageSpanEvent::fromMessageLoggedEvent($event)
+        return $this->record(
+            $event->message,
+            $event->level,
+            $event->context,
         );
-    }
-
-    /** @return array<array<int,string>> */
-    public function getLogMessages(): array
-    {
-        $logMessages = [];
-
-        foreach ($this->spanEvents as $spanEvent) {
-            $logMessages[] = $spanEvent->toOriginalFlareFormat();
-        }
-
-        return $logMessages;
     }
 
     protected function shouldIgnore(mixed $event): bool
@@ -66,5 +54,4 @@ class LogRecorder implements Recorder
 
         return true;
     }
-
 }

@@ -5,12 +5,14 @@ namespace Spatie\LaravelFlare\FlareMiddleware;
 use Closure;
 use Illuminate\Log\Context\Repository;
 use Illuminate\Support\Facades\Context;
+use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\Report;
+use Spatie\FlareClient\ReportFactory;
 
 class AddLaravelContext implements FlareMiddleware
 {
-    public function handle(Report $report, Closure $next)
+    public function handle(ReportFactory $report, Closure $next)
     {
         if (! class_exists(Repository::class)) {
             return $next($report);
@@ -19,7 +21,7 @@ class AddLaravelContext implements FlareMiddleware
         $allContext = Context::all();
 
         if (count($allContext)) {
-            $report->group('laravel_context', $allContext);
+            $report->addAttribute('context.laravel', $allContext);
         }
 
         return $next($report);

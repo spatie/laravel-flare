@@ -22,23 +22,32 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionPro
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
+use Spatie\FlareClient\Enums\SpanEventType;
+use Spatie\FlareClient\FlareMiddleware\AddConsoleInformation;
 use Spatie\FlareClient\FlareMiddleware\AddDumps;
 use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
+use Spatie\FlareClient\FlareMiddleware\AddRequestInformation;
 use Spatie\FlareClient\FlareMiddleware\CensorRequestBodyFields;
 use Spatie\FlareClient\FlareMiddleware\CensorRequestHeaders;
 use Spatie\FlareClient\FlareMiddleware\RemoveRequestIp;
-use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
-use Spatie\LaravelFlare\FlareMiddleware\AddEnvironmentInformation;
+use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
+use Spatie\FlareClient\Recorders\ExceptionRecorder\ExceptionRecorder;
+use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
+use Spatie\FlareClient\Time\Duration;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddFailedJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobs;
+use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
+use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
 use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
 use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
-use Spatie\LaravelFlare\Recorders\DumpRecorder\DumpRecorder;
-use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
+use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
+use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
+use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 
 return [
     /*
@@ -65,34 +74,12 @@ return [
     */
 
     'middleware' => [
-        RemoveRequestIp::class,
-        AddGitInformation::class,
-        AddNotifierName::class,
-        AddEnvironmentInformation::class,
-        AddExceptionInformation::class,
-        AddDumps::class,
-        AddLogs::class => [
-            'maximum_number_of_collected_logs' => 200,
-            'trace_logs' => false,
-        ],
-        AddQueries::class => [
-            'maximum_number_of_collected_queries' => 200,
-            'report_query_bindings' => true,
-            'trace_query_origin_threshold' => 300
-        ],
-        AddJobs::class => [
-            'max_chained_job_reporting_depth' => 5,
-        ],
-        AddLaravelContext::class,
-        AddExceptionHandledStatus::class,
-        CensorRequestBodyFields::class => [
-            'censor_fields' => [
+        AddRequestInformation::class => [
+            'censor_body_fields' => [
                 'password',
                 'password_confirmation',
             ],
-        ],
-        CensorRequestHeaders::class => [
-            'headers' => [
+            'censor_request_headers' => [
                 'API-KEY',
                 'Authorization',
                 'Cookie',
@@ -100,6 +87,58 @@ return [
                 'X-CSRF-TOKEN',
                 'X-XSRF-TOKEN',
             ],
+            'remove_ip' => false,
+        ],
+        AddFailedJobInformation::class => [],
+        AddConsoleInformation::class => [],
+        AddGitInformation::class => [],
+        AddLaravelInformation::class => [],
+        AddExceptionInformation::class => [],
+        AddLaravelContext::class => [],
+        AddExceptionHandledStatus::class => [],
+    ],
+
+    'recorders' => [
+        CacheRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
+            'events' => [SpanEventType::CacheHit, SpanEventType::CacheMiss, SpanEventType::CacheKeyWritten, SpanEventType::CacheKeyForgotten],
+        ],
+        DumpRecorder::class => [
+            'trace' => false,
+            'report' => true,
+            'max_reported' => 25,
+            'find_dump_origin' => true,
+        ],
+        ExceptionRecorder::class => [
+            'trace' => true,
+        ],
+        GlowRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
+        ],
+        FailedJobRecorder::class => [
+            'report' => true,
+        ],
+        LogRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
+        ],
+        QueryRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
+            'include_bindings' => true,
+            'find_origin' => true,
+            'find_origin_threshold' => Duration::milliseconds(700),
+        ],
+        TransactionRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
         ],
     ],
 
@@ -218,15 +257,28 @@ return [
 
     'enable_share_button' => true,
 
-    // TODO: add some headers and other stuff
+    'sender' => [
+        'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
+        'config' => [],
+    ],
 
-    'sender' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
 
-    'performance' => [
+    'tracing' => [
         'enabled' => true,
-        'sampling' => [
-            'class' => \Spatie\FlareClient\Performance\Sampling\RateSampler::class,
-            'rate' => 1,
+
+        'limits' => [
+            'maxSpans' => 512,
+            'maxAttributesPerSpan' => 128,
+            'maxSpanEventsPerSpan' => 128,
+            'maxAttributesPerSpanEvent' => 128,
+        ],
+
+        'sampler' => [
+            'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
+            'config' => [
+                'rate' => 1,
+            ],
         ],
     ],
+
 ];

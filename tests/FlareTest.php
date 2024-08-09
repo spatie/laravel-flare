@@ -5,11 +5,14 @@ use Illuminate\Support\Facades\View;
 use Orchestra\Testbench\Attributes\DefineEnvironment;
 use Spatie\FlareClient\Api;
 use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\Tests\Shared\FakeTime;
+use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
+
+uses(ConfigureFlare::class);
 
 beforeEach(function () {
-    $this->fakeClient = FakeClient::setUp();
-
     Artisan::call('view:clear');
 
     app()['config']['logging.channels.flare'] = [
@@ -20,15 +23,15 @@ beforeEach(function () {
     config()->set('logging.default', 'flare');
     config()->set('flare.key', 'some-key');
 
-    $this->useTime('2019-01-01 12:34:56');
+    FakeTime::setup('2019-01-01 12:34:56');
 
     View::addLocation(__DIR__.'/stubs/views');
 });
 
 it('can manually report exceptions', function () {
-    \Spatie\LaravelFlare\Facades\Flare::sendReportsImmediately();
+    $flare = setupFlare();
 
-    \Spatie\LaravelFlare\Facades\Flare::report(new Exception());
+    $flare->report(new Exception());
 
-    $this->fakeClient->assertRequestsSent(1);
+    FakeSender::instance()->assertRequestsSent(1);
 });

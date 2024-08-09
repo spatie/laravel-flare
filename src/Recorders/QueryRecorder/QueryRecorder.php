@@ -2,90 +2,50 @@
 
 namespace Spatie\LaravelFlare\Recorders\QueryRecorder;
 
-use Illuminate\Contracts\Foundation\Application;
+use Closure;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Events\Dispatcher;
+use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\Concerns\RecordsSpanEvents;
 use Spatie\FlareClient\Concerns\RecordsSpans;
 use Spatie\FlareClient\Contracts\Recorder;
-use Spatie\FlareClient\Performance\Tracer;
+use Spatie\FlareClient\Recorders\QueryRecorder\QueryRecorder as BaseQueryRecorder;
+use Spatie\FlareClient\Recorders\QueryRecorder\QuerySpan;
+use Spatie\FlareClient\Time\Duration;
+use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\Concerns\LaravelRegisteredRecorder;
+use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\FlareClient\Support\BackTracer;
 
 
-class QueryRecorder implements Recorder
+class QueryRecorder extends BaseQueryRecorder
 {
-    /**  @use RecordsSpans<QuerySpan> */
-    use RecordsSpans;
-
     public function __construct(
-        protected Application $app,
-        protected Tracer $tracer,
-        protected bool $reportBindings,
-        ?int $maxQueries,
-        protected ?int $traceQueryOriginThreshold,
+        Tracer $tracer,
+        BackTracer $backTracer,
+        protected Dispatcher $dispatcher,
+        ?array $config = null,
     ) {
-        $this->traceQueryOriginThreshold *= 1000_000; // Milliseconds to microseconds
-        $this->maxEntries = $maxQueries;
+        parent::__construct($tracer, $backTracer, $config);
     }
 
     public function start(): void
     {
-        $this->app['events']->listen(QueryExecuted::class, [$this, 'record']);
+        $this->dispatcher->listen(QueryExecuted::class, [$this, 'recordEvent']);
     }
 
-    public function record(QueryExecuted $queryExecuted): void
+    public function recordEvent(QueryExecuted $event): ?QuerySpan
     {
-        $this->persistSpan($this->buildSpan($queryExecuted));
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    public function getQueries(): array
-    {
-        // TODO: maybe embrace the span format for error reporting
-
-        $queries = [];
-
-        foreach ($this->spans as $query) {
-            $queries[] = $query->toOriginalFlareFormat();
-        }
-
-        return $queries;
-    }
-
-    protected function buildSpan(QueryExecuted $queryExecuted): QuerySpan
-    {
-        $isSampling = $this->tracer->isSamping();
-
-        $duration = $queryExecuted->time * 1000_000;
-
-        $span = new QuerySpan(
-            traceId: $isSampling ? $this->tracer->currentTraceId() : '',
-            parentSpanId: $isSampling ? $this->tracer->currentSpanId() : '',
-            sql: $queryExecuted->sql,
-            duration: $duration,
-            bindings: $this->reportBindings ? $queryExecuted->bindings : null,
-            databaseName: $queryExecuted->connection->getDatabaseName(),
-            driverName: $queryExecuted->connection->getDriverName(),
-            connectionName: $queryExecuted->connectionName,
+        return $this->record(
+            $event->sql,
+            Duration::milliseconds($event->time),
+            $event->bindings,
+            $event->connection->getDatabaseName(),
+            $event->connection->getDriverName(),
+            SpanType::Query,
+            [
+                'laravel.db.connection' => $event->connectionName,
+            ]
         );
-
-        if (! $this->shouldTraceOrigins($duration)) {
-            return $span;
-        }
-
-        $frame = $this->tracer->backTracer->firstApplicationFrame(20);
-
-        if ($frame) {
-            $span->setOriginFrame($frame);
-        }
-
-        return $span;
-    }
-
-    protected function shouldTraceOrigins(int $duration): bool
-    {
-        return $this->shouldTraceSpans()
-            && $this->traceQueryOriginThreshold !== null
-            && $duration >= $this->traceQueryOriginThreshold;
     }
 }

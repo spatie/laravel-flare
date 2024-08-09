@@ -6,29 +6,29 @@ use Spatie\LaravelFlare\Facades\Flare;
 it('will add query information with a query exception', function () {
     $sql = 'select * from users where emai = "ruben@spatie.be"';
 
-    $report = Flare::createReport(new QueryException(
+    $report = Flare::report(new QueryException(
         'default',
         '' . $sql . '',
         [],
         new Exception()
     ));
 
-    $context = $report->toArray()['context'];
+    $attributes = $report->toArray()['attributes'];
 
-    $this->assertArrayHasKey('exception', $context);
-    expect($context['exception']['raw_sql'])->toBe($sql);
+    $this->assertArrayHasKey('exception.db.statement', $attributes);
+    expect($attributes['exception.db.statement'])->toBe($sql);
 });
 
 it('wont add query information without a query exception', function () {
-    $report = Flare::createReport(new Exception());
+    $report = Flare::report(new Exception());
 
-    $context = $report->toArray()['context'];
+    $attributes = $report->toArray()['attributes'];
 
-    $this->assertArrayNotHasKey('exception', $context);
+    $this->assertArrayNotHasKey('exception.db.statement', $attributes);
 });
 
 it('will add user context when provided on a custom exception', function () {
-    $report = Flare::createReport(new class extends Exception {
+    $report = Flare::report(new class extends Exception {
         public function context()
         {
             return [
@@ -37,13 +37,13 @@ it('will add user context when provided on a custom exception', function () {
         }
     });
 
-    $context = $report->toArray()['context'];
+    $context = $report->toArray()['attributes']['context.user'];
 
-    expect($context['exception']['hello'])->toBe('world');
+    expect($context['hello'])->toBe('world');
 });
 
 it('will only add arrays as user provided context', function () {
-    $report = Flare::createReport(new class extends Exception {
+    $report = Flare::report(new class extends Exception {
         public function context()
         {
             return (object) [
@@ -52,7 +52,5 @@ it('will only add arrays as user provided context', function () {
         }
     });
 
-    $context = $report->toArray()['context'];
-
-    expect($context)->not()->toHaveKey('context');
+    expect($report->toArray()['attributes'])->not()->toHaveKey('context');
 });

@@ -2,9 +2,11 @@
 
 namespace Spatie\LaravelFlare\Facades;
 
+use Closure;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
+use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Support\SentReports;
 use Throwable;
 
@@ -22,8 +24,26 @@ class Flare extends Facade
         return FlareClient::class;
     }
 
-    public static function handles(Exceptions $exceptions): void
+    /**
+     * @param Exceptions $exceptions
+     * @param Closure(FlareConfig): void $configure
+     *
+     * @return void
+     */
+    public static function handles(Exceptions $exceptions, ?Closure $configure = null): void
     {
+        if ($configure !== null) {
+            app()->singleton(FlareConfig::class, function () use ($configure) {
+                $config = FlareConfig::make(
+                    env('FLARE_KEY'),
+                );
+
+                $configure($config);
+
+                return $config;
+            });
+        }
+
         $exceptions->reportable(static function (Throwable $exception): FlareClient {
             $flare = app(FlareClient::class);
 
@@ -31,10 +51,5 @@ class Flare extends Facade
 
             return $flare;
         });
-    }
-
-    public static function sentReports(): SentReports
-    {
-        return app(SentReports::class);
     }
 }

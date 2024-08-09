@@ -11,7 +11,7 @@ it('can see when an exception is handled, meaning it is reported', function () {
 
         public function report(Throwable $e)
         {
-            self::$report = Flare::createReport($e);
+            self::$report = Flare::report($e);
         }
     };
 
@@ -29,7 +29,7 @@ it('can see when an exception is handled, meaning it is reported', function () {
 it('will not mark an exception handled when it is not', function () {
     $someTriggeredException = new Exception('This is a test exception');
 
-    $report = Flare::createReport($someTriggeredException);
+    $report = Flare::report($someTriggeredException);
 
     expect($report->toArray())->toHaveKey('handled', null);
 });

@@ -2,176 +2,272 @@
 
 namespace Spatie\LaravelFlare;
 
-use Spatie\Backtrace\Arguments\ArgumentReducers;
+use Monolog\Level;
+use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
+use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
+use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
-use Spatie\FlareClient\FlareMiddleware\AddDumps;
-use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
-use Spatie\FlareClient\FlareMiddleware\CensorRequestBodyFields;
-use Spatie\FlareClient\FlareMiddleware\CensorRequestHeaders;
-use Spatie\FlareClient\FlareMiddleware\RemoveRequestIp;
-use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
-use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
-use Spatie\LaravelFlare\ContextProviders\LaravelContextProviderDetector;
-use Spatie\LaravelFlare\FlareMiddleware\AddEnvironmentInformation;
+use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
+use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
+use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddJobs;
+use Spatie\LaravelFlare\FlareMiddleware\AddFailedJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
-use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
-use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
-use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
+use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
+use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
+use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
+use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
+use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
+use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
+use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
+use Spatie\LaravelFlare\Support\FlareLogHandler;
 
 class FlareConfig extends BaseFlareConfig
 {
-    protected bool $sendLogsAsEvents = true;
+    public bool $sendLogsAsEvents = true;
+
+    public Level $minimumReportLogLevel = Level::Error;
 
     public static function fromLaravelConfig(): self
     {
-        $argumentReducers = ArgumentReducers::create(config(
-            'flare.argument_reducers', ArgumentReducers::default([
-            CollectionArgumentReducer::class,
-            ModelArgumentReducer::class,
-        ])));
+        $argumentReducers = config()->has('flare.argument_reducers') ? ArgumentReducers::create(
+            config('flare.argument_reducers')
+        ) : ArgumentReducers::default();
 
         $config = new self(
             apiToken: config('flare.key'),
             baseUrl: config('flare.base_url', 'https://flareapp.io/api'),
             timeout: config('flare.timeout', 10),
+            middleware: config('flare.middleware'),
+            recorders: config('flare.recorders'),
             applicationPath: base_path(),
-            contextProviderDetector: LaravelContextProviderDetector::class,
             applicationName: config('app.name'),
             applicationStage: app()->environment(),
             argumentReducers: $argumentReducers,
-            withStackFrameArguments: config('flare.with_stack_frame_arguments', true),
-            forcePHPStackFrameArgumentsIniSetting: config('flare.force_php_stack_frame_arguments_ini_setting', true),
-            sender: config('flare.sender'),
-            solutionsProviders: config('flare.solution_providers', []),
+            withStackFrameArguments: config('flare.with_stack_frame_arguments'),
+            forcePHPStackFrameArgumentsIniSetting: config('flare.force_stack_frame_arguments_ini_setting'),
+            sender: config('flare.sender.class'),
+            senderConfig: config('flare.sender.config', []),
+            solutionsProviders: config('flare.solution_providers'),
+            trace: config('flare.tracing.enabled'),
+            sampler: config('flare.tracing.sampler.class'),
+            samplerConfig: config('flare.tracing.sampler.config'),
         );
 
-        foreach (config('flare.middleware') as $key => $value) {
-            [$middleware, $options] = match (true) {
-                is_numeric($key) && is_string($value) => [$value, []],
-                is_string($key) && is_array($value) => [$key, $value],
-                default => [null, null],
-            };
+        $config->sendLogsAsEvents = config('flare.send_logs_as_events', true);
+        $config->minimumReportLogLevel = config()->has('logging.channels.flare.level')
+            ? FlareLogHandler::logLevelFromName(config('logging.channels.flare.level'))
+            : Level::Error;
 
-            match ($middleware) {
-                RemoveRequestIp::class => $config->removeRequestIp(),
-                AddGitInformation::class => $config->addGitInfo(),
-                AddEnvironmentInformation::class => $config->addEnvironmentInfo(),
-                AddNotifierName::class => $config->addNotifierName(),
-                AddExceptionInformation::class => $config->addExceptionInfo(),
-                AddLogs::class => $config->addLogs(
-                    maxLogs: $options['maximum_number_of_collected_logs'] ?? 200,
-                    traceLogs: $options['trace_logs'] ?? false,
-                ),
-                AddDumps::class => $config->addDumps(
-                    maxDumps: $options['maximum_number_of_collected_dump'] ?? 200,
-                    traceDumps: $options['trace_dumps'] ?? false,
-                    traceDumpOrigins: $options['trace_dump_origins'] ?? false,
-                ),
-                AddQueries::class => $config->addQueries(
-                    reportQueryBindings: $options['report_query_bindings'] ?? true,
-                    maximumNumberOfCollectedQueries: $options['maximum_number_of_collected_queries'] ?? 200,
-                    traceQueryOriginThreshold: $options['trace_query_origin_threshold'] ?? 300,
-                ),
-                AddJobs::class => $config->addJobs(
-                    maxChainedJobReportingDepth: $options['max_chained_job_reporting_depth'] ?? 5,
-                ),
-                AddLaravelContext::class => $config->addLaravelContext(),
-                AddExceptionHandledStatus::class => $config->addExceptionHandledStatus(),
-                CensorRequestBodyFields::class => $config->censorRequestBodyFields(
-                    fieldNames: $options['censor_fields'] ?? ['password', 'password_confirmation'],
-                ),
-                CensorRequestHeaders::class => $config->censorRequestHeaders(
-                    headers: $options['headers'] ?? [
-                        'API-KEY',
-                        'Authorization',
-                        'Cookie',
-                        'Set-Cookie',
-                        'X-CSRF-TOKEN',
-                        'X-XSRF-TOKEN',
-                    ],
-                ),
-                default => $config->middleware(new $middleware($options)),
-            };
-        }
+        // TODO: Enable share button
+        // TODO: application version
+        //TODO: report Error Levels
+
 
         return $config;
     }
 
-    public function sendLogsAsEvents(bool $sendLogsAsEvents = true): static
+    public function useDefaults(): static
     {
+        return $this
+            // flare-php-client
+            ->dumps()
+            ->requestInfo()
+            ->gitInfo()
+            ->glows()
+            ->solutions()
+            ->stackFrameArguments()
+            // laravel-flare
+            ->sendLogsAsEvents()
+            ->livewireComponents()
+            ->laravelInfo()
+            ->laravelContext()
+            ->exceptionInfo()
+            ->failedJobInfo()
+            ->addExceptionHandledStatus()
+            ->cacheEvents()
+            ->logs()
+            ->queries()
+            ->commands()
+            ->transactions();
+    }
+
+    public function sendLogsAsEvents(
+        bool $sendLogsAsEvents = true,
+        Level $minimumReportLogLevel = Level::Error
+    ): static {
         $this->sendLogsAsEvents = $sendLogsAsEvents;
+        $this->minimumReportLogLevel = $minimumReportLogLevel;
 
         return $this;
     }
 
-    public function addNotifierName(): static
-    {
-        $this->middleware(new AddNotifierName());
-
-        return $this;
-    }
-
-    public function addEnvironmentInfo(): static
-    {
-        $this->middleware(new AddEnvironmentInformation());
-
-        return $this;
-    }
-
-    public function addExceptionInfo(): static
-    {
-        $this->middleware(new AddExceptionInformation());
-
-        return $this;
-    }
-
-    public function addLogs(
-        int $maxLogs = 200,
-        bool $traceLogs = false
+    public function requestInfo(
+        array $censorBodyFields = ['password', 'password_confirmation'],
+        array $censorRequestHeaders = [
+            'API-KEY',
+            'Authorization',
+            'Cookie',
+            'Set-Cookie',
+            'X-CSRF-TOKEN',
+            'X-XSRF-TOKEN',
+        ], bool $removeRequestIp = false,
+        string $middleware = AddRequestInformation::class,
     ): static {
-        $this->middleware(new AddLogs(
-            maxLogs: $maxLogs,
-            traceLogs: $traceLogs,
-        ));
+        parent::requestInfo(
+            censorBodyFields: $censorBodyFields,
+            censorRequestHeaders: $censorRequestHeaders,
+            removeRequestIp: $removeRequestIp,
+            middleware: $middleware,
+        );
 
         return $this;
     }
 
-    public function addQueries(
-        bool $reportQueryBindings = true,
-        int $maximumNumberOfCollectedQueries = 200,
-        int $traceQueryOriginThreshold = 300
+    public function livewireComponents(
+        bool $includeLivewireComponents = true,
+        string $middleware = AddRequestInformation::class
     ): static {
-        $this->middleware(new AddQueries(
-            reportBindings: $reportQueryBindings,
-            maxQueries: $maximumNumberOfCollectedQueries,
-            traceQueryOriginThreshold: $traceQueryOriginThreshold,
-        ));
+        if (! array_key_exists($middleware, $this->middleware)) {
+            $this->middleware[$middleware] = [];
+        }
+
+        $this->middleware[$middleware] += [
+            'include_livewire_components' => $includeLivewireComponents,
+        ];
 
         return $this;
     }
 
-    public function addJobs(
-        int $maxChainedJobReportingDepth = 5
+    public function consoleInfo(string $middleware = AddConsoleInformation::class): static
+    {
+        parent::consoleInfo(middleware: $middleware);
+
+        return $this;
+    }
+
+    public function laravelInfo(
+        string $middleware = AddLaravelInformation::class
     ): static {
-        $this->middleware(new AddJobs($maxChainedJobReportingDepth));
+        $this->middleware[$middleware] = [];
 
         return $this;
     }
 
-    public function addLaravelContext(): static
-    {
-        $this->middleware(new AddLaravelContext());
+    public function laravelContext(
+        string $middleware = AddLaravelContext::class
+    ): static {
+        $this->middleware[$middleware] = [];
 
         return $this;
     }
 
-    public function addExceptionHandledStatus(): static
-    {
-        $this->middleware(new AddExceptionHandledStatus());
+    public function exceptionInfo(
+        string $middleware = AddExceptionInformation::class
+    ): static {
+        $this->middleware[$middleware] = [];
+
+        return $this;
+    }
+
+    public function failedJobInfo(
+        int $maxChainedJobReportingDepth = 5,
+        string $middleware = AddFailedJobInformation::class,
+        string $recorder = FailedJobRecorder::class
+    ): static {
+        $this->recorders[$recorder] = [
+            'max_chained_job_reporting_depth' => $maxChainedJobReportingDepth,
+        ];
+
+        $this->middleware[$middleware] = [];
+
+        return $this;
+    }
+
+    public function addExceptionHandledStatus(
+        string $middleware = AddExceptionHandledStatus::class
+    ): static {
+        $this->middleware[$middleware] = [];
+
+        return $this;
+    }
+
+    public function cacheEvents(
+        bool $trace = true,
+        bool $report = true,
+        ?int $maxReported = 100,
+        array $events = [SpanEventType::CacheHit, SpanEventType::CacheMiss, SpanEventType::CacheKeyWritten, SpanEventType::CacheKeyForgotten],
+        string $recorder = CacheRecorder::class,
+    ): static {
+        parent::cacheEvents($trace, $report, $maxReported, $events, $recorder);
+
+        return $this;
+    }
+
+    public function logs(
+        bool $trace = true,
+        bool $report = true,
+        ?int $maxReported = 10,
+        string $recorder = LogRecorder::class
+    ): static {
+        parent::logs($trace, $report, $maxReported, $recorder);
+
+        return $this;
+    }
+
+    public function queries(
+        bool $trace = true,
+        bool $report = true,
+        ?int $maxReported = 100,
+        bool $includeBindings = true,
+        bool $findOrigin = true,
+        ?int $findOriginThreshold = 300_000,
+        string $recorder = QueryRecorder::class,
+    ): static {
+        parent::queries($trace, $report, $maxReported, $includeBindings, $findOrigin, $findOriginThreshold, $recorder);
+
+        return $this;
+    }
+
+    public function transactions(
+        bool $trace = true,
+        bool $report = true,
+        ?int $maxReported = 100,
+        string $recorder = TransactionRecorder::class
+    ): static {
+        parent::transactions($trace, $report, $maxReported, $recorder);
+
+        return $this;
+    }
+
+    public function stackFrameArguments(
+        bool $withStackFrameArguments = true,
+        BackTraceArgumentReducers|array|string|ArgumentReducer|null $argumentReducers = null,
+        bool $forcePHPIniSetting = true
+    ): static {
+        if ($argumentReducers === null) {
+            $argumentReducers = ArgumentReducers::default();
+        }
+
+        return parent::stackFrameArguments(
+            $withStackFrameArguments,
+            $argumentReducers,
+            $forcePHPIniSetting
+        );
+    }
+
+    public function commands(
+        bool $trace = true,
+        bool $report = true,
+        string $recorder = CommandRecorder::class
+    ): static {
+        $this->recorders[$recorder] = [
+            'trace' => $trace,
+            'report' => $report,
+            'max_reported' => null,
+        ];
 
         return $this;
     }

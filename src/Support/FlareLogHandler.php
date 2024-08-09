@@ -2,106 +2,63 @@
 
 namespace Spatie\LaravelFlare\Support;
 
-use InvalidArgumentException;
+use Exception;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
-use Monolog\Logger;
 use Monolog\LogRecord;
 use Spatie\FlareClient\Flare;
-use Spatie\FlareClient\Report;
-use Throwable;
+use Spatie\FlareClient\ReportFactory;
+use Spatie\LaravelFlare\Exceptions\InvalidConfig;
 
 class FlareLogHandler extends AbstractProcessingHandler
 {
-    protected Flare $flare;
-
-    protected SentReports $sentReports;
-
-    protected int $minimumReportLogLevel;
-
-    public function __construct(Flare $flare, SentReports $sentReports, $level = Level::Debug, $bubble = true)
+    public static function logLevelFromName(?string $logLevelString): Level
     {
-        $this->flare = $flare;
-
-        $this->minimumReportLogLevel = Level::Error->value;
-
-        $this->sentReports = $sentReports;
-
-        parent::__construct($level, $bubble);
-    }
-
-    public function setMinimumReportLogLevel(int $level): void
-    {
-        if (! in_array($level, Level::VALUES)) {
-            throw new InvalidArgumentException('The given minimum log level is not supported.');
+        try {
+            $logLevel = Level::fromName($logLevelString);
+        } catch (Exception) {
+            throw InvalidConfig::invalidLogLevel($logLevelString);
         }
 
-        $this->minimumReportLogLevel = $level;
+        return $logLevel;
+    }
+
+    public function __construct(
+        protected Flare $flare,
+        protected Level $minimumReportLogLevel,
+        protected bool $traceOrigins = false,
+        Level $handlingLevel = Level::Debug,
+        bool $bubble = true
+    ) {
+        parent::__construct($handlingLevel, $bubble);
     }
 
     protected function write(LogRecord $record): void
     {
-        if (! $this->shouldReport($record->toArray())) {
-            return;
-        }
-        if ($this->hasException($record->toArray())) {
-            $report = $this->flare->report($record['context']['exception']);
-
-            if ($report) {
-                $this->sentReports->add($report);
-            }
-
+        if ($record->level->isLowerThan($this->minimumReportLogLevel)) {
             return;
         }
 
-        if (config('flare.send_logs_as_events')) {
-            if ($this->hasValidLogLevel($record->toArray())) {
-                $this->flare->reportMessage(
-                    $record['message'],
-                    'Log ' . Logger::toMonologLevel($record['level'])->getName(),
-                    function (Report $flareReport) use ($record) {
-                        foreach ($record['context'] as $key => $value) {
-                            $flareReport->context($key, $value);
-                        }
-                    }
+        if(array_key_exists('exception', $record['context'])) {
+            return;
+        }
+
+        $this->flare->reportMessage(
+            $record->message,
+            "Log {$record->level->name}",
+            function (ReportFactory $flareReport) use ($record) {
+                $flareReport->context($record['context']);
+
+                if ($this->traceOrigins === false) {
+                    return;
+                }
+
+                $this->flare->backTracer->setFrameAsAttributes(
+                    $this->flare->backTracer->firstApplicationFrame(20),
+                    $flareReport
                 );
             }
-        }
-    }
-
-    /**
-     * @param array<string, mixed> $report
-     *
-     * @return bool
-     */
-    protected function shouldReport(array $report): bool
-    {
-        if (! config('flare.key')) {
-            return false;
-        }
-
-        return $this->hasException($report) || $this->hasValidLogLevel($report);
-    }
-
-    /**
-     * @param array<string, mixed> $report
-     *
-     * @return bool
-     */
-    protected function hasException(array $report): bool
-    {
-        $context = $report['context'];
-
-        return isset($context['exception']) && $context['exception'] instanceof Throwable;
-    }
-
-    /**
-     * @param array<string, mixed> $report
-     *
-     * @return bool
-     */
-    protected function hasValidLogLevel(array $report): bool
-    {
-        return $report['level'] >= $this->minimumReportLogLevel;
+        );
     }
 }
+
