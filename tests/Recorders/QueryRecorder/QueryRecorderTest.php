@@ -3,150 +3,163 @@
 use Illuminate\Database\Connection;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\FlareClient\Performance\Spans\Span;
 use Spatie\FlareClient\Performance\Support\TraceId;
 use Spatie\FlareClient\Performance\Tracer;
+use Spatie\FlareClient\Tests\Shared\ExpectSpan;
+use Spatie\FlareClient\Tests\Shared\ExpectTrace;
+use Spatie\FlareClient\Tests\Shared\ExpectTracer;
+use Spatie\FlareClient\Time\Duration;
 use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QuerySpan;
+use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
-it('limits the amount of recorded queries', function () {
-    $recorder = new QueryRecorder(app(), app(Tracer::class), reportBindings: true, maxQueries: 200, traceQueryOriginThreshold: 300);
-    $connection = app(Connection::class);
+uses(ConfigureFlare::class);
 
-    foreach (range(1, 400) as $i) {
-        $query = new QueryExecuted('query '.$i, [], 300, $connection);
-        $recorder->record($query);
-    }
-    expect($recorder->getQueries())->toHaveCount(200);
-    expect($recorder->getQueries()[0]['sql'])->toBe('query 201');
+beforeEach(function () {
+    Schema::dropIfExists('users');
+
+    Schema::create('users', function ($table) {
+        $table->id();
+        $table->string('name');
+        $table->timestamps();
+    });
 });
 
-it('does not limit the amount of recorded queries', function () {
-    $recorder = new QueryRecorder(app(), app(Tracer::class), reportBindings: true, maxQueries: null, traceQueryOriginThreshold: 300);
-    $connection = app(Connection::class);
+it('traces queries', function () {
+    $flare = setupFlareForTracing();
 
-    foreach (range(1, 400) as $i) {
-        $query = new QueryExecuted('query '.$i, [], 300, $connection);
-        $recorder->record($query);
-    }
+    $flare->tracer->startTrace();
 
-    expect($recorder->getQueries())->toHaveCount(400);
-    expect($recorder->getQueries()[0]['sql'])->toBe('query 1');
+    DB::select('SELECT * FROM users WHERE id = ?', [42]);
+
+    ExpectTracer::create($flare)
+        ->hasTraceCount(1)
+        ->isSampling()
+        ->trace(fn (ExpectTrace $trace) => $trace
+            ->hasSpanCount(1)
+            ->span(fn (ExpectSpan $span) => $span
+                ->isEnded()
+                ->hasName('Query - SELECT * FROM users WHERE id = ?')
+                ->hasType(SpanType::Query)
+                ->hasAttribute('db.system', 'sqlite')
+                ->hasAttribute('db.name', ':memory:')
+                ->hasAttribute('db.statement', 'SELECT * FROM users WHERE id = ?')
+                ->hasAttribute('laravel.db.connection', 'testing')
+                ->hasAttribute('db.sql.bindings', ['42'])
+            ));
 });
 
-it('records bindings', function () {
-    $recorder = new QueryRecorder(app(), app(Tracer::class), reportBindings: true, maxQueries: 200, traceQueryOriginThreshold: 300);
-    $connection = app(Connection::class);
+it('can report queries', function (){
+    $flare = setupFlare();
 
-    $query = new QueryExecuted('query 1', ['abc' => 123], 300, $connection);
-    $recorder->record($query);
+    DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
-    expect($recorder->getQueries())->toHaveCount(1);
-    expect($recorder->getQueries()[0]['sql'])->toBe('query 1');
-    expect($recorder->getQueries()[0]['bindings'])->toBeArray();
-    expect($recorder->getQueries()[0]['sql'])->toBe('query 1');
-    expect($recorder->getQueries()[0]['bindings']['abc'])->toBe(123);
+    $report = $flare->report(new Exception('Report this'));
+
+    expect($report->toArray()['spans'])->toHaveCount(1);
+
+    expect($report->toArray()['spans'][0])
+        ->toHaveKey('name', 'Query - SELECT * FROM users WHERE id = ?')
+        ->toHaveKey('attributes', [
+            'flare.span_type'=> SpanType::Query,
+            'db.system' => 'sqlite',
+            'db.name' => ':memory:',
+            'db.statement' => 'SELECT * FROM users WHERE id = ?',
+            'laravel.db.connection' => 'testing',
+            'db.sql.bindings' => ['42'],
+        ]);
 });
 
-it('does not record bindings', function () {
-    $recorder = new QueryRecorder(app(), app(Tracer::class), reportBindings: false, maxQueries: 200, traceQueryOriginThreshold: 300);
-    $connection = app(Connection::class);
+it('can stop recording bindings', function (){
+    $flare = setupFlare(fn(FlareConfig $config) => $config->queries(includeBindings: false));
 
-    $query = new QueryExecuted('query 1', ['abc' => 123], 300, $connection);
-    $recorder->record($query);
+    DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
-    expect($recorder->getQueries())->toHaveCount(1);
-    expect($recorder->getQueries()[0]['sql'])->toBe('query 1');
-    expect($recorder->getQueries()[0]['bindings'])->toBeNull();
+    $report = $flare->report(new Exception('Report this'));
+
+    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKey('db.sql.bindings');
 });
 
-it('records origins when tracing and a threshold is met', function () {
-    $tracer = app(Tracer::class);
+it('will add origin attributes when a threshold is met and tracing', function (){
+    $flare = setupFlareForTracing(fn(FlareConfig $config) => $config->queries(findOriginThreshold: Duration::milliseconds(300)));
 
-    $tracer->startTrace();
-    $tracer->addSpan(Span::build($tracer->currentTraceId(), 'Parent Span'), makeCurrent: true);
+    $flare->tracer->startTrace();
 
-    $recorder = new QueryRecorder(app(), $tracer, reportBindings: true, maxQueries: 200, traceQueryOriginThreshold: 300);
-    $connection = app(Connection::class);
+    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(400));
 
-    $query = new QueryExecuted('query 1', ['abc' => 123], 300, $connection);
+    $report = $flare->report(new Exception('Report this'));
 
-    $recorder->record($query);
-
-    $querySpan = Arr::first(Arr::except($tracer->traces[$tracer->currentTraceId()], $tracer->currentSpanId()));
-
-    expect($querySpan)
-        ->toBeInstanceOf(QuerySpan::class)
-        ->traceId->toBe($tracer->currentTraceId())
-        ->spanId->toBeString()
-        ->parentSpanId->toBe($tracer->currentSpanId())
-        ->startUs->toBeInt()->toBeDigits(16)
-        ->endUs->toBeInt()->toBeDigits(16)
-        ->name->toBe('Query - query 1');
-
-    expect($querySpan->attributes)
-        ->toBeArray()
-        ->toHaveCount(9)
-        ->toHaveKey('flare.span_type', SpanType::Query)
-        ->toHaveKey('db.system', 'sqlite')
-        ->toHaveKey('db.name', ':memory:')
-        ->toHaveKey('db.statement', 'query 1')
-        ->toHaveKey('laravel.db.connection', 'testing')
-        ->toHaveKey('db.sql.bindings', ['abc' => 123])
-        ->toHaveKey('code.filepath')
-        ->toHaveKey('code.lineno')
-        ->toHaveKey('code.function');
+    expect($report->toArray()['spans'][0]['attributes'])->toHaveKeys([
+        'code.filepath',
+        'code.lineno',
+        'code.function',
+    ]);
 });
 
-it('will not record origins or add span info when not tracing', function () {
-    $tracer = app(Tracer::class);
+it('will not add origin attributes when a threshold is met and only reporting', function (){
+    $flare = setupFlare(fn(FlareConfig $config) => $config->queries(findOriginThreshold: Duration::milliseconds(300)));
 
-    $recorder = new QueryRecorder(app(), $tracer, reportBindings: true, maxQueries: 200, traceQueryOriginThreshold: 300);
-    $connection = app(Connection::class);
+    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(400));
 
-    $query = new QueryExecuted('query 1', ['abc' => 123], 300, $connection);
+    $report = $flare->report(new Exception('Report this'));
 
-    $recorder->record($query);
-
-    $querySpan = Arr::first($recorder->getSpans());
-
-    expect($querySpan)
-        ->toBeInstanceOf(QuerySpan::class)
-        ->traceId->toBe('')
-        ->spanId->toBeString()
-        ->parentSpanId->toBe('')
-        ->startUs->toBeInt()->toBeDigits(16)
-        ->endUs->toBeInt()->toBeDigits(16)
-        ->name->toBe('Query - query 1');
-
-    expect($querySpan->attributes)
-        ->toBeArray()
-        ->toHaveCount(6)
-        ->not()->toHaveKey('code.filepath')
-        ->not()->toHaveKey('code.lineno')
-        ->not()->toHaveKey('code.function');
+    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKeys([
+        'code.filepath',
+        'code.lineno',
+        'code.function',
+    ]);
 });
 
-it('will not record origins when a threshold is not met', function () {
-    $tracer = app(Tracer::class);
+it('will not add origin attributes when a threshold is not met', function (){
+    $flare = setupFlareForTracing(fn(FlareConfig $config) => $config->queries(findOriginThreshold: Duration::milliseconds(300)));
 
-    $tracer->startTrace();
-    $tracer->addSpan(Span::build($tracer->currentTraceId(), 'Parent Span'), makeCurrent: true);
+    $flare->tracer->startTrace();
 
-    $recorder = new QueryRecorder(app(), $tracer, reportBindings: true, maxQueries: 200, traceQueryOriginThreshold: 300);
-    $connection = app(Connection::class);
+    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(200));
 
-    $query = new QueryExecuted('query 1', ['abc' => 123], 100, $connection);
+    $report = $flare->report(new Exception('Report this'));
 
-    $recorder->record($query);
+    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKeys([
+        'code.filepath',
+        'code.lineno',
+        'code.function',
+    ]);
+});
 
-    $querySpan = Arr::first(Arr::except($tracer->traces[$tracer->currentTraceId()], $tracer->currentSpanId()));
+it('will not add origin attributes when the trace origin feature is disabled', function (){
+    $flare = setupFlareForTracing(fn(FlareConfig $config) => $config->queries(findOrigin: false, findOriginThreshold: Duration::milliseconds(300)));
 
-    expect($querySpan->attributes)
-        ->toBeArray()
-        ->toHaveCount(6)
-        ->not()->toHaveKey('code.filepath')
-        ->not()->toHaveKey('code.lineno')
-        ->not()->toHaveKey('code.function');
+    $flare->tracer->startTrace();
+
+    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(400));
+
+    $report = $flare->report(new Exception('Report this'));
+
+    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKeys([
+        'code.filepath',
+        'code.lineno',
+        'code.function',
+    ]);
+});
+
+
+it('will always add origin attributes when no threshold is set', function (){
+    $flare = setupFlareForTracing(fn(FlareConfig $config) => $config->queries(findOriginThreshold: null));
+
+    $flare->tracer->startTrace();
+
+    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(200));
+
+    $report = $flare->report(new Exception('Report this'));
+
+    expect($report->toArray()['spans'][0]['attributes'])->toHaveKeys([
+        'code.filepath',
+        'code.lineno',
+        'code.function',
+    ]);
 });

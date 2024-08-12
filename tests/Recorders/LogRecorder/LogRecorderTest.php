@@ -1,116 +1,80 @@
 <?php
 
 use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Performance\Spans\Span;
 use Spatie\FlareClient\Performance\Tracer;
-use Spatie\LaravelFlare\Enums\SpanEventType;
+use Spatie\FlareClient\Tests\Shared\ExpectSpan;
+use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
+use Spatie\FlareClient\Tests\Shared\ExpectTrace;
+use Spatie\FlareClient\Tests\Shared\ExpectTracer;
+use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogMessageSpanEvent;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
+use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
-it('will ')
+uses(ConfigureFlare::class);
 
-it('limits the amount of recorded logs', function () {
-    $recorder = new LogRecorder(app(), app(Tracer::class));
+it('traces logs', function () {
+    $flare = setupFlareForTracing();
 
-    foreach (range(1, 400) as $i) {
-        $log = new MessageLogged('info', 'test '.$i, []);
-        $recorder->record($log);
-    }
+    $flare->tracer->startTrace();
+    $flare->tracer->startSpan('Parent Span');
 
-    expect($recorder->getLogMessages())->toHaveCount(200);
-    expect($recorder->getLogMessages()[0]['message'])->toBe('test 201');
+    Log::info('Hello world', [
+        'some' => 'context',
+    ]);
+
+    ExpectTracer::create($flare)
+        ->hasTraceCount(1)
+        ->isSampling()
+        ->trace(fn (ExpectTrace $trace) => $trace
+            ->hasSpanCount(1)
+            ->span(fn (ExpectSpan $span) => $span
+                ->hasSpanEventCount(1)
+                ->spanEvent(fn(ExpectSpanEvent $spanEvent) => $spanEvent
+                    ->hasName('Log entry')
+                    ->hasType(SpanEventType::Log)
+                    ->hasAttributeCount(4)
+                    ->hasAttribute('log.level', 'info')
+                    ->hasAttribute('log.message', 'Hello world')
+                    ->hasAttribute('log.context', ['some' => 'context'])
+                )
+            ));
 });
 
-it('limits the amount of recorded logs when tracing', function () {
-    $recorder = new LogRecorder(app(), $tracer = app(Tracer::class), traceLogs: true);
+it('can report logs', function (){
+    $flare = setupFlare();
 
-    $tracer->startTrace();
-    $tracer->addSpan(Span::build($tracer->currentTraceId(), 'Parent Span'), makeCurrent: true);
+    Log::info('Hello world', [
+        'some' => 'context',
+    ]);
 
-    foreach (range(1, 400) as $i) {
-        $log = new MessageLogged('info', 'test '.$i, []);
-        $recorder->record($log);
-    }
+    $report = $flare->report(new Exception('Report this'));
 
-    expect($recorder->getLogMessages())->toHaveCount(200);
-    expect($recorder->getLogMessages()[0]['message'])->toBe('test 201');
+    expect($report->toArray()['span_events'])->toHaveCount(1);
+
+    expect($report->toArray()['span_events'][0])
+        ->toHaveKey('name', 'Log entry')
+        ->toHaveKey('attributes', [
+            'flare.span_event_type'=> SpanEventType::Log,
+            'log.level' => 'info',
+            'log.message' => 'Hello world',
+            'log.context' => ['some' => 'context'],
+        ]);
 });
 
-it('does not limit the amount of recorded queries', function () {
-    $recorder = new LogRecorder(app(), app(Tracer::class), maxLogs: null);
+it('will not record logs containing exceptions', function (){
+    $flare = setupFlare();
 
-    foreach (range(1, 400) as $i) {
-        $log = new MessageLogged('info', 'test '.$i, []);
-        $recorder->record($log);
-    }
+    Log::info('Hello world', [
+        'exception' => new Exception('This is an exception'),
+    ]);
 
-    expect($recorder->getLogMessages())->toHaveCount(400);
-    expect($recorder->getLogMessages()[0]['message'])->toBe('test 1');
+    $report = $flare->report(new Exception('Report this'));
+
+    expect($report->toArray()['span_events'])->toHaveCount(0);
 });
 
-it('does not record log containing an exception', function () {
-    $recorder = new LogRecorder(app(), app(Tracer::class), maxLogs: null);
-
-    $log = new MessageLogged('info', 'test 1', ['exception' => new Exception('test')]);
-    $recorder->record($log);
-    $log = new MessageLogged('info', 'test 2', []);
-    $recorder->record($log);
-
-    expect($recorder->getLogMessages())->toHaveCount(1);
-    expect($recorder->getLogMessages()[0]['message'])->toBe('test 2');
-});
-
-it('does not ignore log if exception key does not contain exception', function () {
-    $recorder = new LogRecorder(app(), app(Tracer::class), maxLogs: null);
-
-    $log = new MessageLogged('info', 'test 1', ['exception' => 'test']);
-    $recorder->record($log);
-    $log = new MessageLogged('info', 'test 2', []);
-    $recorder->record($log);
-
-    expect($recorder->getLogMessages())->toHaveCount(2);
-    expect($recorder->getLogMessages()[0]['message'])->toBe('test 1');
-    expect($recorder->getLogMessages()[1]['message'])->toBe('test 2');
-    expect($recorder->getLogMessages()[0]['context'])->toBeArray();
-    $this->assertArrayHasKey('exception', $recorder->getLogMessages()[0]['context']);
-    expect($recorder->getLogMessages()[0]['context']['exception'])->toBe('test');
-});
-
-it('can trace a log message', function () {
-    $recorder = new LogRecorder(app(), $tracer = app(Tracer::class), traceLogs: true);
-
-    $tracer->startTrace();
-    $tracer->addSpan($span = Span::build($tracer->currentTraceId(), 'Parent Span'), makeCurrent: true);
-
-    $log = new MessageLogged('info', 'test', ['some' => 'context']);
-    $recorder->record($log);
-
-    expect($span->events)->toHaveCount(1);
-
-    $event = $span->events[0];
-
-    expect($event)
-        ->toBeInstanceOf(LogMessageSpanEvent::class)
-        ->name->toBe('Log entry')
-        ->timeUs->toBeInt()->toBeDigits(16);
-
-    expect($event->attributes)
-        ->toBeArray()
-        ->toHaveCount(4)
-        ->toHaveKey('log.level', 'info')
-        ->toHaveKey('log.message', 'test')
-        ->toHaveKey('log.context', ['some' => 'context'])
-        ->toHaveKey('flare.span_event_type', SpanEventType::Log);
-});
-
-it('can disable tracing log messages', function (){
-    $recorder = new LogRecorder(app(), $tracer = app(Tracer::class), traceLogs: false);
-
-    $tracer->startTrace();
-    $tracer->addSpan($span = Span::build($tracer->currentTraceId(), 'Parent Span'), makeCurrent: true);
-
-    $log = new MessageLogged('info', 'test', ['some' => 'context']);
-    $recorder->record($log);
-
-    expect($span->events)->toHaveCount(0);
-});
