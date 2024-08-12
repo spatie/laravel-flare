@@ -5,7 +5,6 @@ namespace Spatie\LaravelFlare\FlareMiddleware;
 use Closure;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\ReportFactory;
-use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
 
 class AddFailedJobInformation implements FlareMiddleware
 {

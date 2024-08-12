@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\FlareMiddleware;
 
 use Illuminate\Database\QueryException;
-use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\Contracts\ProvidesFlareContext;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\ReportFactory;

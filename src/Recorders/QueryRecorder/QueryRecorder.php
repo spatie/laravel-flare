@@ -2,21 +2,14 @@
 
 namespace Spatie\LaravelFlare\Recorders\QueryRecorder;
 
-use Closure;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Events\Dispatcher;
-use Psr\Container\ContainerInterface;
-use Spatie\FlareClient\Concerns\RecordsSpanEvents;
-use Spatie\FlareClient\Concerns\RecordsSpans;
-use Spatie\FlareClient\Contracts\Recorder;
 use Spatie\FlareClient\Recorders\QueryRecorder\QueryRecorder as BaseQueryRecorder;
 use Spatie\FlareClient\Recorders\QueryRecorder\QuerySpan;
+use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Time\Duration;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Concerns\LaravelRegisteredRecorder;
 use Spatie\LaravelFlare\Enums\SpanType;
-use Spatie\FlareClient\Support\BackTracer;
-
 
 class QueryRecorder extends BaseQueryRecorder
 {

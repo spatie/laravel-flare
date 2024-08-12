@@ -2,13 +2,9 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
-use Orchestra\Testbench\Attributes\DefineEnvironment;
-use Spatie\FlareClient\Api;
-use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
 
 uses(ConfigureFlare::class);
 

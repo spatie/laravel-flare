@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Tests\stubs\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Foundation\Console\Kernel;
 use Illuminate\Support\Facades\Artisan;
 use Spatie\LaravelFlare\Tests\stubs\Exceptions\ExpectedException;
 

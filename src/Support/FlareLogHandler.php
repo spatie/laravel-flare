@@ -61,4 +61,3 @@ class FlareLogHandler extends AbstractProcessingHandler
         );
     }
 }
-

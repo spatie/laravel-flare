@@ -2,17 +2,14 @@
 
 namespace Spatie\LaravelFlare\Recorders\CacheRecorder;
 
-use Closure;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyForgotten;
 use Illuminate\Cache\Events\KeyWritten;
-use Illuminate\Container\Container;
 use Illuminate\Contracts\Events\Dispatcher;
-use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\Recorders\CacheRecorder\CacheRecorder as BaseCacheRecorder;
-use Spatie\FlareClient\Tracer;
 use Spatie\FlareClient\Support\BackTracer;
+use Spatie\FlareClient\Tracer;
 
 class CacheRecorder extends BaseCacheRecorder
 {

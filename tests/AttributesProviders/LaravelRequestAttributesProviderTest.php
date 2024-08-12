@@ -4,9 +4,7 @@ use Illuminate\Foundation\Auth\User;
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
-use Spatie\LaravelFlare\ContextProviders\LaravelRequestContextProvider;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 uses(MakesHttpRequests::class);

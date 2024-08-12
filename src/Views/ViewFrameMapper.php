@@ -3,10 +3,8 @@
 namespace Spatie\LaravelFlare\Views;
 
 use Illuminate\Contracts\View\Engine;
-use Illuminate\Support\Arr;
 use ReflectionClass;
 use ReflectionProperty;
-use Spatie\Backtrace\Frame;
 
 class ViewFrameMapper
 {

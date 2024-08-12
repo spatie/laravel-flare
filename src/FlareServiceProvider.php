@@ -23,7 +23,6 @@ use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
-use Spatie\LaravelFlare\Support\SentReports;
 use Spatie\LaravelFlare\Support\Telemetry;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
@@ -130,7 +129,6 @@ class FlareServiceProvider extends ServiceProvider
             $handler = new FlareLogHandler(
                 $app->make(Flare::class),
                 $this->config->minimumReportLogLevel,
-
             );
 
             return (new Logger('Flare'))->pushHandler($handler);

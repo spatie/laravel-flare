@@ -42,7 +42,7 @@ class FlareTracingMiddleware
         $flareConfig = $this->app->make(FlareConfig::class);
 
         $attributesProvider = (new LaravelRequestAttributesProvider(
-        // TODO: these should be stored on the config object and not in the middleware
+            // TODO: these should be stored on the config object and not in the middleware
         ));
 
         $this->span->addAttributes($attributesProvider->toArray($request));

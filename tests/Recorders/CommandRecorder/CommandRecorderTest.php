@@ -12,7 +12,7 @@ use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\stubs\Commands\TestCommand;
 use Spatie\LaravelFlare\Tests\stubs\Exceptions\ExpectedException;
 
-uses(ConfigureFlare::class)->beforeEach(function (){
+uses(ConfigureFlare::class)->beforeEach(function () {
     IncrementingIdsGenerator::setup();
 
     $consoleKernel = app(Kernel::class);
@@ -23,7 +23,7 @@ uses(ConfigureFlare::class)->beforeEach(function (){
     test()->flare = setupFlareForTracing();
 });
 
-it('can report a command', function (){
+it('can report a command', function () {
     FakeTime::setup('2019-01-01 12:34:56');
 
     /** @var Flare $flare */
@@ -57,9 +57,11 @@ it('can trace a command', function () {
     ExpectTracer::create(test()->flare)
         ->isWaiting()
         ->hasTraceCount(1)
-        ->trace(fn (ExpectTrace $trace) => $trace
+        ->trace(
+            fn (ExpectTrace $trace) => $trace
             ->hasSpanCount(1)
-            ->span(fn (ExpectSpan $span) => $span
+            ->span(
+                fn (ExpectSpan $span) => $span
                 ->hasName('Command - flare:test-command')
                 ->hasType(SpanType::Command)
                 ->isEnded()
@@ -78,9 +80,11 @@ it('can trace a command with options and arguments', function () {
     ExpectTracer::create(test()->flare)
         ->isWaiting()
         ->hasTraceCount(1)
-        ->trace(fn (ExpectTrace $trace) => $trace
+        ->trace(
+            fn (ExpectTrace $trace) => $trace
             ->hasSpanCount(1)
-            ->span(fn (ExpectSpan $span) => $span
+            ->span(
+                fn (ExpectSpan $span) => $span
                 ->hasName('Command - flare:test-command')
                 ->hasType(SpanType::Command)
                 ->isEnded()
@@ -103,9 +107,11 @@ it('can trace a failed command', function () {
     ExpectTracer::create(test()->flare)
         ->isWaiting()
         ->hasTraceCount(1)
-        ->trace(fn (ExpectTrace $trace) => $trace
+        ->trace(
+            fn (ExpectTrace $trace) => $trace
             ->hasSpanCount(1)
-            ->span(fn (ExpectSpan $span) => $span
+            ->span(
+                fn (ExpectSpan $span) => $span
                 ->hasAttribute('process.exit_code', 1)
             )
         );
@@ -117,7 +123,8 @@ it('can trace a nested command which will be added to the same trace', function 
     ExpectTracer::create(test()->flare)
         ->isWaiting()
         ->hasTraceCount(1)
-        ->trace(fn (ExpectTrace $trace) => $trace
+        ->trace(
+            fn (ExpectTrace $trace) => $trace
             ->hasSpanCount(2)
             ->span(
                 fn (ExpectSpan $span) => $span
@@ -131,7 +138,8 @@ it('can trace a nested command which will be added to the same trace', function 
                     ->hasAttribute('process.exit_code', 0),
                 $parentSpan
             )
-            ->span(fn (ExpectSpan $childSpan) => $childSpan
+            ->span(
+                fn (ExpectSpan $childSpan) => $childSpan
                 ->hasName('Command - flare:test-command')
                 ->hasType(SpanType::Command)
                 ->isEnded()
@@ -145,23 +153,27 @@ it('can trace a nested command which will be added to the same trace', function 
         );
 });
 
-it('will trace multiple traces when executing multiple command after each other', function (){
+it('will trace multiple traces when executing multiple command after each other', function () {
     test()->consoleKernel->call('flare:test-command commandA');
     test()->consoleKernel->call('flare:test-command commandB');
 
     ExpectTracer::create(test()->flare)
         ->isWaiting()
         ->hasTraceCount(2)
-        ->trace(fn (ExpectTrace $trace) => $trace
+        ->trace(
+            fn (ExpectTrace $trace) => $trace
             ->hasSpanCount(1)
-            ->span(fn (ExpectSpan $span) => $span
+            ->span(
+                fn (ExpectSpan $span) => $span
                 ->missingParent()
                 ->hasAttribute('process.command_args', ["flare:test-command", "commandA"])
             )
         )
-        ->trace(fn (ExpectTrace $trace) => $trace
+        ->trace(
+            fn (ExpectTrace $trace) => $trace
             ->hasSpanCount(1)
-            ->span(fn (ExpectSpan $span) => $span
+            ->span(
+                fn (ExpectSpan $span) => $span
                 ->missingParent()
                 ->hasAttribute('process.command_args', ["flare:test-command", "commandB"])
             )

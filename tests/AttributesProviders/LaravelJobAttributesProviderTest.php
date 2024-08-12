@@ -2,19 +2,16 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Container\Container;
-use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\CallQueuedClosure;
-use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Jobs\RedisJob;
 use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Queue\RedisQueue;
 use Illuminate\Queue\SyncQueue;
+use function Livewire\invade;
 use Spatie\Backtrace\Arguments\ArgumentReducers;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
-use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
 use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
-use function Livewire\invade;
 
 it('can provide attributes for a job', function () {
     $provider = new LaravelJobAttributesProvider(

@@ -3,7 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelFlare\AttributesProviders\LivewireAttributesProvider;
-use Spatie\LaravelFlare\ContextProviders\LaravelLivewireRequestContextProvider;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeLivewireManager;
 
 beforeEach(function () {

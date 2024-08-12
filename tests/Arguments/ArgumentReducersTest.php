@@ -13,7 +13,7 @@ uses(ConfigureFlare::class);
 beforeEach(function () {
     ini_set('zend.exception_ignore_args', 0); // Enabled on GH actions
 
-    app()->singleton(FlareConfig::class, fn() => FlareConfig::make('fake')->stackArguments(false));
+    app()->singleton(FlareConfig::class, fn () => FlareConfig::make('fake')->stackArguments(false));
 });
 
 it('can reduce a collection', function () {
@@ -60,7 +60,7 @@ it('can reduce a model', function () {
 });
 
 it('can disable the use of arguments', function () {
-    $flare = setupFlare(fn(FlareConfig $config) => $config->stackFrameArguments(withStackFrameArguments: false));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->stackFrameArguments(withStackFrameArguments: false));
 
     function exceptionWithArgumentsDisabled(string $string)
     {
@@ -73,8 +73,8 @@ it('can disable the use of arguments', function () {
 });
 
 it('can set a custom arguments reducer', function () {
-    $flare = setupFlare(fn(FlareConfig $config) => $config->stackFrameArguments(argumentReducers: ArgumentReducers::create([
-        FakeArgumentsReducer::class
+    $flare = setupFlare(fn (FlareConfig $config) => $config->stackFrameArguments(argumentReducers: ArgumentReducers::create([
+        FakeArgumentsReducer::class,
     ])));
 
     function exceptionWithCustomArgumentReducer(string $string)

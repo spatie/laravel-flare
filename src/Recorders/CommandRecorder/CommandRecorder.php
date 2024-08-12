@@ -5,7 +5,6 @@ namespace Spatie\LaravelFlare\Recorders\CommandRecorder;
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Support\Collection;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;

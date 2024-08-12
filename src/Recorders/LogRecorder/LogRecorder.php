@@ -2,15 +2,12 @@
 
 namespace Spatie\LaravelFlare\Recorders\LogRecorder;
 
-use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Log\Events\MessageLogged;
-use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\Recorders\LogRecorder\LogMessageSpanEvent;
 use Spatie\FlareClient\Recorders\LogRecorder\LogRecorder as BaseLogRecorder;
-use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Concerns\LaravelRegisteredRecorder;
 use Spatie\FlareClient\Support\BackTracer;
+use Spatie\FlareClient\Tracer;
 use Throwable;
 
 class LogRecorder extends BaseLogRecorder

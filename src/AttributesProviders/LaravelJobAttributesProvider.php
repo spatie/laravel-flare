@@ -36,7 +36,7 @@ class LaravelJobAttributesProvider
         return array_merge(
             $this->getJobProperties($job),
             [
-                'laravel.job.queue.connection_name' => $connectionName  ?? $job->getConnectionName(),
+                'laravel.job.queue.connection_name' => $connectionName ?? $job->getConnectionName(),
                 'laravel.job.queue.name' => $job->getQueue(),
             ]
         );

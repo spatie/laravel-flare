@@ -2,17 +2,13 @@
 
 namespace Spatie\LaravelFlare\Recorders\TransactionRecorder;
 
-use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Database\Events\TransactionCommitted;
 use Illuminate\Database\Events\TransactionRolledBack;
-use Psr\Container\ContainerInterface;
-use Spatie\FlareClient\Concerns\RecordsSpans;
 use Spatie\FlareClient\Recorders\TransactionRecorder\TransactionRecorder as BaseTransactionRecorder;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Concerns\LaravelRegisteredRecorder;
 
 class TransactionRecorder extends BaseTransactionRecorder
 {

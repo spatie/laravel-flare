@@ -4,12 +4,12 @@ use Dotenv\Dotenv;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\IncrementingIdsGenerator;
 use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\FlareServiceProvider;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\Tests\TestCase;
 
 uses(TestCase::class)->beforeEach(function () {

@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\FlareMiddleware;
 
 use Closure;
-use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\ReportFactory;
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;

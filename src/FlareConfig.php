@@ -7,7 +7,6 @@ use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
 use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
-use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
@@ -113,7 +112,8 @@ class FlareConfig extends BaseFlareConfig
             'Set-Cookie',
             'X-CSRF-TOKEN',
             'X-XSRF-TOKEN',
-        ], bool $removeRequestIp = false,
+        ],
+        bool $removeRequestIp = false,
         string $middleware = AddRequestInformation::class,
     ): static {
         parent::requestInfo(

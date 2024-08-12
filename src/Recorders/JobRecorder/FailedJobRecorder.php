@@ -2,12 +2,9 @@
 
 namespace Spatie\LaravelFlare\Recorders\JobRecorder;
 
-use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobExceptionOccurred;
-use Psr\Container\ContainerInterface;
 use Spatie\Backtrace\Arguments\ArgumentReducers;
-use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;

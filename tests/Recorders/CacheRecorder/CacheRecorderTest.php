@@ -1,11 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use function Pest\Laravel\get;
 use Spatie\FlareClient\Enums\SpanEventType;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
-use function Pest\Laravel\get;
 
 uses(ConfigureFlare::class);
 

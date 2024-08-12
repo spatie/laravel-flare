@@ -2,7 +2,7 @@
 
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 
-it('can provide attributes', function (){
+it('can provide attributes', function () {
     config()->set('app.debug', true);
     config()->set('app.locale', 'nl');
 

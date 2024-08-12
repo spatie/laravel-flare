@@ -1,19 +1,13 @@
 <?php
 
-use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Monolog\Level;
 use Spatie\FlareClient\Enums\SpanEventType;
-use Spatie\FlareClient\Flare;
-use Spatie\FlareClient\Http\Client;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
 use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\Support\SentReports;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
-use function Pest\Laravel\withExceptionHandling;
 
 uses(ConfigureFlare::class);
 
@@ -56,7 +50,7 @@ it('reports log messages above the specified minimum level', function () {
 });
 
 it('reports different log levels when configured', function () {
-    setupFlare(fn(FlareConfig $config) => $config->sendLogsAsEvents(minimumReportLogLevel: Level::Debug));
+    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(minimumReportLogLevel: Level::Debug));
 
     Log::debug('this is a log message');
     Log::error('this is a log message');
@@ -121,7 +115,7 @@ it('adds log messages to the report', function () {
 });
 
 it('can disable sending logs as a report but keep them as span events in an exception report', function ($logLevel) {
-    setupFlare(fn(FlareConfig $config) => $config->sendLogsAsEvents(false));
+    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(false));
 
     Log::log($logLevel, 'log');
 
@@ -152,7 +146,7 @@ it('can disable sending logs as a report but keep them as span events in an exce
 })->with('provideMessageLevels');
 
 it('it will report an exception with log span events with metadata', function () {
-    setupFlare(fn(FlareConfig $config) => $config->sendLogsAsEvents(false));
+    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(false));
 
     Log::info('log', [
         'meta' => 'data',

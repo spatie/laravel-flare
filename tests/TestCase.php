@@ -3,15 +3,9 @@
 namespace Spatie\LaravelFlare\Tests;
 
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
-use Illuminate\Http\Request;
-use Spatie\FlareClient\Recorders\GlowRecorder\GlowSpanEvent;
-use Spatie\FlareClient\Report;
-use Spatie\FlareClient\Spans\Span;
-use Spatie\FlareClient\Tracer;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\FlareServiceProvider;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
-use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {

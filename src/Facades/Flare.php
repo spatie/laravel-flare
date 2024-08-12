@@ -7,7 +7,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
 use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\Support\SentReports;
 use Throwable;
 
 /**

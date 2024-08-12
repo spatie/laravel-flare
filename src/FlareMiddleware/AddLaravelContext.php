@@ -5,9 +5,7 @@ namespace Spatie\LaravelFlare\FlareMiddleware;
 use Closure;
 use Illuminate\Log\Context\Repository;
 use Illuminate\Support\Facades\Context;
-use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
-use Spatie\FlareClient\Report;
 use Spatie\FlareClient\ReportFactory;
 
 class AddLaravelContext implements FlareMiddleware
