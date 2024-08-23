@@ -7,6 +7,7 @@ use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
 use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
+use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
@@ -29,6 +30,8 @@ class FlareConfig extends BaseFlareConfig
 
     public Level $minimumReportLogLevel = Level::Error;
 
+    public bool $enableShareButton = true;
+
     public static function fromLaravelConfig(): self
     {
         $argumentReducers = config()->has('flare.argument_reducers') ? ArgumentReducers::create(
@@ -41,6 +44,7 @@ class FlareConfig extends BaseFlareConfig
             timeout: config('flare.timeout', 10),
             middleware: config('flare.middleware'),
             recorders: config('flare.recorders'),
+            reportErrorLevels: config('flare.report_error_levels'),
             applicationPath: base_path(),
             applicationName: config('app.name'),
             applicationStage: app()->environment(),
@@ -53,17 +57,20 @@ class FlareConfig extends BaseFlareConfig
             trace: config('flare.tracing.enabled'),
             sampler: config('flare.tracing.sampler.class'),
             samplerConfig: config('flare.tracing.sampler.config'),
+            traceLimits: new TraceLimits(
+                maxSpans: config('flare.tracing.limits.max_spans'),
+                maxAttributesPerSpan: config('flare.tracing.limits.max_attributes_per_span'),
+                maxSpanEventsPerSpan: config('flare.tracing.limits.max_span_events_per_span'),
+                maxAttributesPerSpanEvent: config('flare.tracing.limits.max_attributes_per_span_event')
+            ),
+            traceThrowables: config('flare.tracing.trace_throwables'),
         );
 
         $config->sendLogsAsEvents = config('flare.send_logs_as_events', true);
         $config->minimumReportLogLevel = config()->has('logging.channels.flare.level')
             ? FlareLogHandler::logLevelFromName(config('logging.channels.flare.level'))
             : Level::Error;
-
-        // TODO: Enable share button
-        // TODO: application version
-        //TODO: report Error Levels
-
+        $config->enableShareButton = config('flare.enable_share_button', true);
 
         return $config;
     }
@@ -72,25 +79,26 @@ class FlareConfig extends BaseFlareConfig
     {
         return $this
             // flare-php-client
-            ->dumps()
-            ->requestInfo()
-            ->gitInfo()
-            ->glows()
-            ->solutions()
-            ->stackFrameArguments()
+            ->addDumps()
+            ->addRequestInfo()
+            ->addGitInfo()
+            ->addGlows()
+            ->addSolutions()
+            ->addStackFrameArguments()
+            ->addThrowables()
             // laravel-flare
             ->sendLogsAsEvents()
-            ->livewireComponents()
-            ->laravelInfo()
-            ->laravelContext()
-            ->exceptionInfo()
-            ->failedJobInfo()
+            ->addLivewireComponents()
+            ->addLaravelInfo()
+            ->addLaravelContext()
+            ->addExceptionInfo()
+            ->addFailedJobInfo()
             ->addExceptionHandledStatus()
-            ->cacheEvents()
-            ->logs()
-            ->queries()
-            ->commands()
-            ->transactions();
+            ->addCacheEvents()
+            ->addLogs()
+            ->addQueries()
+            ->addCommands()
+            ->addTransactions();
     }
 
     public function sendLogsAsEvents(
@@ -103,7 +111,7 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function requestInfo(
+    public function addRequestInfo(
         array $censorBodyFields = ['password', 'password_confirmation'],
         array $censorRequestHeaders = [
             'API-KEY',
@@ -116,7 +124,7 @@ class FlareConfig extends BaseFlareConfig
         bool $removeRequestIp = false,
         string $middleware = AddRequestInformation::class,
     ): static {
-        parent::requestInfo(
+        parent::addRequestInfo(
             censorBodyFields: $censorBodyFields,
             censorRequestHeaders: $censorRequestHeaders,
             removeRequestIp: $removeRequestIp,
@@ -126,7 +134,7 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function livewireComponents(
+    public function addLivewireComponents(
         bool $includeLivewireComponents = true,
         string $middleware = AddRequestInformation::class
     ): static {
@@ -141,14 +149,14 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function consoleInfo(string $middleware = AddConsoleInformation::class): static
+    public function addConsoleInfo(string $middleware = AddConsoleInformation::class): static
     {
-        parent::consoleInfo(middleware: $middleware);
+        parent::addConsoleInfo(middleware: $middleware);
 
         return $this;
     }
 
-    public function laravelInfo(
+    public function addLaravelInfo(
         string $middleware = AddLaravelInformation::class
     ): static {
         $this->middleware[$middleware] = [];
@@ -156,7 +164,7 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function laravelContext(
+    public function addLaravelContext(
         string $middleware = AddLaravelContext::class
     ): static {
         $this->middleware[$middleware] = [];
@@ -164,7 +172,7 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function exceptionInfo(
+    public function addExceptionInfo(
         string $middleware = AddExceptionInformation::class
     ): static {
         $this->middleware[$middleware] = [];
@@ -172,7 +180,7 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function failedJobInfo(
+    public function addFailedJobInfo(
         int $maxChainedJobReportingDepth = 5,
         string $middleware = AddFailedJobInformation::class,
         string $recorder = FailedJobRecorder::class
@@ -194,30 +202,30 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function cacheEvents(
+    public function addCacheEvents(
         bool $trace = true,
         bool $report = true,
         ?int $maxReported = 100,
         array $events = [SpanEventType::CacheHit, SpanEventType::CacheMiss, SpanEventType::CacheKeyWritten, SpanEventType::CacheKeyForgotten],
         string $recorder = CacheRecorder::class,
     ): static {
-        parent::cacheEvents($trace, $report, $maxReported, $events, $recorder);
+        parent::addCacheEvents($trace, $report, $maxReported, $events, $recorder);
 
         return $this;
     }
 
-    public function logs(
+    public function addLogs(
         bool $trace = true,
         bool $report = true,
         ?int $maxReported = 10,
         string $recorder = LogRecorder::class
     ): static {
-        parent::logs($trace, $report, $maxReported, $recorder);
+        parent::addLogs($trace, $report, $maxReported, $recorder);
 
         return $this;
     }
 
-    public function queries(
+    public function addQueries(
         bool $trace = true,
         bool $report = true,
         ?int $maxReported = 100,
@@ -226,23 +234,23 @@ class FlareConfig extends BaseFlareConfig
         ?int $findOriginThreshold = 300_000,
         string $recorder = QueryRecorder::class,
     ): static {
-        parent::queries($trace, $report, $maxReported, $includeBindings, $findOrigin, $findOriginThreshold, $recorder);
+        parent::addQueries($trace, $report, $maxReported, $includeBindings, $findOrigin, $findOriginThreshold, $recorder);
 
         return $this;
     }
 
-    public function transactions(
+    public function addTransactions(
         bool $trace = true,
         bool $report = true,
         ?int $maxReported = 100,
         string $recorder = TransactionRecorder::class
     ): static {
-        parent::transactions($trace, $report, $maxReported, $recorder);
+        parent::addTransactions($trace, $report, $maxReported, $recorder);
 
         return $this;
     }
 
-    public function stackFrameArguments(
+    public function addStackFrameArguments(
         bool $withStackFrameArguments = true,
         BackTraceArgumentReducers|array|string|ArgumentReducer|null $argumentReducers = null,
         bool $forcePHPIniSetting = true
@@ -251,23 +259,20 @@ class FlareConfig extends BaseFlareConfig
             $argumentReducers = ArgumentReducers::default();
         }
 
-        return parent::stackFrameArguments(
+        return parent::addStackFrameArguments(
             $withStackFrameArguments,
             $argumentReducers,
             $forcePHPIniSetting
         );
     }
 
-    public function commands(
+    public function addCommands(
         bool $trace = true,
         bool $report = true,
+        ?int $maxReported = 10,
         string $recorder = CommandRecorder::class
     ): static {
-        $this->recorders[$recorder] = [
-            'trace' => $trace,
-            'report' => $report,
-            'max_reported' => null,
-        ];
+        parent::addCommands($trace, $report, $maxReported, $recorder);
 
         return $this;
     }

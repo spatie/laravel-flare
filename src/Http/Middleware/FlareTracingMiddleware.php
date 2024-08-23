@@ -26,7 +26,7 @@ class FlareTracingMiddleware
     {
         $this->tracer->potentialStartTrace([]);
 
-        if ($this->tracer->isSamping()) {
+        if ($this->tracer->isSampling()) {
             $this->startTrace($request);
         }
 
@@ -64,7 +64,7 @@ class FlareTracingMiddleware
         $this->span = Span::build(
             traceId: $this->tracer->currentTraceId(),
             name: "request - ".$request->url(),
-            startUs: $start,
+            start: $start,
             attributes: $attributes
         );
 

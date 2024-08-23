@@ -16,7 +16,7 @@ it('records cache operations', function (
 ) {
     $preRecording();
 
-    setupFlare(fn (FlareConfig $config) => $config->removeAllRecorders()->cacheEvents());
+    setupFlare(fn (FlareConfig $config) => $config->removeAllRecorders()->addCacheEvents());
 
     Route::get('exception', function () use ($record) {
         $record();

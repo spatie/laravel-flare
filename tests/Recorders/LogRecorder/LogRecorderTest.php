@@ -16,7 +16,7 @@ it('traces logs', function () {
     $flare->tracer->startTrace();
     $flare->tracer->startSpan('Parent Span');
 
-    Log::info('Hello world', [
+    Log::info('critical', [
         'some' => 'context',
     ]);
 
@@ -34,7 +34,7 @@ it('traces logs', function () {
                     ->hasType(SpanEventType::Log)
                     ->hasAttributeCount(4)
                     ->hasAttribute('log.level', 'info')
-                    ->hasAttribute('log.message', 'Hello world')
+                    ->hasAttribute('log.message', 'critical')
                     ->hasAttribute('log.context', ['some' => 'context'])
                 )
             ));

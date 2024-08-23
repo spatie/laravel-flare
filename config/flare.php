@@ -27,6 +27,7 @@ use Spatie\FlareClient\FlareMiddleware\AddConsoleInformation;
 use Spatie\FlareClient\FlareMiddleware\AddDumps;
 use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
 use Spatie\FlareClient\FlareMiddleware\AddRequestInformation;
+use Spatie\FlareClient\FlareMiddleware\AddSolutions;
 use Spatie\FlareClient\FlareMiddleware\CensorRequestBodyFields;
 use Spatie\FlareClient\FlareMiddleware\CensorRequestHeaders;
 use Spatie\FlareClient\FlareMiddleware\RemoveRequestIp;
@@ -43,7 +44,9 @@ use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
 use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
 use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
+use Spatie\LaravelFlare\Recorders\ApplicationRecorder\ApplicationRecorder;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
+use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
@@ -96,9 +99,18 @@ return [
         AddExceptionInformation::class => [],
         AddLaravelContext::class => [],
         AddExceptionHandledStatus::class => [],
+        AddSolutions::class => [],
     ],
 
     'recorders' => [
+        ApplicationRecorder::class => [
+
+        ],
+        CommandRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 10,
+        ],
         CacheRecorder::class => [
             'trace' => true,
             'report' => true,
@@ -110,9 +122,6 @@ return [
             'report' => true,
             'max_reported' => 25,
             'find_dump_origin' => true,
-        ],
-        ExceptionRecorder::class => [
-            'trace' => true,
         ],
         GlowRecorder::class => [
             'trace' => true,
@@ -154,7 +163,6 @@ return [
 
     'send_logs_as_events' => true,
 
-
     /*
     |--------------------------------------------------------------------------
     | Solution Providers
@@ -192,6 +200,17 @@ return [
         UnknownMysql8CollationSolutionProvider::class,
         UnknownMariadbCollationSolutionProvider::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Report error levels
+    |--------------------------------------------------------------------------
+    | When reporting errors, you can specify which error levels should be
+    | reported. By default, all error levels are reported by setting
+    | this value to `null`.
+     */
+
+    'report_error_levels' => null,
 
 
     /*
@@ -257,27 +276,49 @@ return [
 
     'enable_share_button' => true,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sender
+    |--------------------------------------------------------------------------
+    |
+    | The sender is responsible for sending the error reports and traces to
+    | Flare it can be configured if needed.
+    |
+    */
     'sender' => [
         'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
         'config' => [],
     ],
 
-
+    /*
+    |--------------------------------------------------------------------------
+    | Tracing
+    |--------------------------------------------------------------------------
+    |
+    | Tracing allows you to see the flow of your application. It shows you
+    | which parts of your application are slow and which parts are fast.
+    |
+    */
     'tracing' => [
         'enabled' => true,
 
-        'limits' => [
-            'maxSpans' => 512,
-            'maxAttributesPerSpan' => 128,
-            'maxSpanEventsPerSpan' => 128,
-            'maxAttributesPerSpanEvent' => 128,
-        ],
-
+        // The sampler is used to determine which traces should be recorded
         'sampler' => [
             'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
             'config' => [
                 'rate' => 1,
             ],
+        ],
+
+        // Whether to trace throwables
+        'trace_throwables' => true,
+
+        // Limits for the tracing data
+        'limits' => [
+            'max_spans' => 512,
+            'max_attributes_per_span' => 128,
+            'max_span_events_per_span' => 128,
+            'max_attributes_per_span_event' => 128,
         ],
     ],
 

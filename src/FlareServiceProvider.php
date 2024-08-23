@@ -17,8 +17,8 @@ use Monolog\Logger;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
 use Spatie\FlareClient\Resources\Resource;
+use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
-use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Support\BackTracer;
@@ -75,18 +75,22 @@ class FlareServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->singleton(Resource::class, fn () => Resource::build(
-            $this->config->applicationName,
-            $this->config->applicationVersion,
-            Telemetry::NAME,
-            Telemetry::VERSION
-        )->host());
+        $this->app->extend(Resource::class, fn (Resource $resource) => $resource
+            ->telemetrySdkName(Telemetry::NAME)
+            ->telemetrySdkVersion(Telemetry::VERSION)
+        );
 
-        $this->app->singleton(FlareTracingMiddleware::class);
+        $this->app->extend(Scope::class, fn (Scope $scope) => $scope
+            ->name(Telemetry::NAME)
+            ->version(Telemetry::VERSION)
+        );
+
+//        $this->app->singleton(FlareTracingMiddleware::class);
     }
 
     public function boot(): void
     {
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 TestCommand::class,
@@ -112,11 +116,7 @@ class FlareServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->prependTracingMiddleware();
-
-        register_shutdown_function(function () {
-            $this->app->make(Tracer::class)->transmit();
-        });
+//        $this->prependTracingMiddleware();
     }
 
     protected function registerLogHandler(): void
@@ -139,7 +139,7 @@ class FlareServiceProvider extends ServiceProvider
 
     protected function registerShareButton(): void
     {
-        config()->set('error-share.enabled', config('flare.enable_share_button'));
+        config()->set('error-share.enabled', $this->config->enableShareButton);
     }
 
     protected function configureTinker(): void
