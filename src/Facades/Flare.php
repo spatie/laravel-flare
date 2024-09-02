@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
+use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Throwable;
 
 /**
@@ -14,6 +15,7 @@ use Throwable;
  * @method static FlareClient withApplicationVersion(string|Closure $version)
  * @method static FlareClient filterExceptionsUsing(Closure $filterExceptionsCallable)
  * @method static FlareClient filterReportsUsing(Closure $filterReportsCallable)
+ * @method static GlowRecorder glow()
  *
  * @see \Spatie\FlareClient\Flare
  */
