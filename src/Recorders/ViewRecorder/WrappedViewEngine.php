@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Recorders\ViewRecorder;
 
 use Illuminate\Contracts\View\Engine;
-use Illuminate\Support\Traits\ForwardsCalls;
 
 class WrappedViewEngine implements Engine
 {

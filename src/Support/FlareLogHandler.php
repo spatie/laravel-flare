@@ -39,7 +39,7 @@ class FlareLogHandler extends AbstractProcessingHandler
             return;
         }
 
-        if(array_key_exists('exception', $record['context'])) {
+        if (array_key_exists('exception', $record['context'])) {
             return;
         }
 

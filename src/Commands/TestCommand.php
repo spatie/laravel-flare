@@ -53,7 +53,7 @@ class TestCommand extends Command
 
     public function checkFlareLogger(): bool
     {
-        if(! app()->make('log') instanceof LogManager) {
+        if (! app()->make('log') instanceof LogManager) {
             return true;
         }
 
@@ -61,7 +61,7 @@ class TestCommand extends Command
             ? $this->isValidReportableCallbackFlareLogger()
             : $this->isValidConfigFlareLogger();
 
-        if($configuredCorrectly === false) {
+        if ($configuredCorrectly === false) {
             return false;
         }
 
@@ -124,7 +124,7 @@ class TestCommand extends Command
 
         $hasReportableCallbackFlareLogger = $this->hasReportableCallbackFlareLogger();
 
-        if(empty($configLoggerFailures) && $hasReportableCallbackFlareLogger) {
+        if (empty($configLoggerFailures) && $hasReportableCallbackFlareLogger) {
             $this->info('❌ The Flare logger was defined in your Laravel `logging.php` config file and `bootstrap/app.php` file which can cause duplicate errors. Please remove the Flare logger from your `logging.php` config file.');
         }
 
@@ -132,7 +132,7 @@ class TestCommand extends Command
             return true;
         }
 
-        if(empty($configLoggerFailures)) {
+        if (empty($configLoggerFailures)) {
             return true;
         }
 

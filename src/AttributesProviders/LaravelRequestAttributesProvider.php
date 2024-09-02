@@ -7,7 +7,6 @@ use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Routing\Route;
 use Livewire\LivewireManager;
 use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider as BaseRequestAttributesProvider;
-use Spatie\FlareClient\Support\Redactor;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
 

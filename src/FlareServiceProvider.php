@@ -10,29 +10,26 @@ use Illuminate\Routing\Contracts\CallableDispatcher;
 use Illuminate\Routing\Contracts\ControllerDispatcher;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\View\Factory;
 use Illuminate\View\ViewException;
 use Laravel\Octane\Events\RequestReceived;
 use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
 use Monolog\Logger;
-use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
 use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
 use Spatie\LaravelFlare\Support\BackTracer;
-use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 use Spatie\LaravelFlare\Support\Telemetry;
+use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
 
@@ -85,12 +82,16 @@ class FlareServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->extend(Resource::class, fn (Resource $resource) => $resource
+        $this->app->extend(
+            Resource::class,
+            fn (Resource $resource) => $resource
             ->telemetrySdkName(Telemetry::NAME)
             ->telemetrySdkVersion(Telemetry::VERSION)
         );
 
-        $this->app->extend(Scope::class, fn (Scope $scope) => $scope
+        $this->app->extend(
+            Scope::class,
+            fn (Scope $scope) => $scope
             ->name(Telemetry::NAME)
             ->version(Telemetry::VERSION)
         );

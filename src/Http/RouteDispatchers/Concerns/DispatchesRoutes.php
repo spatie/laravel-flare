@@ -5,7 +5,6 @@ namespace Spatie\LaravelFlare\Http\RouteDispatchers\Concerns;
 use Closure;
 use Spatie\LaravelFlare\Enums\SpanType;
 
-
 trait DispatchesRoutes
 {
     protected function wrapDispatcher(Closure $dispatch)

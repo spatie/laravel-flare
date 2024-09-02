@@ -18,7 +18,7 @@ class TestCommand extends Command
             throw new ExpectedException('Test exception');
         }
 
-        if($this->option('run-nested')) {
+        if ($this->option('run-nested')) {
             Artisan::call('flare:test-command', [
                 '--option' => 'nested',
                 '--boolean-option' => true,

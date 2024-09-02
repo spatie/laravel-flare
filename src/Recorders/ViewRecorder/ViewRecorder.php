@@ -48,9 +48,9 @@ class ViewRecorder implements SpansRecorder
         $this->app->resolved('view.engine.resolver')
             ? $this->wrapEnginesInEngineResolver($this->app->make('view.engine.resolver'))
             : $this->app->afterResolving(
-            'view.engine.resolver',
-            fn (EngineResolver $resolver) => $this->wrapEnginesInEngineResolver($resolver)
-        );
+                'view.engine.resolver',
+                fn (EngineResolver $resolver) => $this->wrapEnginesInEngineResolver($resolver)
+            );
     }
 
     public function recordRendering(
@@ -113,7 +113,7 @@ class ViewRecorder implements SpansRecorder
         $count = $loop->count ?? '?';
         $depth = $loop->depth ?? 1;
 
-        if(is_numeric($count)){
+        if (is_numeric($count)) {
             $count -= 1;
         }
 
