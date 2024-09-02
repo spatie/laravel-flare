@@ -4,23 +4,22 @@ namespace Spatie\LaravelFlare\Enums;
 
 use Spatie\FlareClient\Contracts\FlareSpanType;
 
-enum SpanType : string implements FlareSpanType
+enum SpanType: string implements FlareSpanType
 {
-    case Request = 'laravel_request';
     case Routing = 'laravel_routing';
-    case Job = 'laravel_job';
     case Query = 'laravel_query';
-    case RedisCommand = 'laravel_redis_command';
     case Application = 'laravel_application';
-    case Booting = 'laravel_booting';
+    case Boot = 'laravel_boot';
+    case Registration = 'laravel_registration';
+    case GlobalMiddlewareBefore = 'laravel_global_middleware_before';
+    case LocalMiddlewareBefore = 'laravel_local_middleware_before';
+    case Response = 'laravel_response';
+    case Terminating = 'laravel_terminating';
 
     public function humanReadable(): string
     {
         return match ($this) {
-            self::Request => 'request',
-            self::Job => 'job',
             self::Query => 'query',
-            self::RedisCommand => 'redis command',
             self::Application => 'application',
         };
     }

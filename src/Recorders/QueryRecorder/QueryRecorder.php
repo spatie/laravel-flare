@@ -7,7 +7,7 @@ use Illuminate\Events\Dispatcher;
 use Spatie\FlareClient\Recorders\QueryRecorder\QueryRecorder as BaseQueryRecorder;
 use Spatie\FlareClient\Recorders\QueryRecorder\QuerySpan;
 use Spatie\FlareClient\Support\BackTracer;
-use Spatie\FlareClient\Time\Duration;
+use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Enums\SpanType;
 
@@ -31,7 +31,7 @@ class QueryRecorder extends BaseQueryRecorder
     {
         return $this->record(
             $event->sql,
-            Duration::milliseconds($event->time),
+            TimeHelper::milliseconds($event->time),
             $event->bindings,
             $event->connection->getDatabaseName(),
             $event->connection->getDriverName(),

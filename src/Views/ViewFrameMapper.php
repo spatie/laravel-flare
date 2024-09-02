@@ -23,22 +23,6 @@ class ViewFrameMapper
         $this->bladeSourceMapCompiler = $bladeSourceMapCompiler;
     }
 
-    /**
-     * @param array<array> $trace
-     *
-     * @return array{viewIndex: int|null, trace: array<array>}
-     */
-    public function mapExceptionTrace(
-        array $trace
-    ): array {
-
-
-        return [
-            'viewIndex' => $viewIndex,
-            'trace' => $trace,
-        ];
-    }
-
     public function findCompiledView(string $compiledPath): ?string
     {
         $this->knownPaths ??= $this->getKnownPaths();
@@ -69,6 +53,7 @@ class ViewFrameMapper
         }
 
         $knownPaths = [];
+
         foreach ($lastCompiled as $lastCompiledPath) {
             $compiledPath = $this->compilerEngine->getCompiler()->getCompiledPath($lastCompiledPath);
 

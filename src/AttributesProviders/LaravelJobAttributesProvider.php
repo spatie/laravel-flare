@@ -13,28 +13,24 @@ use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionProperty;
 use RuntimeException;
-use Spatie\Backtrace\Arguments\ArgumentReducers;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\Backtrace\Arguments\ReducedArgument\ReducedArgument;
-use Spatie\FlareClient\Time\Duration;
+use Spatie\FlareClient\Time\TimeHelper;
 
 class LaravelJobAttributesProvider
 {
-    protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction;
-
     public function __construct(
-        protected int $maxChainedJobReportingDepth = 3,
-        protected ArgumentReducers|null $argumentReducers = null,
+        protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
     ) {
-        if ($this->argumentReducers) {
-            $this->reduceArgumentPayloadAction = new ReduceArgumentPayloadAction($this->argumentReducers);
-        }
     }
 
-    public function toArray(Job $job, ?string $connectionName = null): array
-    {
+    public function toArray(
+        Job $job,
+        ?string $connectionName = null,
+        int $maxChainedJobReportingDepth = 3,
+    ): array {
         return array_merge(
-            $this->getJobProperties($job),
+            $this->getJobPropertiesFromPayload($this->resolveJobPayload($job), $maxChainedJobReportingDepth),
             [
                 'laravel.job.queue.connection_name' => $connectionName ?? $job->getConnectionName(),
                 'laravel.job.queue.name' => $job->getQueue(),
@@ -42,16 +38,17 @@ class LaravelJobAttributesProvider
         );
     }
 
-    protected function getJobProperties(Job $job): array
-    {
+    public function getJobPropertiesFromPayload(
+        array $payload,
+        int $maxChainedJobReportingDepth = 3,
+    ): array {
         // Queue::createObjectPayload() is used to create the payload for the job
-        $payload = $this->resolveJobPayload($job);
 
         try {
             if (is_string($payload['data'])) {
-                $properties['data'] = json_decode($payload['data'], true, 512, JSON_THROW_ON_ERROR);
+                $payload['data'] = json_decode($payload['data'], true, 512, JSON_THROW_ON_ERROR);
             }
-        } catch (Exception $exception) {
+        } catch (Exception) {
         }
 
         $attributes = [];
@@ -64,7 +61,7 @@ class LaravelJobAttributesProvider
             $attributes['laravel.job.uuid'] = $payload['uuid'];
         }
 
-        if (array_key_exists('displayName', $payload) && $payload['displayName'] !== $jobClass) {
+        if (array_key_exists('displayName', $payload)) {
             $attributes['laravel.job.name'] = $payload['displayName'];
         }
 
@@ -93,7 +90,7 @@ class LaravelJobAttributesProvider
         }
 
         if (array_key_exists('pushedAt', $payload)) {
-            $attributes['laravel.job.pushed_at'] = Duration::seconds(
+            $attributes['laravel.job.pushed_at'] = TimeHelper::seconds(
                 DateTime::createFromFormat('U.u', $payload['pushedAt'])->format('U')
             );
         }
@@ -103,7 +100,7 @@ class LaravelJobAttributesProvider
         try {
             $propertyAttributes = $this->resolveCommandProperties(
                 $this->resolveObjectFromCommand($payload['data']['command']),
-                $this->maxChainedJobReportingDepth
+                $maxChainedJobReportingDepth
             );
         } catch (Exception $exception) {
         }

@@ -19,6 +19,7 @@ use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
+use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
@@ -64,6 +65,9 @@ class FlareConfig extends BaseFlareConfig
                 maxAttributesPerSpanEvent: config('flare.tracing.limits.max_attributes_per_span_event')
             ),
             traceThrowables: config('flare.tracing.trace_throwables'),
+            censorClientIps: config('flare.censor.client_ips'),
+            censorHeaders: config('flare.censor.headers'),
+            censorBodyFields: config('flare.censor.body_fields'),
         );
 
         $config->sendLogsAsEvents = config('flare.send_logs_as_events', true);
@@ -77,22 +81,13 @@ class FlareConfig extends BaseFlareConfig
 
     public function useDefaults(): static
     {
-        return $this
-            // flare-php-client
-            ->addDumps()
-            ->addRequestInfo()
-            ->addGitInfo()
-            ->addGlows()
-            ->addSolutions()
-            ->addStackFrameArguments()
-            ->addThrowables()
-            // laravel-flare
+        return parent::useDefaults()
             ->sendLogsAsEvents()
             ->addLivewireComponents()
             ->addLaravelInfo()
             ->addLaravelContext()
             ->addExceptionInfo()
-            ->addFailedJobInfo()
+            ->addJobInfo()
             ->addExceptionHandledStatus()
             ->addCacheEvents()
             ->addLogs()
@@ -112,22 +107,9 @@ class FlareConfig extends BaseFlareConfig
     }
 
     public function addRequestInfo(
-        array $censorBodyFields = ['password', 'password_confirmation'],
-        array $censorRequestHeaders = [
-            'API-KEY',
-            'Authorization',
-            'Cookie',
-            'Set-Cookie',
-            'X-CSRF-TOKEN',
-            'X-XSRF-TOKEN',
-        ],
-        bool $removeRequestIp = false,
         string $middleware = AddRequestInformation::class,
     ): static {
         parent::addRequestInfo(
-            censorBodyFields: $censorBodyFields,
-            censorRequestHeaders: $censorRequestHeaders,
-            removeRequestIp: $removeRequestIp,
             middleware: $middleware,
         );
 
@@ -180,16 +162,19 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function addFailedJobInfo(
-        int $maxChainedJobReportingDepth = 5,
-        string $middleware = AddFailedJobInformation::class,
-        string $recorder = FailedJobRecorder::class
+    public function addJobInfo(
+        bool $trace = true,
+        bool $report = true,
+        ?int $maxReported = 10,
+        int $maxChainedJobReportingDepth = 2,
+        string $recorder = JobRecorder::class
     ): static {
         $this->recorders[$recorder] = [
+            'trace' => $trace,
+            'report' => $report,
+            'max_reported' => $maxReported,
             'max_chained_job_reporting_depth' => $maxChainedJobReportingDepth,
         ];
-
-        $this->middleware[$middleware] = [];
 
         return $this;
     }

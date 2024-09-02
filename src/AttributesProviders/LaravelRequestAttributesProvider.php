@@ -7,21 +7,13 @@ use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Routing\Route;
 use Livewire\LivewireManager;
 use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider as BaseRequestAttributesProvider;
+use Spatie\FlareClient\Support\Redactor;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
 
 class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
 {
-    public function __construct(
-        array $censorBodyFields = [],
-        array $censorRequestHeaders = [],
-        bool $removeIp = false,
-        protected bool $includeLivewireComponents = false,
-    ) {
-        parent::__construct($censorBodyFields, $censorRequestHeaders, $removeIp);
-    }
-
-    public function toArray(Request $request): array
+    public function toArray(Request $request, bool $includeLivewireComponents = false): array
     {
         if (! $request instanceof LaravelRequest) {
             return parent::toArray($request);
@@ -33,7 +25,7 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
             ...$this->getRoute($request),
         ];
 
-        if (! $this->isRunningLiveWire($request) || ! $this->includeLivewireComponents) {
+        if (! $this->isRunningLiveWire($request) || ! $includeLivewireComponents) {
             return $attributes;
         }
 

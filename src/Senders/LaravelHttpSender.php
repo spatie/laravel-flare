@@ -13,12 +13,10 @@ class LaravelHttpSender implements Sender
             ->post($endpoint, $payload)
             ->throw()
             ->onError(function ($response) {
-                // TODO: add a better handling here
-
-                logger()->error('Failed to transmit traces', [
+                logger()->error('Failed to transmit Flare report and/or traces', [
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
-            })->json();
+            })->json() ?? [];
     }
 }

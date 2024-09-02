@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Schema;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectTrace;
 use Spatie\FlareClient\Tests\Shared\ExpectTracer;
-use Spatie\FlareClient\Time\Duration;
+use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
@@ -79,11 +79,11 @@ it('can stop recording bindings', function () {
 });
 
 it('will add origin attributes when a threshold is met and tracing', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: Duration::milliseconds(300)));
+    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
 
     $flare->tracer->startTrace();
 
-    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(400));
+    $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 
     $report = $flare->report(new Exception('Report this'));
 
@@ -95,9 +95,9 @@ it('will add origin attributes when a threshold is met and tracing', function ()
 });
 
 it('will not add origin attributes when a threshold is met and only reporting', function () {
-    $flare = setupFlare(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: Duration::milliseconds(300)));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
 
-    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(400));
+    $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 
     $report = $flare->report(new Exception('Report this'));
 
@@ -109,11 +109,11 @@ it('will not add origin attributes when a threshold is met and only reporting', 
 });
 
 it('will not add origin attributes when a threshold is not met', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: Duration::milliseconds(300)));
+    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
 
     $flare->tracer->startTrace();
 
-    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(200));
+    $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(200));
 
     $report = $flare->report(new Exception('Report this'));
 
@@ -125,11 +125,11 @@ it('will not add origin attributes when a threshold is not met', function () {
 });
 
 it('will not add origin attributes when the trace origin feature is disabled', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOrigin: false, findOriginThreshold: Duration::milliseconds(300)));
+    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOrigin: false, findOriginThreshold: TimeHelper::milliseconds(300)));
 
     $flare->tracer->startTrace();
 
-    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(400));
+    $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 
     $report = $flare->report(new Exception('Report this'));
 
@@ -146,7 +146,7 @@ it('will always add origin attributes when no threshold is set', function () {
 
     $flare->tracer->startTrace();
 
-    $flare->query()->record('SELECT * FROM users', duration: Duration::milliseconds(200));
+    $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(200));
 
     $report = $flare->report(new Exception('Report this'));
 

@@ -17,6 +17,7 @@ class LivewireAttributesProvider
         return [
             'http.request.method' => $livewire->originalMethod(),
             'url.full' => $livewire->originalUrl(),
+
             // TODO url.scheme, url.path & url.query might be incorrect
 
             'livewire.components' => $this->getLivewire($request, $livewire),

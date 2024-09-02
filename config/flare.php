@@ -34,7 +34,7 @@ use Spatie\FlareClient\FlareMiddleware\RemoveRequestIp;
 use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
 use Spatie\FlareClient\Recorders\ExceptionRecorder\ExceptionRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
-use Spatie\FlareClient\Time\Duration;
+use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddFailedJobInformation;
@@ -44,13 +44,17 @@ use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
 use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
 use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
-use Spatie\LaravelFlare\Recorders\ApplicationRecorder\ApplicationRecorder;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
+use Spatie\LaravelFlare\Recorders\HttpRecorder\HttpRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
+use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
+use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
+use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
+use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
 
 return [
     /*
@@ -77,22 +81,7 @@ return [
     */
 
     'middleware' => [
-        AddRequestInformation::class => [
-            'censor_body_fields' => [
-                'password',
-                'password_confirmation',
-            ],
-            'censor_request_headers' => [
-                'API-KEY',
-                'Authorization',
-                'Cookie',
-                'Set-Cookie',
-                'X-CSRF-TOKEN',
-                'X-XSRF-TOKEN',
-            ],
-            'remove_ip' => false,
-        ],
-        AddFailedJobInformation::class => [],
+        AddRequestInformation::class => [],
         AddConsoleInformation::class => [],
         AddGitInformation::class => [],
         AddLaravelInformation::class => [],
@@ -103,7 +92,7 @@ return [
     ],
 
     'recorders' => [
-        ApplicationRecorder::class => [
+        RoutingRecorder::class => [
 
         ],
         CommandRecorder::class => [
@@ -128,8 +117,21 @@ return [
             'report' => true,
             'max_reported' => 100,
         ],
-        FailedJobRecorder::class => [
+        QueueRecorder::class => [
+            'trace' => true,
             'report' => true,
+            'max_reported' => 100,
+        ],
+        JobRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
+            'max_chained_job_reporting_depth' => 2,
+        ],
+        HttpRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
         ],
         LogRecorder::class => [
             'trace' => true,
@@ -142,13 +144,42 @@ return [
             'max_reported' => 100,
             'include_bindings' => true,
             'find_origin' => true,
-            'find_origin_threshold' => Duration::milliseconds(700),
+            'find_origin_threshold' => TimeHelper::milliseconds(700),
         ],
         TransactionRecorder::class => [
             'trace' => true,
             'report' => true,
             'max_reported' => 100,
         ],
+        ViewRecorder::class => [
+            'trace' => true,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Censor data
+    |--------------------------------------------------------------------------
+    |
+    | It is possible to censor sensitive data from the reports and sent to
+    | Flare. Below you can specify which fields and header should be
+    | censored. It is also possible to hide the client's IP address.
+    |
+    */
+    'censor' => [
+        'body_fields' => [
+            'password',
+            'password_confirmation',
+        ],
+        'headers' => [
+            'API-KEY',
+            'Authorization',
+            'Cookie',
+            'Set-Cookie',
+            'X-CSRF-TOKEN',
+            'X-XSRF-TOKEN',
+        ],
+        'client_ips' => false,
     ],
 
     /*

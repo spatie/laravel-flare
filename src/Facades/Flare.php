@@ -5,9 +5,7 @@ namespace Spatie\LaravelFlare\Facades;
 use Closure;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\Facades\Log;
 use Spatie\FlareClient\Flare as FlareClient;
-use Spatie\LaravelFlare\FlareConfig;
 use Throwable;
 
 /**
@@ -33,13 +31,12 @@ class Flare extends Facade
      */
     public static function handles(Exceptions $exceptions): void
     {
-        $exceptions
-            ->reportable(static function (Throwable $exception): FlareClient {
-                $flare = app(FlareClient::class);
+        $exceptions->reportable(static function (Throwable $exception): FlareClient {
+            $flare = app(FlareClient::class);
 
-                $flare->report($exception);
+            $flare->report($exception);
 
-                return $flare;
-            });
+            return $flare;
+        });
     }
 }

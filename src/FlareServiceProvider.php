@@ -6,22 +6,31 @@ use Illuminate\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Routing\Contracts\CallableDispatcher;
+use Illuminate\Routing\Contracts\ControllerDispatcher;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\View\Factory;
 use Illuminate\View\ViewException;
 use Laravel\Octane\Events\RequestReceived;
 use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
 use Monolog\Logger;
+use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
+use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
+use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
+use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
 use Spatie\LaravelFlare\Support\BackTracer;
+use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 use Spatie\LaravelFlare\Support\Telemetry;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
@@ -44,6 +53,7 @@ class FlareServiceProvider extends ServiceProvider
         } else {
             $this->config = $this->app->make(FlareConfig::class);
         }
+
 
         $this->registerLogHandler();
 
@@ -85,12 +95,13 @@ class FlareServiceProvider extends ServiceProvider
             ->version(Telemetry::VERSION)
         );
 
-//        $this->app->singleton(FlareTracingMiddleware::class);
+        $this->app->singleton(FlareTracingMiddleware::class);
+
+        TracingKernel::registerCallbacks($this->app);
     }
 
     public function boot(): void
     {
-
         if ($this->app->runningInConsole()) {
             $this->commands([
                 TestCommand::class,
@@ -112,11 +123,15 @@ class FlareServiceProvider extends ServiceProvider
         $this->registerViewExceptionMapper();
         $this->configureQueue();
 
+
         if ($this->config->trace === false) {
             return;
         }
 
-//        $this->prependTracingMiddleware();
+        $this->extendRouteDispatchers();
+        $this->prependTracingMiddleware();
+
+        TracingKernel::bootCallbacks($this->app);
     }
 
     protected function registerLogHandler(): void
@@ -153,7 +168,7 @@ class FlareServiceProvider extends ServiceProvider
 
     protected function configureOctane(): void
     {
-        if (isset($_SERVER['LARAVEL_OCTANE'])) {
+        if (app()->bound('octane')) {
             $this->setupOctane();
         }
     }
@@ -182,20 +197,28 @@ class FlareServiceProvider extends ServiceProvider
         // Reset before executing a queue job to make sure the job's log/query/dump recorders are empty.
         // When using a sync queue this also reports the queued reports from previous exceptions.
         $queue->before(function () {
-            $this->resetFlare();
-
-            // TODO: check in Horizon if this is working
-            //app(Flare::class)->sendReportsImmediately();
+            $this->resetFlareReporting();
         });
 
         // Send queued reports (and reset) after executing a queue job.
         $queue->after(function () {
-            $this->resetFlare();
+            $this->resetFlareReporting();
         });
 
-        // TODO: performance tracing sampling kinda can be reset here?
-
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
+    }
+
+    protected function extendRouteDispatchers()
+    {
+        $this->app->extend(
+            CallableDispatcher::class,
+            fn (CallableDispatcher $dispatcher) => new CallableRouteDispatcher($this->app->make(Tracer::class), $dispatcher)
+        );
+
+        $this->app->extend(
+            ControllerDispatcher::class,
+            fn (ControllerDispatcher $dispatcher) => new ControllerRouteDispatcher($this->app->make(Tracer::class), $dispatcher)
+        );
     }
 
     protected function prependTracingMiddleware(): void
@@ -209,28 +232,25 @@ class FlareServiceProvider extends ServiceProvider
 
     protected function setupOctane(): void
     {
-        // TODO: performance tracing sampling kinda can be reset here?
-
-
         $this->app['events']->listen(RequestReceived::class, function () {
-            $this->resetFlare();
+            $this->resetFlareReporting();
         });
 
         $this->app['events']->listen(TaskReceived::class, function () {
-            $this->resetFlare();
+            $this->resetFlareReporting();
         });
 
         $this->app['events']->listen(TickReceived::class, function () {
-            $this->resetFlare();
+            $this->resetFlareReporting();
         });
 
         $this->app['events']->listen(RequestTerminated::class, function () {
-            $this->resetFlare();
+            $this->resetFlareReporting();
         });
     }
 
-    protected function resetFlare(): void
+    protected function resetFlareReporting(): void
     {
-        $this->app->get(Flare::class)->reset();
+        $this->app->get(Flare::class)->resetReporting();
     }
 }

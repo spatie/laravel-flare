@@ -5,26 +5,41 @@ namespace Spatie\LaravelFlare\Http\Middleware;
 use Closure;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
-use Spatie\LaravelFlare\Enums\SpanType;
-use Spatie\LaravelFlare\FlareConfig;
+use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Symfony\Component\HttpFoundation\Response;
 
 class FlareTracingMiddleware
 {
-    protected Span $span;
+    protected Span $requestSpan;
 
     public function __construct(
         protected Tracer $tracer,
-        protected Application $app
+        protected Application $app,
+        protected LaravelRequestAttributesProvider $attributesProvider,
+        protected bool $traceGlobalMiddleware = true,
     ) {
     }
 
     public function handle(Request $request, Closure $next)
     {
-        $this->tracer->potentialStartTrace([]);
+        $ignorePaths = [
+            '_debugbar',
+            'telescope',
+            'horizon',
+        ];
+
+        if (Str::startsWith($request->decodedPath(), $ignorePaths)) {
+            $this->tracer->trashCurrentTrace();
+
+            return $next($request);
+        }
+
+        $this->tracer->potentialStartTrace(); // In case of Octane
 
         if ($this->tracer->isSampling()) {
             $this->startTrace($request);
@@ -33,41 +48,57 @@ class FlareTracingMiddleware
         return $next($request);
     }
 
-    public function terminate(Request $request, Response $response): void
+    protected function startTrace(Request $request): void
     {
-        if (! isset($this->span)) {
-            return;
-        }
-
-        $flareConfig = $this->app->make(FlareConfig::class);
-
-        $attributesProvider = (new LaravelRequestAttributesProvider(
-            // TODO: these should be stored on the config object and not in the middleware
-        ));
-
-        $this->span->addAttributes($attributesProvider->toArray($request));
-        $this->span->addAttribute('http.response.status_code', $response->getStatusCode());
-
-        $this->tracer->endCurrentSpan();
-        $this->tracer->endTrace();
-    }
-
-    private function startTrace(Request $request): void
-    {
-        $start = (defined('LARAVEL_START') ? LARAVEL_START : $request->server('REQUEST_TIME_FLOAT')) * 1000_000;
-
         $attributes = [
             'flare.span_type' => SpanType::Request,
             'http.request.method' => strtoupper($request->getMethod()),
         ];
 
-        $this->span = Span::build(
+        $this->requestSpan = Span::build(
             traceId: $this->tracer->currentTraceId(),
             name: "request - ".$request->url(),
-            start: $start,
+            parentId: $this->tracer->currentSpanId(),
             attributes: $attributes
         );
 
-        $this->tracer->addSpan($this->span, makeCurrent: true);
+        $this->tracer->addSpan($this->requestSpan, makeCurrent: true);
+
+        if ($this->traceGlobalMiddleware) {
+            $this->tracer->addSpan(
+                Span::build(
+                    traceId: $this->tracer->currentTraceId(),
+                    name: "Middleware (global, before)",
+                    parentId: $this->tracer->currentSpanId(),
+                    attributes: [
+                        'flare.span_type' => LaravelSpanType::GlobalMiddlewareBefore,
+                    ]
+                ),
+                makeCurrent: true
+            );
+        }
+    }
+
+    public function terminate(Request $request, Response $response): void
+    {
+        if ($this->tracer->hasCurrentSpan(LaravelSpanType::Terminating)) {
+            $this->tracer->endCurrentSpan();
+        }
+
+        if (! $this->tracer->hasCurrentSpan(SpanType::Request)) {
+            return;
+        }
+
+        $this->requestSpan->addAttributes(
+            $this->attributesProvider->toArray($request)
+        );
+        $this->requestSpan->addAttribute('http.response.status_code', $response->getStatusCode());
+
+        $requestSpan = $this->tracer->endCurrentSpan();
+
+        if ($requestSpan->parentSpanId === null) {
+            // In case of Octane
+            $this->tracer->endTrace();
+        }
     }
 }
