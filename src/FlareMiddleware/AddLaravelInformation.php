@@ -11,9 +11,7 @@ class AddLaravelInformation implements FlareMiddleware
 {
     public function handle(ReportFactory $report, Closure $next)
     {
-        $report->frameworkVersion(app()->version());
-
-        $report->setAttributes(
+        $report->addAttributes(
             (new LaravelAttributesProvider())->toArray()
         );
 

@@ -11,6 +11,7 @@ class LaravelAttributesProvider
             'laravel.locale' => app()->getLocale(),
             'laravel.config_cached' => app()->configurationIsCached(),
             'laravel.debug' => config('app.debug'),
+            'flare.framework' => 'Laravel',
         ];
     }
 }
