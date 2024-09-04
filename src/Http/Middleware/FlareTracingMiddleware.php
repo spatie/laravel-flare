@@ -57,8 +57,8 @@ class FlareTracingMiddleware
 
         $this->requestSpan = Span::build(
             traceId: $this->tracer->currentTraceId(),
-            name: "request - ".$request->url(),
             parentId: $this->tracer->currentSpanId(),
+            name: "request - ".$request->url(),
             attributes: $attributes
         );
 
@@ -68,8 +68,8 @@ class FlareTracingMiddleware
             $this->tracer->addSpan(
                 Span::build(
                     traceId: $this->tracer->currentTraceId(),
-                    name: "Middleware (global, before)",
                     parentId: $this->tracer->currentSpanId(),
+                    name: "Middleware (global, before)",
                     attributes: [
                         'flare.span_type' => LaravelSpanType::GlobalMiddlewareBefore,
                     ]

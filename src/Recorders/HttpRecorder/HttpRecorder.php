@@ -73,8 +73,8 @@ class HttpRecorder implements SpansRecorder
 
             return Span::build(
                 traceId: $this->tracer->currentTraceId() ?? '',
-                name: $name,
                 parentId: $this->tracer->currentSpanId(),
+                name: $name,
                 attributes: [
                     'flare.span_type' => SpanType::HttpRequest,
                     'url.full' => $url,

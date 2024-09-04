@@ -56,8 +56,8 @@ class JobRecorder implements Recorder
         return $this->startSpan(function () use ($attributes, $event) {
             return Span::build(
                 traceId: $this->tracer->currentTraceId() ?? '',
-                name: "Job - {$attributes['laravel.job.name']}",
                 parentId: $this->tracer->currentSpanId(),
+                name: "Job - {$attributes['laravel.job.name']}",
                 attributes: $attributes
             );
         });

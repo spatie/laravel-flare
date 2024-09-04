@@ -61,8 +61,8 @@ class ViewRecorder implements SpansRecorder
     ): ?Span {
         return $this->startSpan(fn () => Span::build(
             $this->tracer->currentTraceId(),
+            $this->tracer->currentSpanId(),
             "View - {$viewName}",
-            parentId: $this->tracer->currentSpanId(),
             attributes: [
                 'flare.span_type' => SpanType::View,
                 'view.name' => $viewName,

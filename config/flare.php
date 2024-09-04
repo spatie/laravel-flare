@@ -46,6 +46,7 @@ use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
 use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\HttpRecorder\HttpRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
@@ -127,6 +128,12 @@ return [
             'report' => true,
             'max_reported' => 100,
             'max_chained_job_reporting_depth' => 2,
+        ],
+        FilesystemRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
+            'track_all_disks' => true,
         ],
         HttpRecorder::class => [
             'trace' => true,

@@ -15,6 +15,7 @@ enum SpanType: string implements FlareSpanType
     case LocalMiddlewareBefore = 'laravel_local_middleware_before';
     case Response = 'laravel_response';
     case Terminating = 'laravel_terminating';
+    case Filesystem = 'laravel_filesystem';
 
     public function humanReadable(): string
     {

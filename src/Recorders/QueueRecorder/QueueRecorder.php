@@ -50,8 +50,8 @@ class QueueRecorder implements SpansRecorder
 
             return Span::build(
                 traceId: $this->tracer->currentTraceId() ?? '',
-                name: "Queueing -  {$attributes['laravel.job.name']}",
                 parentId: $this->tracer->currentSpanId(),
+                name: "Queueing -  {$attributes['laravel.job.name']}",
                 attributes: $attributes
             );
         });

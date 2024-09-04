@@ -61,9 +61,13 @@ class FlareServiceProvider extends ServiceProvider
         $this->provider = new FlareProvider(
             $this->config,
             $this->app,
-            function (Container $container, string $recorderClass, array $config) {
-                $this->app->singleton($recorderClass);
-                $this->app->when($recorderClass)->needs('$config')->give($config);
+            function (Container $container, string $class, array $config) {
+                $this->app->singleton($class);
+                $this->app->when($class)->needs('$config')->give($config);
+
+                if(method_exists($class, 'registered')) {
+                    $class::registered($container, $config);
+                }
             }
         );
 
@@ -85,15 +89,15 @@ class FlareServiceProvider extends ServiceProvider
         $this->app->extend(
             Resource::class,
             fn (Resource $resource) => $resource
-            ->telemetrySdkName(Telemetry::NAME)
-            ->telemetrySdkVersion(Telemetry::VERSION)
+                ->telemetrySdkName(Telemetry::NAME)
+                ->telemetrySdkVersion(Telemetry::VERSION)
         );
 
         $this->app->extend(
             Scope::class,
             fn (Scope $scope) => $scope
-            ->name(Telemetry::NAME)
-            ->version(Telemetry::VERSION)
+                ->name(Telemetry::NAME)
+                ->version(Telemetry::VERSION)
         );
 
         $this->app->singleton(FlareTracingMiddleware::class);
