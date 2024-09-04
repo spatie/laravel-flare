@@ -4,9 +4,7 @@ namespace Spatie\LaravelFlare\Recorders\FilesystemRecorder;
 
 use Illuminate\Container\Container;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Support\Arr;
-use ReflectionMethod;
 use Spatie\FlareClient\Recorders\FilesystemRecorder\FilesystemRecorder as BaseFilesystemRecorder;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
@@ -36,7 +34,7 @@ class FilesystemRecorder extends BaseFilesystemRecorder
 
         if ($shouldWrapDisks) {
             $container->singleton('filesystem', function () use ($config) {
-                $manager =  new FlareFilesystemManager(app());
+                $manager = new FlareFilesystemManager(app());
 
                 $manager->configureFlare($config);
 

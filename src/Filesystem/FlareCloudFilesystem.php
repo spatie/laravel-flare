@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Filesystem;
 
 use Illuminate\Contracts\Filesystem\Cloud;
-use Illuminate\Contracts\Filesystem\Filesystem;
 use Spatie\LaravelFlare\Filesystem\Concerns\WrapsCloudFilesystem;
 
 class FlareCloudFilesystem implements Cloud

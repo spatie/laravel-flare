@@ -65,7 +65,7 @@ class FlareServiceProvider extends ServiceProvider
                 $this->app->singleton($class);
                 $this->app->when($class)->needs('$config')->give($config);
 
-                if(method_exists($class, 'registered')) {
+                if (method_exists($class, 'registered')) {
                     $class::registered($container, $config);
                 }
             }

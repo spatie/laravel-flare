@@ -7,7 +7,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
-use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Throwable;
 

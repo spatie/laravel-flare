@@ -3,14 +3,12 @@
 namespace Spatie\LaravelFlare\Filesystem\Concerns;
 
 use Closure;
-use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Psr\Http\Message\StreamInterface;
 use Spatie\FlareClient\Concerns\PrefersHumanFormats;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Facades\Flare;
-
 
 trait WrapsFileSystem
 {
