@@ -23,7 +23,6 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
 use Spatie\FlareClient\Enums\CacheOperation;
-use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\FlareMiddleware\AddConsoleInformation;
 use Spatie\FlareClient\FlareMiddleware\AddDumps;
 use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
@@ -45,6 +44,7 @@ use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
 use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
 use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
+use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation as AddViewInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
@@ -83,6 +83,7 @@ return [
     */
 
     'middleware' => [
+        AddViewInformation::class => [],
         AddRequestInformation::class => [],
         AddConsoleInformation::class => [],
         AddGitInformation::class => [],

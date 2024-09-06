@@ -41,6 +41,9 @@ class ViewRecorder implements SpansRecorder
 
     public function start(): void
     {
+        // TODO: on an error, view data (where the error occurred) was passed to the context, let's bring that back
+        // See: Spatie\FlareClient\View (removed? And why?)
+
         if ($this->trace === false) {
             return;
         }

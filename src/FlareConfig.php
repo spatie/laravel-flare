@@ -77,6 +77,8 @@ class FlareConfig extends BaseFlareConfig
         return $config;
     }
 
+    // TODO: make sure this is up to date with the flare.php config file
+
     public function useDefaults(): static
     {
         return parent::useDefaults()

@@ -77,7 +77,7 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
             'http.route' => $route->uri(),
             'laravel.route.name' => $route->getName(),
             'laravel.route.parameters' => $this->getRouteParameters($route),
-            'laravel.route.controller' => $route->getActionName(),
+            'laravel.route.action' => $route->getActionName(),
             'laravel.route.middleware' => array_values($route->gatherMiddleware()),
         ];
     }

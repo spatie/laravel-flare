@@ -40,7 +40,7 @@ class ViewExceptionMapper
 
         $this->modifyViewsInTrace($exception);
 
-        $exception->setView($compiledViewPath);
+        $exception->setViewFile($compiledViewPath);
         $exception->setViewData($this->getViewData($exception));
 
         return $exception;

@@ -4,14 +4,14 @@ namespace Spatie\LaravelFlare\Exceptions;
 
 use ErrorException;
 use Spatie\FlareClient\Contracts\ProvidesFlareContext;
-use Spatie\LaravelFlare\Recorders\DumpRecorder\HtmlDumper;
+use Spatie\FlareClient\Recorders\DumpRecorder\HtmlDumper;
 
-class ViewException extends ErrorException implements ProvidesFlareContext
+class ViewException extends ErrorException
 {
     /** @var array<string, mixed> */
     protected array $viewData = [];
 
-    protected string $view = '';
+    protected string $viewFile = '';
 
     /**
      * @param array<string, mixed> $data
@@ -29,27 +29,13 @@ class ViewException extends ErrorException implements ProvidesFlareContext
         return $this->viewData;
     }
 
-    public function setView(string $path): void
+    public function setViewFile(string $path): void
     {
-        $this->view = $path;
+        $this->viewFile = $path;
     }
 
-    protected function dumpViewData(mixed $variable): string
+    public function getViewFile(): string
     {
-        return (new HtmlDumper())->dumpVariable($variable);
-    }
-
-    /** @return array<string, mixed> */
-    public function context(): array
-    {
-        $context = [
-            'view' => [
-                'view' => $this->view,
-            ],
-        ];
-
-        $context['view']['data'] = array_map([$this, 'dumpViewData'], $this->viewData);
-
-        return $context;
+        return $this->viewFile;
     }
 }
