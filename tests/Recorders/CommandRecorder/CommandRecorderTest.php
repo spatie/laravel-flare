@@ -8,8 +8,6 @@ use Spatie\FlareClient\Tests\Shared\ExpectTrace;
 use Spatie\FlareClient\Tests\Shared\ExpectTracer;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
-use Spatie\FlareClient\Tests\Shared\IncrementingIdsGenerator;
-use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\stubs\Commands\TestCommand;

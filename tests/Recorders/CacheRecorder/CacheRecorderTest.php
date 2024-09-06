@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use function Pest\Laravel\get;
 use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\Enums\CacheResult;
-use function Pest\Laravel\get;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\FlareConfig;

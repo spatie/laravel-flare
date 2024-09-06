@@ -9,7 +9,6 @@ use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Queue\RedisQueue;
 use Illuminate\Queue\SyncQueue;
 use function Livewire\invade;
-use Spatie\Backtrace\Arguments\ArgumentReducers;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
 

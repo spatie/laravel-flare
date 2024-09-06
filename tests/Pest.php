@@ -6,7 +6,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeSender;
-use Spatie\FlareClient\Tests\Shared\IncrementingIdsGenerator;
 use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\FlareServiceProvider;
@@ -84,8 +83,8 @@ function setupFlareForTracing(
     bool $runKernelCallbacks = false,
 ): Flare {
     return setupFlare(function (FlareConfig $config) use ($runKernelCallbacks, $closure) {
-        if($runKernelCallbacks === false) {
-           TracingKernel::$run = false;
+        if ($runKernelCallbacks === false) {
+            TracingKernel::$run = false;
         }
 
         $config->trace(true);

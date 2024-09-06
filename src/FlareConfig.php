@@ -6,7 +6,6 @@ use Monolog\Level;
 use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
 use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
 use Spatie\FlareClient\Enums\CacheOperation;
-use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
 use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;

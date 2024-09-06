@@ -8,13 +8,11 @@ use Exception;
 use Illuminate\Contracts\Encryption\Encrypter;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Jobs\RedisJob;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionProperty;
 use RuntimeException;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
-use Spatie\Backtrace\Arguments\ReducedArgument\ReducedArgument;
 use Spatie\FlareClient\Time\TimeHelper;
 
 class LaravelJobAttributesProvider
@@ -95,11 +93,11 @@ class LaravelJobAttributesProvider
             );
         }
 
-        if(array_key_exists('attempts', $payload)) {
+        if (array_key_exists('attempts', $payload)) {
             $attributes['laravel.job.attempts'] = $payload['attempts'];
         }
 
-        if(array_key_exists('tags', $payload)) {
+        if (array_key_exists('tags', $payload)) {
             $attributes['laravel.job.tags'] = $payload['tags'];
         }
 

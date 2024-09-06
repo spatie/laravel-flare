@@ -6,7 +6,6 @@ use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
 use Spatie\FlareClient\Tests\Shared\ExpectTrace;
 use Spatie\FlareClient\Tests\Shared\ExpectTracer;
-use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
 uses(ConfigureFlare::class);
