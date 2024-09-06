@@ -27,7 +27,7 @@ class LaravelJobAttributesProvider
     public function toArray(
         Job $job,
         ?string $connectionName = null,
-        int $maxChainedJobReportingDepth = 3,
+        int $maxChainedJobReportingDepth = 3
     ): array {
         return array_merge(
             $this->getJobPropertiesFromPayload($this->resolveJobPayload($job), $maxChainedJobReportingDepth),
@@ -85,14 +85,22 @@ class LaravelJobAttributesProvider
             $attributes['laravel.job.timeout'] = $payload['timeout'];
         }
 
-        if (array_key_exists('retryUntil', $payload)) {
-            $attributes['laravel.job.retry_until'] = $payload['retryUntil'];
+        if (array_key_exists('retryUntil', $payload) && $payload['retryUntil'] !== null) {
+            $attributes['laravel.job.retry_until'] = TimeHelper::seconds($payload['retryUntil']);
         }
 
-        if (array_key_exists('pushedAt', $payload)) {
+        if (array_key_exists('pushedAt', $payload) && $payload['pushedAt'] !== null) {
             $attributes['laravel.job.pushed_at'] = TimeHelper::seconds(
-                DateTime::createFromFormat('U.u', $payload['pushedAt'])->format('U')
+                DateTime::createFromFormat('U.u', $payload['pushedAt'])->format('Uu')
             );
+        }
+
+        if(array_key_exists('attempts', $payload)) {
+            $attributes['laravel.job.attempts'] = $payload['attempts'];
+        }
+
+        if(array_key_exists('tags', $payload)) {
+            $attributes['laravel.job.tags'] = $payload['tags'];
         }
 
         $propertyAttributes = [];

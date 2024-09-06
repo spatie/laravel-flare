@@ -44,11 +44,12 @@ it('can report a command', function () {
 
     expect($report->toArray()['events'][0])
         ->toHaveKey('startTimeUnixNano', 1546346096000000000)
-        ->toHaveKey('endTimeUnixNano', 1546346096000000000);
+        ->toHaveKey('endTimeUnixNano', 1546346096000000000)
+        ->toHaveKey('type', SpanType::Command);
+
 
     expect($report->toArray()['events'][0]['attributes'])
-        ->toHaveCount(5)
-        ->toHaveKey('flare.span_type', SpanType::Command)
+        ->toHaveCount(4)
         ->toHaveKey('process.command', 'flare:test-command')
         ->toHaveKey('process.command_line', 'flare:test-command')
         ->toHaveKey('process.command_args', ["flare:test-command", "with-default"])

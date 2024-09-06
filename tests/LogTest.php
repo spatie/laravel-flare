@@ -93,22 +93,20 @@ it('adds log messages to the report', function () {
         ->toHaveCount(3)
         ->each
         ->toHaveKey('startTimeUnixNano', 1546346096000000000)
-        ->toHaveKey('endTimeUnixNano', null);
+        ->toHaveKey('endTimeUnixNano', null)
+        ->toHaveKey('type', SpanEventType::Log);
 
     expect($arguments['events'][0]['attributes'])
-        ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', 'info')
         ->toHaveKey('log.message', 'info log')
         ->toHaveKey('log.context', []);
 
     expect($arguments['events'][1]['attributes'])
-        ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', 'debug')
         ->toHaveKey('log.message', 'debug log')
         ->toHaveKey('log.context', []);
 
     expect($arguments['events'][2]['attributes'])
-        ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', 'notice')
         ->toHaveKey('log.message', 'notice log')
         ->toHaveKey('log.context', []);
@@ -136,10 +134,10 @@ it('can disable sending logs as a report but keep them as span events in an exce
         ->toHaveCount(1)
         ->each
         ->toHaveKey('startTimeUnixNano', 1546346096000000000)
-        ->toHaveKey('endTimeUnixNano', null);
+        ->toHaveKey('endTimeUnixNano', null)
+        ->toHaveKey('type', SpanEventType::Log);
 
     expect($arguments['events'][0]['attributes'])
-        ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', $logLevel)
         ->toHaveKey('log.message', 'log')
         ->toHaveKey('log.context', []);

@@ -44,7 +44,7 @@ dataset('cache recorder', function () {
         fn () => cache()->put('some_key', 'some_value', 60),
         fn () => cache()->get('some_key'),
         function (array $event) {
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
+            expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
@@ -56,7 +56,7 @@ dataset('cache recorder', function () {
         fn () => null,
         fn () => cache()->get('some_key'),
         function (array $event) {
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
+            expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
@@ -68,7 +68,7 @@ dataset('cache recorder', function () {
         fn () => null,
         fn () => cache()->put('some_key', 'some_value'),
         function (array $event) {
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
+            expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Set);
@@ -80,7 +80,7 @@ dataset('cache recorder', function () {
         fn () => cache()->put('some_key', 'some_value'),
         fn () => cache()->forget('some_key'),
         function (array $event) {
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
+            expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Forget);

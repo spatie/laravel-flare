@@ -14,6 +14,7 @@ use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
+use Spatie\LaravelFlare\Enums\SpanType;
 
 class JobRecorder implements Recorder
 {
@@ -58,7 +59,9 @@ class JobRecorder implements Recorder
                 traceId: $this->tracer->currentTraceId() ?? '',
                 parentId: $this->tracer->currentSpanId(),
                 name: "Job - {$attributes['laravel.job.name']}",
-                attributes: $attributes
+                attributes: $attributes + [
+                    'flare.span_type' => SpanType::Job,
+                ],
             );
         });
     }

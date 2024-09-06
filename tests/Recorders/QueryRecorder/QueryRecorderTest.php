@@ -57,8 +57,8 @@ it('can report queries', function () {
     expect($report->toArray()['events'])->toHaveCount(1);
 
     expect($report->toArray()['events'][0])
+        ->toHaveKey('type', SpanType::Query)
         ->toHaveKey('attributes', [
-            'flare.span_type' => SpanType::Query,
             'db.system' => 'sqlite',
             'db.name' => ':memory:',
             'db.statement' => 'SELECT * FROM users WHERE id = ?',

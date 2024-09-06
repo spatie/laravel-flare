@@ -90,7 +90,7 @@ it('can parse job properties set by the user', function () {
     expect($attributes['laravel.job.max_tries'])->toEqual(5);
     expect($attributes['laravel.job.max_exceptions'])->toEqual(10);
     expect($attributes['laravel.job.timeout'])->toEqual(120);
-    expect($attributes['laravel.job.retry_until'])->toEqual(1589630400);
+    expect($attributes['laravel.job.retry_until'])->toEqual(1589630400000000);
 });
 
 it('can record a closure job', function () {

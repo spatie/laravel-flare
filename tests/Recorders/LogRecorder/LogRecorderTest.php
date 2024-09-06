@@ -53,8 +53,8 @@ it('can report logs', function () {
     expect($report->toArray()['events'])->toHaveCount(1);
 
     expect($report->toArray()['events'][0])
+        ->toHaveKey('type', SpanEventType::Log)
         ->toHaveKey('attributes', [
-            'flare.span_event_type' => SpanEventType::Log,
             'log.level' => 'info',
             'log.message' => 'Hello world',
             'log.context' => ['some' => 'context'],

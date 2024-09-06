@@ -16,4 +16,5 @@ enum SpanType: string implements FlareSpanType
     case Response = 'laravel_response';
     case Terminating = 'laravel_terminating';
     case Filesystem = 'laravel_filesystem';
+    case Job = 'laravel_job';
 }
