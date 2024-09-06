@@ -89,25 +89,25 @@ it('adds log messages to the report', function () {
 
     $arguments = FakeSender::instance()->getLastPayload();
 
-    expect($arguments['span_events'])
+    expect($arguments['events'])
         ->toHaveCount(3)
         ->each
-        ->toHaveKey('name', 'Log entry')
-        ->toHaveKey('timeUnixNano', 1546346096000000000);
+        ->toHaveKey('startTimeUnixNano', 1546346096000000000)
+        ->toHaveKey('endTimeUnixNano', null);
 
-    expect($arguments['span_events'][0]['attributes'])
+    expect($arguments['events'][0]['attributes'])
         ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', 'info')
         ->toHaveKey('log.message', 'info log')
         ->toHaveKey('log.context', []);
 
-    expect($arguments['span_events'][1]['attributes'])
+    expect($arguments['events'][1]['attributes'])
         ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', 'debug')
         ->toHaveKey('log.message', 'debug log')
         ->toHaveKey('log.context', []);
 
-    expect($arguments['span_events'][2]['attributes'])
+    expect($arguments['events'][2]['attributes'])
         ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', 'notice')
         ->toHaveKey('log.message', 'notice log')
@@ -132,13 +132,13 @@ it('can disable sending logs as a report but keep them as span events in an exce
     expect($arguments['exception_class'])->toBe('Error');
     expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
 
-    expect($arguments['span_events'])
+    expect($arguments['events'])
         ->toHaveCount(1)
         ->each
-        ->toHaveKey('name', 'Log entry')
-        ->toHaveKey('timeUnixNano', 1546346096000000000);
+        ->toHaveKey('startTimeUnixNano', 1546346096000000000)
+        ->toHaveKey('endTimeUnixNano', null);
 
-    expect($arguments['span_events'][0]['attributes'])
+    expect($arguments['events'][0]['attributes'])
         ->toHaveKey('flare.span_event_type', SpanEventType::Log)
         ->toHaveKey('log.level', $logLevel)
         ->toHaveKey('log.message', 'log')
@@ -165,9 +165,9 @@ it('it will report an exception with log span events with metadata', function ()
     expect($arguments['exception_class'])->toBe('Error');
     expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
 
-    expect($arguments['span_events'])->toHaveCount(1);
+    expect($arguments['events'])->toHaveCount(1);
 
-    expect($arguments['span_events'][0]['attributes'])->toHaveKey('log.context', ['meta' => 'data']);
+    expect($arguments['events'][0]['attributes'])->toHaveKey('log.context', ['meta' => 'data']);
 });
 
 // Datasets

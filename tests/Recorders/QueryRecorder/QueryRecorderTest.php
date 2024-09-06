@@ -54,10 +54,9 @@ it('can report queries', function () {
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['spans'])->toHaveCount(1);
+    expect($report->toArray()['events'])->toHaveCount(1);
 
-    expect($report->toArray()['spans'][0])
-        ->toHaveKey('name', 'Query - SELECT * FROM users WHERE id = ?')
+    expect($report->toArray()['events'][0])
         ->toHaveKey('attributes', [
             'flare.span_type' => SpanType::Query,
             'db.system' => 'sqlite',
@@ -75,7 +74,7 @@ it('can stop recording bindings', function () {
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKey('db.sql.bindings');
+    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKey('db.sql.bindings');
 });
 
 it('will add origin attributes when a threshold is met and tracing', function () {
@@ -87,7 +86,7 @@ it('will add origin attributes when a threshold is met and tracing', function ()
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['spans'][0]['attributes'])->toHaveKeys([
+    expect($report->toArray()['events'][0]['attributes'])->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -101,7 +100,7 @@ it('will not add origin attributes when a threshold is met and only reporting', 
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKeys([
+    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -117,7 +116,7 @@ it('will not add origin attributes when a threshold is not met', function () {
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKeys([
+    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -133,7 +132,7 @@ it('will not add origin attributes when the trace origin feature is disabled', f
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['spans'][0]['attributes'])->not()->toHaveKeys([
+    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -150,7 +149,7 @@ it('will always add origin attributes when no threshold is set', function () {
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['spans'][0]['attributes'])->toHaveKeys([
+    expect($report->toArray()['events'][0]['attributes'])->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',

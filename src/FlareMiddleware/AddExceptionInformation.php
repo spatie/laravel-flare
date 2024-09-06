@@ -19,7 +19,7 @@ class AddExceptionInformation implements FlareMiddleware
 
         // TODO: make sure we parse this correctly within Flare
         $report->addAttribute(
-            'exception.db.statement',
+            'flare.exception.db_statement',
             $report->throwable->getSql(),
         );
 

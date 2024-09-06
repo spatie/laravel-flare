@@ -16,12 +16,4 @@ enum SpanType: string implements FlareSpanType
     case Response = 'laravel_response';
     case Terminating = 'laravel_terminating';
     case Filesystem = 'laravel_filesystem';
-
-    public function humanReadable(): string
-    {
-        return match ($this) {
-            self::Query => 'query',
-            self::Application => 'application',
-        };
-    }
 }

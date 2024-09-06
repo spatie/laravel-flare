@@ -15,8 +15,8 @@ it('will add query information with a query exception', function () {
 
     $attributes = $report->toArray()['attributes'];
 
-    $this->assertArrayHasKey('exception.db.statement', $attributes);
-    expect($attributes['exception.db.statement'])->toBe($sql);
+    $this->assertArrayHasKey('flare.exception.db_statement', $attributes);
+    expect($attributes['flare.exception.db_statement'])->toBe($sql);
 });
 
 it('wont add query information without a query exception', function () {
@@ -24,7 +24,7 @@ it('wont add query information without a query exception', function () {
 
     $attributes = $report->toArray()['attributes'];
 
-    $this->assertArrayNotHasKey('exception.db.statement', $attributes);
+    $this->assertArrayNotHasKey('flare.exception.db_statement', $attributes);
 });
 
 it('will add user context when provided on a custom exception', function () {

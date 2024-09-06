@@ -5,6 +5,7 @@ namespace Spatie\LaravelFlare;
 use Monolog\Level;
 use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
 use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
+use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
 use Spatie\FlareClient\Support\TraceLimits;
@@ -189,10 +190,10 @@ class FlareConfig extends BaseFlareConfig
         bool $trace = true,
         bool $report = true,
         ?int $maxReported = 100,
-        array $events = [SpanEventType::CacheHit, SpanEventType::CacheMiss, SpanEventType::CacheKeyWritten, SpanEventType::CacheKeyForgotten],
+        array $operations = [CacheOperation::Get, CacheOperation::Set, CacheOperation::Forget],
         string $recorder = CacheRecorder::class,
     ): static {
-        parent::addCacheEvents($trace, $report, $maxReported, $events, $recorder);
+        parent::addCacheEvents($trace, $report, $maxReported, $operations, $recorder);
 
         return $this;
     }

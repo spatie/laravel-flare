@@ -4,17 +4,19 @@ use Dotenv\Dotenv;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\IncrementingIdsGenerator;
 use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\FlareServiceProvider;
+use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\TestCase;
 
 uses(TestCase::class)->beforeEach(function () {
     FakeSender::instance()->reset();
-    IncrementingIdsGenerator::reset();
+    FakeIds::reset();
 })->in(__DIR__);
 
 if (file_exists(__DIR__.'/../.env')) {
@@ -79,8 +81,13 @@ function setupFlare(
 function setupFlareForTracing(
     ?Closure $closure = null,
     bool $sendReportsImmediately = true,
+    bool $runKernelCallbacks = false,
 ): Flare {
-    return setupFlare(function (FlareConfig $config) use ($closure) {
+    return setupFlare(function (FlareConfig $config) use ($runKernelCallbacks, $closure) {
+        if($runKernelCallbacks === false) {
+           TracingKernel::$run = false;
+        }
+
         $config->trace(true);
         $config->alwaysSampleTraces();
 

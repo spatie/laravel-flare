@@ -179,17 +179,7 @@ class LaravelJobAttributesProvider
 
         $properties = $jobProperties
             ->reject(fn (mixed $value, string $name) => in_array($name, $propertiesToIgnore))
-            ->when($this->argumentReducers, fn (Collection $properties) => $properties->map(function (mixed $value) {
-                foreach ($this->argumentReducers->argumentReducers as $argumentReducer) {
-                    $reduced = $argumentReducer->execute($value);
-
-                    if ($reduced instanceof ReducedArgument) {
-                        return $reduced->value;
-                    }
-                }
-
-                return $value;
-            }));
+            ->map(fn (mixed $value) => $this->reduceArgumentPayloadAction->reduce($value)->value);
 
         $chain = $jobProperties->has('chained')
             ? $this->resolveJobChain($jobProperties->get('chained'), $maxChainDepth)

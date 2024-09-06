@@ -6,6 +6,7 @@ use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
 use Spatie\FlareClient\Tests\Shared\ExpectTrace;
 use Spatie\FlareClient\Tests\Shared\ExpectTracer;
+use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
 uses(ConfigureFlare::class);
@@ -49,10 +50,9 @@ it('can report logs', function () {
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['span_events'])->toHaveCount(1);
+    expect($report->toArray()['events'])->toHaveCount(1);
 
-    expect($report->toArray()['span_events'][0])
-        ->toHaveKey('name', 'Log entry')
+    expect($report->toArray()['events'][0])
         ->toHaveKey('attributes', [
             'flare.span_event_type' => SpanEventType::Log,
             'log.level' => 'info',
@@ -70,5 +70,5 @@ it('will not record logs containing exceptions', function () {
 
     $report = $flare->report(new Exception('Report this'));
 
-    expect($report->toArray()['span_events'])->toHaveCount(0);
+    expect($report->toArray()['events'])->toHaveCount(0);
 });

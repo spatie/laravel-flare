@@ -14,9 +14,11 @@ class TracingKernel
 
     public static ?int $appRegisteredTime = null;
 
+    public static bool $run = true;
+
     public static function registerCallbacks(Application $app): void
     {
-        if (self::isCompositeProcess($app)) {
+        if (self::$run === false || self::isCompositeProcess($app)) {
             return;
         }
 
@@ -27,7 +29,7 @@ class TracingKernel
 
     public static function bootCallbacks(Application $app): void
     {
-        if (self::isCompositeProcess($app)) {
+        if (self::$run === false || self::isCompositeProcess($app)) {
             return;
         }
 

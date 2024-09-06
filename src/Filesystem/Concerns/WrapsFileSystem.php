@@ -157,7 +157,7 @@ trait WrapsFileSystem
             $path,
             [
                 'laravel.filesystem.path' => $path,
-                'laravel.filesystem.name' => $name,
+                'laravel.filesystem.as_file_name' => $name,
                 'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($file)),
             ],
             fn ($return) => ['laravel.filesystem.success' => $return]
@@ -353,7 +353,7 @@ trait WrapsFileSystem
             [
                 'laravel.filesystem.path' => $path,
             ],
-            fn ($return) => ['laravel.filesystem.size' => $return]
+            fn ($return) => ['laravel.filesystem.contents.size' => $return]
         );
     }
 
@@ -392,10 +392,10 @@ trait WrapsFileSystem
             func_get_args(),
             $directory,
             [
-                'laravel.filesystem.directory' => $directory,
+                'laravel.filesystem.path' => $directory,
                 'laravel.filesystem.recursive' => $recursive,
             ],
-            fn ($return) => ['laravel.filesystem.files' => $this->humanizeFilesystemEntries($return, 'files')]
+            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'files')]
         );
     }
 
@@ -413,9 +413,9 @@ trait WrapsFileSystem
             func_get_args(),
             $directory,
             [
-                'laravel.filesystem.directory' => $directory,
+                'laravel.filesystem.path' => $directory,
             ],
-            fn ($return) => ['laravel.filesystem.files' => $this->humanizeFilesystemEntries($return, 'files')]
+            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'files')]
         );
     }
 
@@ -434,10 +434,10 @@ trait WrapsFileSystem
             func_get_args(),
             $directory,
             [
-                'laravel.filesystem.directory' => $directory,
+                'laravel.filesystem.path' => $directory,
                 'laravel.filesystem.recursive' => $recursive,
             ],
-            fn ($return) => ['laravel.filesystem.directories' => $this->humanizeFilesystemEntries($return, 'directories')]
+            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'directories')]
         );
     }
 
@@ -455,9 +455,9 @@ trait WrapsFileSystem
             func_get_args(),
             $directory,
             [
-                'laravel.filesystem.directory' => $directory,
+                'laravel.filesystem.path' => $directory,
             ],
-            fn ($return) => ['laravel.filesystem.directories' => $this->humanizeFilesystemEntries($return, 'directories')]
+            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'directories')]
         );
     }
 
@@ -495,7 +495,7 @@ trait WrapsFileSystem
             func_get_args(),
             $directory,
             [
-                'laravel.filesystem.directory' => $directory,
+                'laravel.filesystem.path' => $directory,
             ],
             fn ($return) => ['laravel.filesystem.success' => $return]
         );

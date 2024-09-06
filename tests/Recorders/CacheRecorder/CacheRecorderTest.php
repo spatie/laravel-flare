@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Spatie\FlareClient\Enums\CacheOperation;
+use Spatie\FlareClient\Enums\CacheResult;
 use function Pest\Laravel\get;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\FakeSender;
@@ -30,7 +32,7 @@ it('records cache operations', function (
 
     $fakeSender->assertRequestsSent(1);
 
-    $spanEvents = $fakeSender->getLastPayload()['span_events'];
+    $spanEvents = $fakeSender->getLastPayload()['events'];
 
     expect($spanEvents)->toHaveCount(1);
 
@@ -42,10 +44,11 @@ dataset('cache recorder', function () {
         fn () => cache()->put('some_key', 'some_value', 60),
         fn () => cache()->get('some_key'),
         function (array $event) {
-            expect($event['name'])->toBe('Cache hit - some_key');
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::CacheHit);
+            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
+            expect($event['attributes']['cache.result'])->toBe(CacheResult::Hit);
         },
     ];
 
@@ -53,10 +56,11 @@ dataset('cache recorder', function () {
         fn () => null,
         fn () => cache()->get('some_key'),
         function (array $event) {
-            expect($event['name'])->toBe('Cache miss - some_key');
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::CacheMiss);
+            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
+            expect($event['attributes']['cache.result'])->toBe(CacheResult::Miss);
         },
     ];
 
@@ -64,10 +68,11 @@ dataset('cache recorder', function () {
         fn () => null,
         fn () => cache()->put('some_key', 'some_value'),
         function (array $event) {
-            expect($event['name'])->toBe('Cache key written - some_key');
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::CacheKeyWritten);
+            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Set);
+            expect($event['attributes']['cache.result'])->toBe(CacheResult::Success);
         },
     ];
 
@@ -75,10 +80,11 @@ dataset('cache recorder', function () {
         fn () => cache()->put('some_key', 'some_value'),
         fn () => cache()->forget('some_key'),
         function (array $event) {
-            expect($event['name'])->toBe('Cache key forgotten - some_key');
-            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::CacheKeyForgotten);
+            expect($event['attributes']['flare.span_event_type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
             expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Forget);
+            expect($event['attributes']['cache.result'])->toBe(CacheResult::Success);
         },
     ];
 });

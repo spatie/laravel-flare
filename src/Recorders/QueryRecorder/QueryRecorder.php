@@ -30,13 +30,13 @@ class QueryRecorder extends BaseQueryRecorder
     public function recordEvent(QueryExecuted $event): ?QuerySpan
     {
         return $this->record(
-            $event->sql,
-            TimeHelper::milliseconds($event->time),
-            $event->bindings,
-            $event->connection->getDatabaseName(),
-            $event->connection->getDriverName(),
-            SpanType::Query,
-            [
+            sql: $event->sql,
+            duration: TimeHelper::milliseconds($event->time),
+            bindings: $event->bindings,
+            databaseName: $event->connection->getDatabaseName(),
+            driverName: $event->connection->getDriverName(),
+            spanType: SpanType::Query,
+            attributes: [
                 'laravel.db.connection' => $event->connectionName,
             ]
         );

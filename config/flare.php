@@ -22,6 +22,7 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionPro
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
+use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\FlareMiddleware\AddConsoleInformation;
 use Spatie\FlareClient\FlareMiddleware\AddDumps;
@@ -105,7 +106,7 @@ return [
             'trace' => true,
             'report' => true,
             'max_reported' => 100,
-            'events' => [SpanEventType::CacheHit, SpanEventType::CacheMiss, SpanEventType::CacheKeyWritten, SpanEventType::CacheKeyForgotten],
+            'operations' => [CacheOperation::Get, CacheOperation::Set, CacheOperation::Forget],
         ],
         DumpRecorder::class => [
             'trace' => false,

@@ -14,16 +14,15 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
 
 it('can provide attributes for a job', function () {
-    $provider = new LaravelJobAttributesProvider(
-        argumentReducers: ArgumentReducers::default(),
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
         createQueuedJob(new QueueableJob([])),
     );
 
     expect($attributes)
-        ->toHaveCount(5)
+        ->toHaveCount(6)
+        ->toHaveKey('laravel.job.name', QueueableJob::class)
         ->toHaveKey('laravel.job.class', QueueableJob::class)
         ->toHaveKey('laravel.job.uuid')
         ->toHaveKey('laravel.job.queue.name', 'sync')
@@ -32,9 +31,7 @@ it('can provide attributes for a job', function () {
 });
 
 it('can set the connection name from the outside', function () {
-    $provider = new LaravelJobAttributesProvider(
-        argumentReducers: ArgumentReducers::default(),
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
         createQueuedJob(new QueueableJob([])),
@@ -42,14 +39,12 @@ it('can set the connection name from the outside', function () {
     );
 
     expect($attributes)
-        ->toHaveCount(5)
+        ->toHaveCount(6)
         ->toHaveKey('laravel.job.queue.connection_name', 'sync');
 });
 
 it('can provide attributes for a job with properties', function () {
-    $provider = new LaravelJobAttributesProvider(
-        argumentReducers: ArgumentReducers::default(),
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
         createQueuedJob(new QueueableJob([
@@ -65,9 +60,7 @@ it('can provide attributes for a job with properties', function () {
 });
 
 it('can provide attributes for a job with properties which values will be reduced', function () {
-    $provider = new LaravelJobAttributesProvider(
-        argumentReducers: ArgumentReducers::default(),
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
         createQueuedJob(new QueueableJob([
@@ -90,9 +83,7 @@ it('can parse job properties set by the user', function () {
         timeout: 120 // timeout
     );
 
-    $provider = new LaravelJobAttributesProvider(
-        argumentReducers: ArgumentReducers::default(),
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(createQueuedJob($job));
 
@@ -103,9 +94,7 @@ it('can parse job properties set by the user', function () {
 });
 
 it('can record a closure job', function () {
-    $provider = new LaravelJobAttributesProvider(
-        argumentReducers: ArgumentReducers::default(),
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
         createQueuedJob(CallQueuedClosure::create(function () {
@@ -118,9 +107,7 @@ it('can record a closure job', function () {
 });
 
 it('can provide attributes for chained jobs', function () {
-    $provider = new LaravelJobAttributesProvider(
-        argumentReducers: ArgumentReducers::default(),
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(createQueuedJob(
         (new QueueableJob(['level-one']))->chain([
@@ -163,10 +150,7 @@ it('can provide attributes for chained jobs', function () {
 });
 
 it('can restrict the chain depth', function () {
-    $provider = new LaravelJobAttributesProvider(
-        maxChainedJobReportingDepth: 1,
-        argumentReducers: ArgumentReducers::default()
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(createQueuedJob(
         (new QueueableJob(['level-one']))->chain([
@@ -174,7 +158,7 @@ it('can restrict the chain depth', function () {
                 (new QueueableJob(['level-three'])),
             ]),
         ])
-    ));
+    ), maxChainedJobReportingDepth: 1);
 
     $chain = $attributes['laravel.job.chain.jobs'];
 
@@ -183,10 +167,7 @@ it('can restrict the chain depth', function () {
 });
 
 it('can disable including the chain', function () {
-    $provider = new LaravelJobAttributesProvider(
-        maxChainedJobReportingDepth: 0,
-        argumentReducers: ArgumentReducers::default()
-    );
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(createQueuedJob(
         (new QueueableJob(['level-one']))->chain([
@@ -194,7 +175,7 @@ it('can disable including the chain', function () {
                 (new QueueableJob(['level-three'])),
             ]),
         ])
-    ));
+    ), maxChainedJobReportingDepth: 0);
 
     expect($attributes)->not()->toHaveKey('laravel.job.chain.jobs');
 });
@@ -213,7 +194,7 @@ it('can handle a job with an unserializeable payload', function () {
         'default'
     );
 
-    $provider = new LaravelJobAttributesProvider();
+    $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray($job);
 
