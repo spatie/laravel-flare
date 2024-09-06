@@ -3,8 +3,6 @@
 namespace Spatie\LaravelFlare\Exceptions;
 
 use ErrorException;
-use Spatie\FlareClient\Contracts\ProvidesFlareContext;
-use Spatie\FlareClient\Recorders\DumpRecorder\HtmlDumper;
 
 class ViewException extends ErrorException
 {
