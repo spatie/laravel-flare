@@ -54,6 +54,7 @@ use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
+use Spatie\LaravelFlare\Recorders\RedisCommandRecorder\RedisCommandRecorder;
 use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
@@ -156,6 +157,11 @@ return [
             'find_origin_threshold' => TimeHelper::milliseconds(700),
         ],
         TransactionRecorder::class => [
+            'trace' => true,
+            'report' => true,
+            'max_reported' => 100,
+        ],
+        RedisCommandRecorder::class => [
             'trace' => true,
             'report' => true,
             'max_reported' => 100,
