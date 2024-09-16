@@ -104,7 +104,7 @@ trait WrapsFilesystemAdapter
      */
     public function mimeType($path)
     {
-         $path = $this->humanizeFilesystemEntries($path);
+        $path = $this->humanizeFilesystemEntries($path);
 
         return $this->wrapCall(
             __FUNCTION__,
