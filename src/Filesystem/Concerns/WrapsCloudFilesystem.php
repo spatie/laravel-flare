@@ -15,6 +15,8 @@ trait WrapsCloudFilesystem
      */
     public function url($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),

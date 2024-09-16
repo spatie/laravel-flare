@@ -23,6 +23,8 @@ trait WrapsFileSystem
      */
     public function path($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -37,12 +39,14 @@ trait WrapsFileSystem
     /**
      * Determine if a file exists.
      *
-     * @param string $path
+     * @param ?string $path
      *
      * @return bool
      */
     public function exists($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -57,12 +61,14 @@ trait WrapsFileSystem
     /**
      * Get the contents of a file.
      *
-     * @param string $path
+     * @param ?string $path
      *
      * @return string|null
      */
     public function get($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -83,6 +89,8 @@ trait WrapsFileSystem
      */
     public function readStream($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -104,6 +112,8 @@ trait WrapsFileSystem
      */
     public function put($path, $contents, $options = [])
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -127,6 +137,8 @@ trait WrapsFileSystem
      */
     public function putFile($path, $file = null, $options = [])
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -151,6 +163,8 @@ trait WrapsFileSystem
      */
     public function putFileAs($path, $file, $name = null, $options = [])
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -175,6 +189,8 @@ trait WrapsFileSystem
      */
     public function writeStream($path, $resource, array $options = [])
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -196,6 +212,8 @@ trait WrapsFileSystem
      */
     public function getVisibility($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -217,6 +235,8 @@ trait WrapsFileSystem
      */
     public function setVisibility($path, $visibility)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -239,6 +259,8 @@ trait WrapsFileSystem
      */
     public function prepend($path, $data, $separator = PHP_EOL)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -261,6 +283,8 @@ trait WrapsFileSystem
      */
     public function append($path, $data, $separator = PHP_EOL)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -282,12 +306,14 @@ trait WrapsFileSystem
      */
     public function delete($paths)
     {
+        $paths = $this->humanizeFilesystemEntries($paths);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $this->humanizeFilesystemEntries($paths),
+            $paths,
             [
-                'laravel.filesystem.paths' => $this->humanizeFilesystemEntries($paths),
+                'laravel.filesystem.paths' => $paths,
             ],
             fn ($return) => ['laravel.filesystem.success' => $return]
         );
@@ -303,6 +329,9 @@ trait WrapsFileSystem
      */
     public function copy($from, $to)
     {
+        $from = $this->humanizeFilesystemEntries($from);
+        $to = $this->humanizeFilesystemEntries($to);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -325,6 +354,9 @@ trait WrapsFileSystem
      */
     public function move($from, $to)
     {
+        $from = $this->humanizeFilesystemEntries($from);
+        $to = $this->humanizeFilesystemEntries($to);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -346,6 +378,8 @@ trait WrapsFileSystem
      */
     public function size($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -366,6 +400,8 @@ trait WrapsFileSystem
      */
     public function lastModified($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -387,6 +423,8 @@ trait WrapsFileSystem
      */
     public function files($directory = null, $recursive = false)
     {
+        $directory = $this->humanizeFilesystemEntries($directory);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -408,6 +446,8 @@ trait WrapsFileSystem
      */
     public function allFiles($directory = null)
     {
+        $directory = $this->humanizeFilesystemEntries($directory);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -429,6 +469,8 @@ trait WrapsFileSystem
      */
     public function directories($directory = null, $recursive = false)
     {
+        $directory = $this->humanizeFilesystemEntries($directory);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -450,6 +492,8 @@ trait WrapsFileSystem
      */
     public function allDirectories($directory = null)
     {
+        $directory = $this->humanizeFilesystemEntries($directory);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -470,6 +514,8 @@ trait WrapsFileSystem
      */
     public function makeDirectory($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -490,6 +536,8 @@ trait WrapsFileSystem
      */
     public function deleteDirectory($directory)
     {
+        $directory = $this->humanizeFilesystemEntries($directory);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -553,11 +601,17 @@ trait WrapsFileSystem
         return '?';
     }
 
-    protected function humanizeFilesystemEntries(array|string $paths, string $type = 'paths')
+    protected function humanizeFilesystemEntries(array|string|null $paths, string $type = 'paths'): string
     {
         if (is_string($paths)) {
             return $paths;
         }
+
+        if (is_null($paths)) {
+            return '/';
+        }
+
+        $paths = array_map(fn ($path) => $path === null ? '/' : $path, $paths);
 
         $count = count($paths);
 

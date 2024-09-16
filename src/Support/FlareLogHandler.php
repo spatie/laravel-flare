@@ -45,7 +45,7 @@ class FlareLogHandler extends AbstractProcessingHandler
 
         $this->flare->reportMessage(
             $record->message,
-            "Log {$record->level->name}",
+            $record->level->name,
             function (ReportFactory $flareReport) use ($record) {
                 $flareReport->context($record['context']);
 

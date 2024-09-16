@@ -44,6 +44,10 @@ class RoutingRecorder implements SpansRecorder
         });
 
         $this->dispatcher->listen(RouteMatched::class, function () {
+            if (! $this->tracer->isSampling()) {
+                return;
+            }
+
             if ($this->tracer->hasCurrentSpan(SpanType::Routing)) {
                 $this->tracer->endCurrentSpan();
             }
@@ -55,6 +59,10 @@ class RoutingRecorder implements SpansRecorder
         });
 
         $this->dispatcher->listen(RequestHandled::class, function () {
+            if (! $this->tracer->isSampling()) {
+                return;
+            }
+
             if ($this->tracer->hasCurrentSpan(SpanType::Response)) {
                 $this->tracer->endCurrentSpan();
             }

@@ -18,10 +18,12 @@ trait WrapsFilesystemAdapter
      */
     public function assertExists($path, $content = null)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $this->humanizeFilesystemEntries($path),
+            $path,
             [
                 'laravel.filesystem.path' => $path,
                 'laravel.filesystem.contents.size' => $this->humanFilesize($content),
@@ -38,10 +40,12 @@ trait WrapsFilesystemAdapter
      */
     public function assertMissing($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $this->humanizeFilesystemEntries($path),
+            $path,
             [
                 'laravel.filesystem.path' => $path,
             ]
@@ -57,6 +61,8 @@ trait WrapsFilesystemAdapter
      */
     public function assertDirectoryEmpty($path)
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -76,6 +82,8 @@ trait WrapsFilesystemAdapter
      */
     public function checksum(string $path, array $options = [])
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -96,6 +104,8 @@ trait WrapsFilesystemAdapter
      */
     public function mimeType($path)
     {
+         $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -120,6 +130,8 @@ trait WrapsFilesystemAdapter
      */
     public function temporaryUrl($path, $expiration, array $options = [])
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
@@ -145,6 +157,8 @@ trait WrapsFilesystemAdapter
      */
     public function temporaryUploadUrl($path, $expiration, array $options = [])
     {
+        $path = $this->humanizeFilesystemEntries($path);
+
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),

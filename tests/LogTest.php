@@ -127,7 +127,7 @@ it('can disable sending logs as a report but keep them as span events in an exce
 
     $arguments = FakeSender::instance()->getLastPayload();
 
-    expect($arguments['exception_class'])->toBe('Error');
+    expect($arguments['exceptionClass'])->toBe('Error');
     expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
 
     expect($arguments['events'])
@@ -160,7 +160,7 @@ it('it will report an exception with log span events with metadata', function ()
 
     $arguments = FakeSender::instance()->getLastPayload();
 
-    expect($arguments['exception_class'])->toBe('Error');
+    expect($arguments['exceptionClass'])->toBe('Error');
     expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
 
     expect($arguments['events'])->toHaveCount(1);
