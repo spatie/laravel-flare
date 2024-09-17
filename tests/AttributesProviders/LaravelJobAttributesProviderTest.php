@@ -89,7 +89,7 @@ it('can parse job properties set by the user', function () {
     expect($attributes['laravel.job.max_tries'])->toEqual(5);
     expect($attributes['laravel.job.max_exceptions'])->toEqual(10);
     expect($attributes['laravel.job.timeout'])->toEqual(120);
-    expect($attributes['laravel.job.retry_until'])->toEqual(1589630400000000);
+    expect($attributes['laravel.job.retry_until'])->toEqual(1589630400000000000);
 });
 
 it('can record a closure job', function () {
@@ -200,6 +200,7 @@ it('can handle a job with an unserializeable payload', function () {
     expect($attributes['laravel.job.queue.connection_name'])->toEqual('redis');
     expect($attributes['laravel.job.queue.name'])->toEqual('default');
 });
+
 
 function createQueuedJob(
     ShouldQueue $job
