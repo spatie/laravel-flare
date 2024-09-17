@@ -51,12 +51,7 @@ class FlareServiceProvider extends ServiceProvider
             $this->config = $this->app->make(FlareConfig::class);
         }
 
-
         $this->registerLogHandler();
-
-        if ($this->config->apiToken === null) {
-            return;
-        }
 
         $this->provider = new FlareProvider(
             $this->config,
