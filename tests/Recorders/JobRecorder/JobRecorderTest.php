@@ -24,7 +24,8 @@ it('can trace jobs executions', function () {
 
     ExpectTrace::create(FakeSender::instance()->getLastPayload())
         ->hasSpanCount(1)
-        ->span(fn (ExpectSpan $span) => $span
+        ->span(
+            fn (ExpectSpan $span) => $span
             ->hasName('Job - Closure (JobRecorderTest.php:'.__LINE__ - 10 .')')
             ->hasAttribute('flare.span_type', SpanType::Job)
             ->hasAttribute('laravel.job.queue.connection_name', 'sync')
@@ -48,10 +49,12 @@ it('can trace jobs failures', function () {
 
     ExpectTrace::create(FakeSender::instance()->getLastPayload())
         ->hasSpanCount(1)
-        ->span(fn (ExpectSpan $span) => $span
+        ->span(
+            fn (ExpectSpan $span) => $span
             ->hasAttribute('laravel.job.success', false)
             ->hasSpanEventCount(1)
-            ->spanEvent(fn (ExpectSpanEvent $spanEvent) => $spanEvent
+            ->spanEvent(
+                fn (ExpectSpanEvent $spanEvent) => $spanEvent
                 ->hasName('Exception - Exception')
                 ->hasAttribute('flare.span_event_type', SpanEventType::Exception)
                 ->hasAttribute('exception.message', 'Failed')

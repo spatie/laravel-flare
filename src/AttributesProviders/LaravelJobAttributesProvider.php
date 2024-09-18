@@ -167,7 +167,7 @@ class LaravelJobAttributesProvider
             $attributes['laravel.job.batch_id'] = $jobProperties->get('batchId');
         }
 
-        if($jobProperties->get('deleteWhenMissingModels') !== null) {
+        if ($jobProperties->get('deleteWhenMissingModels') !== null) {
             $attributes['laravel.job.delete_when_missing_models'] = $jobProperties->get('deleteWhenMissingModels');
         }
 
