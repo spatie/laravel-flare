@@ -167,6 +167,10 @@ class LaravelJobAttributesProvider
             $attributes['laravel.job.batch_id'] = $jobProperties->get('batchId');
         }
 
+        if($jobProperties->get('deleteWhenMissingModels') !== null) {
+            $attributes['laravel.job.delete_when_missing_models'] = $jobProperties->get('deleteWhenMissingModels');
+        }
+
         $propertiesToIgnore = [
             'job',
             'closure',
@@ -181,6 +185,8 @@ class LaravelJobAttributesProvider
             'chainQueue',
             'chainCatchCallbacks',
             'batchId',
+            'failureCallbacks',
+            'deleteWhenMissingModels',
         ];
 
         $properties = $jobProperties
@@ -190,8 +196,6 @@ class LaravelJobAttributesProvider
         $chain = $jobProperties->has('chained')
             ? $this->resolveJobChain($jobProperties->get('chained'), $maxChainDepth)
             : [];
-
-        $attributes = [];
 
         if ($properties->isNotEmpty()) {
             $attributes['laravel.job.properties'] = $properties->all();

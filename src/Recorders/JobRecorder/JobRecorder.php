@@ -75,11 +75,9 @@ class JobRecorder implements Recorder
 
     public function recordExceptionOccurred(JobExceptionOccurred $event): void
     {
-        $this->tracer->currentSpan()->addEvent(
+        $this->endSpan(closure: fn (Span $span) => $span->addEvent(
             ThrowableSpanEvent::fromThrowable($event->exception)
-        );
-
-        $this->endSpan(attributes: [
+        ), attributes: [
             'laravel.job.success' => false,
         ]);
     }
