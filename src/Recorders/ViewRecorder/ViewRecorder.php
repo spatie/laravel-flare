@@ -2,8 +2,8 @@
 
 namespace Spatie\LaravelFlare\Recorders\ViewRecorder;
 
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\Factory;
 use Illuminate\View\View;
