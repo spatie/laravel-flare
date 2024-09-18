@@ -7,6 +7,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
+use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Throwable;
 
@@ -34,7 +35,13 @@ class Flare extends Facade
      */
     public static function handles(Exceptions $exceptions): void
     {
-        $exceptions->reportable(static function (Throwable $exception): FlareClient {
+        $exceptions->reportable(static function (Throwable $exception): ?FlareClient {
+            $config = app(FlareConfig::class);
+
+            if ($config->apiToken === null) {
+                return null;
+            }
+
             $flare = app(FlareClient::class);
 
             $flare->report($exception);

@@ -35,6 +35,7 @@ use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
 use Spatie\FlareClient\Recorders\ExceptionRecorder\ExceptionRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Time\TimeHelper;
+use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddFailedJobInformation;
@@ -94,6 +95,17 @@ return [
         AddExceptionHandledStatus::class => [],
         AddSolutions::class => [],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Recorders
+    |--------------------------------------------------------------------------
+    |
+    | These recorders, will record events that happen in your application. They
+    | will be included in the error report or trace that is sent to Flare,
+    | depending on the configuration.
+    |
+    */
 
     'recorders' => [
         RoutingRecorder::class => [
@@ -173,6 +185,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Attribute providers
+    |--------------------------------------------------------------------------
+    |
+    | When sending an error report or trace to Flare attributes can be added to
+    | the report or trace for common entries. An example of such an entry is
+    | the currently authenticated user. In an attribute provider you can
+    | specify which attributes should be sent.
+    |
+    */
+
+    'attribute_providers' => [
+        'user' => LaravelUserAttributesProvider::class
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Censor data
     |--------------------------------------------------------------------------
     |
@@ -181,6 +209,7 @@ return [
     | censored. It is also possible to hide the client's IP address.
     |
     */
+
     'censor' => [
         'body_fields' => [
             'password',

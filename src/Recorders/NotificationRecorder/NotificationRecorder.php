@@ -7,6 +7,7 @@ use Illuminate\Events\Dispatcher;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
+use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\RecorderType;
@@ -22,6 +23,7 @@ class NotificationRecorder implements Recorder
         protected Tracer $tracer,
         protected Dispatcher $dispatcher,
         protected BackTracer $backTracer,
+        protected UserAttributesProvider $userAttributesProvider,
         array $config
     ) {
         $this->configure($config);
@@ -56,11 +58,10 @@ class NotificationRecorder implements Recorder
         });
     }
 
-    protected function resolveNotifiable($notifiable): ?array
+    protected function resolveNotifiable($notifiable): string|null
     {
         if ($notifiable instanceof Authenticatable) {
-            // TODO: somehow we should allow users to customize this (would be usefull throughout Flare)
-            return ['email' => $notifiable->email ?? '', 'name' => $notifiable->name ?? ''];
+            return $this->userAttributesProvider->email($notifiable) ?? $this->userAttributesProvider->fullName($notifiable);
         }
 
         return null;

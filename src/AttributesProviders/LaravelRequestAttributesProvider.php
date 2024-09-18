@@ -20,7 +20,6 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
 
         $attributes = [
             ...parent::toArray($request),
-            ...$this->getUser($request),
             ...$this->getRoute($request),
         ];
 
@@ -42,27 +41,23 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
         }
     }
 
-    protected function getUser(LaravelRequest $request): array
+    protected function getUser(Request $request): ?object
     {
+        if (! $request instanceof LaravelRequest) {
+            return null;
+        }
+
         try {
             $user = $request->user();
 
-            if (! $user) {
-                return [];
+            if (! is_object($user)) {
+                return null;
             }
 
-            if (method_exists($user, 'toFlare')) {
-                return ['laravel.user' => $user->toFlare()];
-            }
-
-            if (method_exists($user, 'toArray')) {
-                return ['laravel.user' => $user->toArray()];
-            }
+            return $user;
         } catch (Throwable $e) {
-            return [];
+            return null;
         }
-
-        return [];
     }
 
     protected function getRoute(LaravelRequest $request): array

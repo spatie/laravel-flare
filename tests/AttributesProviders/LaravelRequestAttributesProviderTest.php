@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
+use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 uses(MakesHttpRequests::class);
@@ -19,7 +20,10 @@ it('returns route name in context data', function () {
 
     $request->setRouteResolver(fn () => $route);
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
 
     $attributes = $provider->toArray($request);
 
@@ -37,7 +41,10 @@ it('returns route parameters in context data', function () {
         return $route;
     });
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
 
     $attributes = $provider->toArray($request);
 
@@ -66,7 +73,10 @@ it('will call the to flare method on route parameters when it exists', function 
         return $route;
     });
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
 
     $attributes = $provider->toArray($request);
 
@@ -78,7 +88,10 @@ it('will call the to flare method on route parameters when it exists', function 
 it('returns the url', function () {
     $request = createRequest('GET', '/route', []);
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
 
     $attributes = $provider->toArray($request);
 
@@ -88,7 +101,10 @@ it('returns the url', function () {
 it('returns the cookies', function () {
     $request = createRequest('GET', '/route', [], ['cookie' => 'noms']);
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
 
     $attributes = $provider->toArray($request);
 
@@ -105,17 +121,26 @@ it('returns the authenticated user', function () {
     $request = createRequest('GET', '/route', [], ['cookie' => 'noms']);
     $request->setUserResolver(fn () => $user);
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
+
     $attributes = $provider->toArray($request);
 
-    expect($attributes['laravel.user'])->toBe($user->toArray());
+    expect($attributes['user.email'])->toBe('john@example.com');
+    expect($attributes['user.id'])->toBe(1);
+    expect($attributes)->not()->toHaveKeys([
+        'user.full_name',
+        'user.context',
+    ]);
 });
 
 it('the authenticated user model has a to flare method it will be used to collect user data', function () {
     $user = new class extends User {
         public function toFlare()
         {
-            return ['id' => $this->id];
+            return ['role' => 'admin'];
         }
     };
 
@@ -127,42 +152,47 @@ it('the authenticated user model has a to flare method it will be used to collec
     $request = createRequest('GET', '/route', [], ['cookie' => 'noms']);
     $request->setUserResolver(fn () => $user);
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
+
     $attributes = $provider->toArray($request);
 
-    expect($attributes['laravel.user'])->toBe(['id' => $user->id]);
+    expect($attributes['user.email'])->toBe('john@example.com');
+    expect($attributes['user.id'])->toBe(1);
+    expect($attributes['user.attributes'])->toBe(['role' => 'admin']);
+    expect($attributes)->not()->toHaveKeys([
+        'user.full_name',
+    ]);
 });
 
-it('the authenticated user model has no matching method it will return no user data', function () {
-    $user = new class {
-        public function toArray(): array
-        {
-            return ['name' => 'John Doe'];
-        }
-    };
+it('the authenticated user cannot be deduced so no attributes are added', function (
+    $user
+) {
+    $provider = new LaravelRequestAttributesProvider(
+        new Redactor(),
+        new LaravelUserAttributesProvider()
+    );
 
     $request = createRequest('GET', '/route', [], ['cookie' => 'noms']);
     $request->setUserResolver(fn () => $user);
 
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
     $attributes = $provider->toArray($request);
 
-    expect($attributes['laravel.user'])->toBe(['name' => 'John Doe']);
-});
-
-it('the authenticated user model is broken it will return no user data', function () {
-    $user = new class extends User {
-        protected $appends = ['invalid'];
-    };
-
-    $request = createRequest('GET', '/route', [], ['cookie' => 'noms']);
-    $request->setUserResolver(fn () => $user);
-
-    $provider = new LaravelRequestAttributesProvider(new Redactor());
-    $attributes = $provider->toArray($request);
-
-    expect($attributes)->not()->toHaveKey('laravel.user');
-});
+    expect($attributes)->not()->toHaveKeys([
+        'user.full_name',
+        'user.email',
+        'user.id',
+        'user.attributes',
+    ]);
+})->with([
+    'no user resolver' => fn () => null,
+    'empty class' => fn () => new class {
+    },
+    'empty user' => fn () => new User(),
+    'array' => fn () => [],
+]);
 
 function createRequest($method, $uri, $parameters = [], $cookies = [], $files = [], $server = [], $content = null): Request
 {
