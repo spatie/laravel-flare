@@ -47,7 +47,7 @@ class LaravelUserAttributesProvider extends UserAttributesProvider
 
     public function attributes(mixed $user): array
     {
-        if(method_exists($user, 'toFlare')) {
+        if (method_exists($user, 'toFlare')) {
             return $user->toFlare();
         }
 
