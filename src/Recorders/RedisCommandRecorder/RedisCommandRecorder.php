@@ -2,7 +2,7 @@
 
 namespace Spatie\LaravelFlare\Recorders\RedisCommandRecorder;
 
-use Illuminate\Events\Dispatcher;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Redis\Events\CommandExecuted;
 use Illuminate\Redis\RedisManager;
 use Spatie\FlareClient\Recorders\RedisCommandRecorder\RedisCommandRecorder as BaseRedisCommandRecorder;

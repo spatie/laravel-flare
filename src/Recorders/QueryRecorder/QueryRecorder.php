@@ -3,7 +3,7 @@
 namespace Spatie\LaravelFlare\Recorders\QueryRecorder;
 
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Events\Dispatcher;
+use Illuminate\Contracts\Events\Dispatcher;
 use Spatie\FlareClient\Recorders\QueryRecorder\QueryRecorder as BaseQueryRecorder;
 use Spatie\FlareClient\Recorders\QueryRecorder\QuerySpan;
 use Spatie\FlareClient\Support\BackTracer;

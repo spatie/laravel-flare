@@ -2,7 +2,7 @@
 
 namespace Spatie\LaravelFlare\Recorders\RoutingRecorder;
 
-use Illuminate\Events\Dispatcher;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Routing\Events\RouteMatched;

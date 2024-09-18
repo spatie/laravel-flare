@@ -3,7 +3,7 @@
 namespace Spatie\LaravelFlare\Recorders\NotificationRecorder;
 
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Events\Dispatcher;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
