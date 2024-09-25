@@ -26,13 +26,13 @@ it('can trace jobs executions', function () {
         ->hasSpanCount(1)
         ->span(
             fn (ExpectSpan $span) => $span
-            ->hasName('Job - Closure (JobRecorderTest.php:'.__LINE__ - 10 .')')
-            ->hasAttribute('flare.span_type', SpanType::Job)
-            ->hasAttribute('laravel.job.queue.connection_name', 'sync')
-            ->hasAttribute('laravel.job.queue.name', 'sync')
-            ->hasAttribute('laravel.job.success', true)
-            ->hasAttribute('laravel.job.delete_when_missing_models', true)
-            ->hasSpanEventCount(0)
+                ->hasName('Job - Closure (JobRecorderTest.php:'.__LINE__ - 11 .')')
+                ->hasAttribute('flare.span_type', SpanType::Job)
+                ->hasAttribute('laravel.job.queue.connection_name', 'sync')
+                ->hasAttribute('laravel.job.queue.name', 'sync')
+                ->hasAttribute('laravel.job.success', true)
+                ->hasAttribute('laravel.job.delete_when_missing_models', true)
+                ->hasSpanEventCount(0)
         );
 });
 
@@ -51,14 +51,14 @@ it('can trace jobs failures', function () {
         ->hasSpanCount(1)
         ->span(
             fn (ExpectSpan $span) => $span
-            ->hasAttribute('laravel.job.success', false)
-            ->hasSpanEventCount(1)
-            ->spanEvent(
-                fn (ExpectSpanEvent $spanEvent) => $spanEvent
-                ->hasName('Exception - Exception')
-                ->hasAttribute('flare.span_event_type', SpanEventType::Exception)
-                ->hasAttribute('exception.message', 'Failed')
-            )
+                ->hasAttribute('laravel.job.success', false)
+                ->hasSpanEventCount(1)
+                ->spanEvent(
+                    fn (ExpectSpanEvent $spanEvent) => $spanEvent
+                        ->hasName('Exception - Exception')
+                        ->hasAttribute('flare.span_event_type', SpanEventType::Exception)
+                        ->hasAttribute('exception.message', 'Failed')
+                )
         );
 });
 
