@@ -82,7 +82,7 @@ class FlareTracingMiddleware
     public function terminate(Request $request, Response $response): void
     {
         if ($this->tracer->hasCurrentSpan(LaravelSpanType::Terminating)) {
-            $this->tracer->endCurrentSpan();
+            $this->tracer->endSpan();
         }
 
         if (! $this->tracer->hasCurrentSpan(SpanType::Request)) {
@@ -94,7 +94,7 @@ class FlareTracingMiddleware
         );
         $this->requestSpan->addAttribute('http.response.status_code', $response->getStatusCode());
 
-        $requestSpan = $this->tracer->endCurrentSpan();
+        $requestSpan = $this->tracer->endSpan();
 
         if ($requestSpan->parentSpanId === null) {
             // In case of Octane

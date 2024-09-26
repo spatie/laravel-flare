@@ -10,7 +10,7 @@ trait DispatchesRoutes
     protected function wrapDispatcher(Closure $dispatch)
     {
         if ($this->tracer->hasCurrentSpan(SpanType::LocalMiddlewareBefore)) {
-            $this->tracer->endCurrentSpan();
+            $this->tracer->endSpan($this->tracer->currentSpan());
         }
 
         $dispatched = $dispatch();

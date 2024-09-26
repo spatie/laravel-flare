@@ -34,7 +34,7 @@ class RoutingRecorder implements SpansRecorder
             }
 
             if ($this->tracer->hasCurrentSpan(SpanType::GlobalMiddlewareBefore)) {
-                $this->tracer->endCurrentSpan();
+                $this->tracer->endSpan();
             }
 
             $this->tracer->startSpan(
@@ -49,7 +49,7 @@ class RoutingRecorder implements SpansRecorder
             }
 
             if ($this->tracer->hasCurrentSpan(SpanType::Routing)) {
-                $this->tracer->endCurrentSpan();
+                $this->tracer->endSpan();
             }
 
             $this->tracer->startSpan(
@@ -64,7 +64,7 @@ class RoutingRecorder implements SpansRecorder
             }
 
             if ($this->tracer->hasCurrentSpan(SpanType::Response)) {
-                $this->tracer->endCurrentSpan();
+                $this->tracer->endSpan();
             }
 
             $this->tracer->startSpan(

@@ -99,7 +99,7 @@ class TracingKernel
             return;
         }
 
-        $tracer->endCurrentSpan();
+        $tracer->endSpan();
     }
 
     protected static function appTerminated(Tracer $tracer): void
@@ -112,7 +112,7 @@ class TracingKernel
             return;
         }
 
-        $tracer->endCurrentSpan();
+        $tracer->endSpan();
         $tracer->endTrace();
     }
 
