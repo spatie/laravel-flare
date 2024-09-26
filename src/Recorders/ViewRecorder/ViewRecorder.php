@@ -89,7 +89,7 @@ class ViewRecorder implements SpansRecorder
 
         $engines = array_values(array_unique($viewFactory->getExtensions()));
 
-        $viewFactory->composer('*', function (View $view){
+        $viewFactory->composer('*', function (View $view) {
             WrappedViewEngine::$currentView = $view->name();
 
             return $view;

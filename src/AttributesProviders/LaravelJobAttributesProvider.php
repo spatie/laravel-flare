@@ -14,7 +14,6 @@ use ReflectionProperty;
 use RuntimeException;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Time\TimeHelper;
-use Throwable;
 
 class LaravelJobAttributesProvider
 {
@@ -91,7 +90,7 @@ class LaravelJobAttributesProvider
         if (array_key_exists('pushedAt', $payload) && $payload['pushedAt'] !== null) {
             $pushedAt = DateTime::createFromFormat('U.u', $payload['pushedAt']);
 
-            if($pushedAt){
+            if ($pushedAt) {
                 $attributes['laravel.job.pushed_at'] = TimeHelper::seconds((int)$pushedAt->format('Uu'));
             }
         }
