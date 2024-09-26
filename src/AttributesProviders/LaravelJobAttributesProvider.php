@@ -89,11 +89,10 @@ class LaravelJobAttributesProvider
         }
 
         if (array_key_exists('pushedAt', $payload) && $payload['pushedAt'] !== null) {
-            try {
-                $pushedAt = DateTime::createFromFormat('U.u', $payload['pushedAt'])->format('Uu');
+            $pushedAt = DateTime::createFromFormat('U.u', $payload['pushedAt']);
 
-                $attributes['laravel.job.pushed_at'] = TimeHelper::seconds($pushedAt);
-            } catch (Throwable) {
+            if($pushedAt){
+                $attributes['laravel.job.pushed_at'] = TimeHelper::seconds((int)$pushedAt->format('Uu'));
             }
         }
 
@@ -146,6 +145,8 @@ class LaravelJobAttributesProvider
                     return [];
                 }
             });
+
+        $attributes = [];
 
         if ($jobProperties->get('after_commit') !== null) {
             $attributes['laravel.job.after_commit'] = $jobProperties->get('after_commit');
@@ -258,7 +259,6 @@ class LaravelJobAttributesProvider
         $app = app();
 
         if ($app->bound(Encrypter::class)) {
-            /** @phpstan-ignore-next-line */
             return unserialize($app[Encrypter::class]->decrypt($command));
         }
 

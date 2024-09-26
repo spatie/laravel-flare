@@ -15,11 +15,11 @@ class AddRequestInformation extends BaseAddRequestInformation
 
     public function __construct(
         LaravelRequestAttributesProvider $attributesProvider,
-        $config
+        array $config
     ) {
         $this->includeLivewireComponents = $config['include_livewire_components'] ?? false;
 
-        parent::__construct($attributesProvider, $config);
+        parent::__construct($attributesProvider);
     }
 
     protected function isRunningInConsole(): bool

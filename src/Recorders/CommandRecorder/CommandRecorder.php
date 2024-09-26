@@ -12,8 +12,6 @@ use Spatie\FlareClient\Tracer;
 
 class CommandRecorder extends BaseCommandRecorder
 {
-    use RecordsPendingSpans;
-
     public function __construct(
         Tracer $tracer,
         BackTracer $backTracer,
@@ -42,7 +40,7 @@ class CommandRecorder extends BaseCommandRecorder
 
         $this->recordStart(
             $event->command,
-            $event->input,
+            $event->input ?? [],
             [
                 'process.command_line' => str_replace("'{$event->command}'", $event->command, (string) $event->input),
             ]

@@ -9,6 +9,7 @@ use Psr\Http\Message\StreamInterface;
 use Spatie\FlareClient\Concerns\PrefersHumanFormats;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Facades\Flare;
+use Throwable;
 
 trait WrapsFileSystem
 {
@@ -105,7 +106,7 @@ trait WrapsFileSystem
      * Write the contents of a file.
      *
      * @param string $path
-     * @param \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource $contents
+     * @param StreamInterface|File|UploadedFile|string|resource $contents
      * @param mixed $options
      *
      * @return bool
@@ -129,8 +130,8 @@ trait WrapsFileSystem
     /**
      * Store the uploaded file on the disk.
      *
-     * @param \Illuminate\Http\File|\Illuminate\Http\UploadedFile|string $path
-     * @param \Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|array|null $file
+     * @param File|UploadedFile|string $path
+     * @param File|UploadedFile|string|array|null $file
      * @param mixed $options
      *
      * @return string|false
@@ -154,8 +155,8 @@ trait WrapsFileSystem
     /**
      * Store the uploaded file on the disk with a given name.
      *
-     * @param \Illuminate\Http\File|\Illuminate\Http\UploadedFile|string $path
-     * @param \Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|array|null $file
+     * @param File|UploadedFile|string $path
+     * @param File|UploadedFile|string|array|null $file
      * @param string|array|null $name
      * @param mixed $options
      *
@@ -197,7 +198,7 @@ trait WrapsFileSystem
             $path,
             [
                 'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->getSizeOfContents($this->getSizeOfContents($resource)),
+                'laravel.filesystem.contents.size' => $this->getSizeOfContents($resource),
             ],
             fn ($return) => ['laravel.filesystem.success' => $return]
         );
@@ -254,6 +255,7 @@ trait WrapsFileSystem
      *
      * @param string $path
      * @param string $data
+     * @param string $separator
      *
      * @return bool
      */
@@ -278,6 +280,7 @@ trait WrapsFileSystem
      *
      * @param string $path
      * @param string $data
+     * @param string $separator
      *
      * @return bool
      */
@@ -559,7 +562,7 @@ trait WrapsFileSystem
         string $description,
         array $attributes = [],
         ?Closure $afterAttributes = null
-    ) {
+    ): mixed {
         $attributes = array_merge($attributes, [
             'flare.span.type' => SpanType::Filesystem,
             'laravel.filesystem.operation' => $method,
@@ -577,13 +580,19 @@ trait WrapsFileSystem
     }
 
     /**
-     * @param \Psr\Http\Message\StreamInterface|\Illuminate\Http\File|\Illuminate\Http\UploadedFile|string|resource $contents
+     * @param StreamInterface|File|UploadedFile|string|resource|null|array $contents
      */
     protected function getSizeOfContents(
         mixed $contents
-    ): int|string {
+    ): ?int {
+        if ($contents === null) {
+            return 0;
+        }
+
         if ($contents instanceof StreamInterface || $contents instanceof UploadedFile || $contents instanceof File) {
-            return $contents->getSize();
+            $size = $contents->getSize();
+
+            return is_bool($size) ? null : $size;
         }
 
         if (is_string($contents)) {
@@ -591,14 +600,18 @@ trait WrapsFileSystem
         }
 
         if (is_resource($contents)) {
-            return fstat($contents)['size'];
+            return null;
         }
 
-        if (is_null($contents)) {
-            return 0;
+        if (is_array($contents)) {
+            try {
+                $this->getSizeOfContents(json_encode($contents, flags: JSON_THROW_ON_ERROR));
+            } catch (Throwable) {
+                return null;
+            }
         }
 
-        return '?';
+        return null;
     }
 
     protected function humanizeFilesystemEntries(array|string|null $paths, string $type = 'paths'): string

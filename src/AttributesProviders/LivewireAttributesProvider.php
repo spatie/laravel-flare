@@ -59,7 +59,6 @@ class LivewireAttributesProvider
             $componentClass = null;
         }
 
-        /** @phpstan-ignore-next-line */
         $updates = $request->input('updates') ?? [];
 
         return [
@@ -95,7 +94,6 @@ class LivewireAttributesProvider
     /** @return array<string, mixed> */
     protected function resolveUpdates(Request $request, array $updates): array
     {
-        /** @phpstan-ignore-next-line */
         $updates = $request->input('updates') ?? [];
 
         return array_map(function (array $update) {

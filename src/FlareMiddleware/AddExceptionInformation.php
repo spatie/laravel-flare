@@ -2,6 +2,7 @@
 
 namespace Spatie\LaravelFlare\FlareMiddleware;
 
+use Closure;
 use Illuminate\Database\QueryException;
 use Spatie\FlareClient\Contracts\ProvidesFlareContext;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
@@ -9,7 +10,7 @@ use Spatie\FlareClient\ReportFactory;
 
 class AddExceptionInformation implements FlareMiddleware
 {
-    public function handle(ReportFactory $report, $next)
+    public function handle(ReportFactory $report, Closure $next): Closure|ReportFactory
     {
         $this->addUserDefinedContext($report);
 

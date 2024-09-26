@@ -6,15 +6,11 @@ parameters:
     paths:
         - src
         - config
-    excludePaths:
-        - src/Recorders/JobRecorder/JobRecorder
-        - src/Recorders/DumpRecorder/HtmlDumper
-        - src/Recorders/DumpRecorder/DumpRecorder
-        - src/FlareServiceProvider
-        - src/FlareMiddleware
-        - src/Support/LivewireComponentParser
-        - src/Solutions/SolutionProviders/SolutionProviderRepository
-        - src/Commands/TestCommand
+
+    ignoreErrors:
+     - "#Method [a-zA-Z0-9\\_\\\\:\\(\\)]+ has parameter \\$[a-zA-Z0-9_]+ with no value type specified in iterable type array.#"
+     - "#Method [a-zA-Z0-9\\_\\\\:\\(\\)]+ return type has no value type specified in iterable type array.#"
+     - "#Property [a-zA-Z0-9\\$\\_\\\\:\\(\\)]+ type has no value type specified in iterable type array.#"
 
     tmpDir: build/phpstan
     checkMissingIterableValueType: true

@@ -18,6 +18,7 @@ use Spatie\LaravelFlare\Enums\SpanType;
 
 class JobRecorder implements Recorder
 {
+    /** @use RecordsPendingSpans<Span> */
     use RecordsPendingSpans;
 
     protected int $maxChainedJobReportingDepth = 0;
@@ -54,7 +55,7 @@ class JobRecorder implements Recorder
             $this->maxChainedJobReportingDepth
         );
 
-        return $this->startSpan(function () use ($attributes, $event) {
+        return $this->startSpan(function () use ($attributes) {
             return Span::build(
                 traceId: $this->tracer->currentTraceId() ?? '',
                 parentId: $this->tracer->currentSpanId(),

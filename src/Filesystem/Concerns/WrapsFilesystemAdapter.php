@@ -26,7 +26,7 @@ trait WrapsFilesystemAdapter
             $path,
             [
                 'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->humanFilesize($content),
+                'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($content)),
             ]
         );
     }

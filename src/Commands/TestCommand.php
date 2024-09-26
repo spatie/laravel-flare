@@ -165,9 +165,7 @@ class TestCommand extends Command
                 ['Laravel', app()->version()],
                 ['spatie/laravel-flare', InstalledVersions::getVersion('spatie/laravel-flare')],
                 ['spatie/flare-client-php', InstalledVersions::getVersion('spatie/flare-client-php')],
-                /** @phpstan-ignore-next-line */
                 ['Curl', curl_version()['version'] ?? 'Unknown'],
-                /** @phpstan-ignore-next-line */
                 ['SSL', curl_version()['ssl_version'] ?? 'Unknown'],
             ]);
 

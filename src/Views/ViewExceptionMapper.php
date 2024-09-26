@@ -70,7 +70,11 @@ class ViewExceptionMapper
     {
         $viewIndex = null;
 
-        $trace = $exception->getPrevious()->getTrace();
+        $trace = $exception->getPrevious()?->getTrace();
+
+        if (! is_array($trace)) {
+            return;
+        }
 
         $trace = array_map(function ($frame, $index) use (&$viewIndex) {
             if ($originalPath = $this->viewFrameMapper->findCompiledView(Arr::get($frame, 'file', ''))) {

@@ -29,7 +29,7 @@ class WrappedViewEngine implements Engine
         return $rendered;
     }
 
-    public function __call($name, $arguments)
+    public function __call(string $name, mixed $arguments): mixed
     {
         return $this->engine->{$name}(...$arguments);
     }

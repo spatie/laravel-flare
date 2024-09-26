@@ -5,9 +5,6 @@ namespace Spatie\LaravelFlare\AttributesProviders;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
 
-/**
- * @extends UserAttributesProvider<\Illuminate\Contracts\Auth\Authenticatable>
- */
 class LaravelUserAttributesProvider extends UserAttributesProvider
 {
     public function id(mixed $user): string|int|null
@@ -16,7 +13,7 @@ class LaravelUserAttributesProvider extends UserAttributesProvider
             return $user->getAuthIdentifier();
         }
 
-        if (method_exists($user, 'getKey')) {
+        if (is_object($user) && method_exists($user, 'getKey')) {
             return $user->getKey();
         }
 
@@ -47,7 +44,7 @@ class LaravelUserAttributesProvider extends UserAttributesProvider
 
     public function attributes(mixed $user): array
     {
-        if (method_exists($user, 'toFlare')) {
+        if (is_object($user) && method_exists($user, 'toFlare')) {
             return $user->toFlare();
         }
 

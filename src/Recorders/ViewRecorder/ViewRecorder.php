@@ -19,6 +19,7 @@ use Spatie\FlareClient\Tracer;
 // TODO: can be put into the base package
 class ViewRecorder implements SpansRecorder
 {
+    /** @use RecordsPendingSpans<Span> */
     use RecordsPendingSpans;
 
     public function __construct(
@@ -88,7 +89,7 @@ class ViewRecorder implements SpansRecorder
 
         $engines = array_values(array_unique($viewFactory->getExtensions()));
 
-        $viewFactory->composer('*', function (View $view) use ($viewFactory) {
+        $viewFactory->composer('*', function (View $view){
             WrappedViewEngine::$currentView = $view->name();
 
             return $view;

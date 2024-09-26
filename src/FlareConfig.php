@@ -5,8 +5,10 @@ namespace Spatie\LaravelFlare;
 use Monolog\Level;
 use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
 use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
+use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
+use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
@@ -40,7 +42,6 @@ class FlareConfig extends BaseFlareConfig
         $config = new self(
             apiToken: config('flare.key'),
             baseUrl: config('flare.base_url', 'https://flareapp.io/api'),
-            timeout: config('flare.timeout', 10),
             middleware: config('flare.middleware'),
             recorders: config('flare.recorders'),
             reportErrorLevels: config('flare.report_error_levels'),
@@ -117,6 +118,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<FlareMiddleware> $middleware
+     */
     public function addLivewireComponents(
         bool $includeLivewireComponents = true,
         string $middleware = AddRequestInformation::class
@@ -132,6 +136,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<FlareMiddleware> $middleware
+     */
     public function addConsoleInfo(string $middleware = AddConsoleInformation::class): static
     {
         parent::addConsoleInfo(middleware: $middleware);
@@ -139,6 +146,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<FlareMiddleware> $middleware
+     */
     public function addLaravelInfo(
         string $middleware = AddLaravelInformation::class
     ): static {
@@ -147,6 +157,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<FlareMiddleware> $middleware
+     */
     public function addLaravelContext(
         string $middleware = AddLaravelContext::class
     ): static {
@@ -155,6 +168,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<FlareMiddleware> $middleware
+     */
     public function addExceptionInfo(
         string $middleware = AddExceptionInformation::class
     ): static {
@@ -163,6 +179,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<Recorder> $recorder
+     */
     public function addJobInfo(
         bool $trace = true,
         bool $report = true,
@@ -180,6 +199,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<FlareMiddleware> $middleware
+     */
     public function addExceptionHandledStatus(
         string $middleware = AddExceptionHandledStatus::class
     ): static {
@@ -188,6 +210,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<Recorder> $recorder
+     */
     public function addCacheEvents(
         bool $trace = true,
         bool $report = true,
@@ -200,6 +225,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<Recorder> $recorder
+     */
     public function addLogs(
         bool $trace = true,
         bool $report = true,
@@ -211,6 +239,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<Recorder> $recorder
+     */
     public function addQueries(
         bool $trace = true,
         bool $report = true,
@@ -225,6 +256,9 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
+    /**
+     * @param class-string<Recorder> $recorder
+     */
     public function addTransactions(
         bool $trace = true,
         bool $report = true,
@@ -252,6 +286,9 @@ class FlareConfig extends BaseFlareConfig
         );
     }
 
+    /**
+     * @param class-string<Recorder> $recorder
+     */
     public function addCommands(
         bool $trace = true,
         bool $report = true,

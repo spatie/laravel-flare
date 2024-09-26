@@ -15,6 +15,7 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 
 class QueueRecorder implements SpansRecorder
 {
+    /** @use RecordsPendingSpans<Span> */
     use RecordsPendingSpans;
 
     public function __construct(
@@ -44,7 +45,7 @@ class QueueRecorder implements SpansRecorder
         return $this->startSpan(function () use ($event) {
             $attributes = [
                 'laravel.job.queue.connection_name' => $event->connectionName,
-                'laravel.job.queue.name' => $event->queue ?? config('queue.default'),
+                'laravel.job.queue.name' => $event->queue,
                 ...$this->laravelJobAttributesProvider->getJobPropertiesFromPayload($event->payload()),
             ];
 

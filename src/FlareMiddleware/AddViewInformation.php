@@ -16,7 +16,7 @@ class AddViewInformation implements FlareMiddleware
     ) {
     }
 
-    public function handle(ReportFactory $report, Closure $next)
+    public function handle(ReportFactory $report, Closure $next): Closure|ReportFactory
     {
         if (! $report->throwable instanceof ViewException) {
             return $next($report);

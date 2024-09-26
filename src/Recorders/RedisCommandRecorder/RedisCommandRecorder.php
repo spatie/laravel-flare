@@ -46,9 +46,9 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
                 command: $event->command,
                 parameters: $event->parameters,
                 duration: TimeHelper::milliseconds($event->time),
-                namespace: $connection['database'] ?? null,
+                namespace: $connection ? (int) $connection['database'] : null,
                 serverAddress: $connection['host'] ?? null,
-                serverPort: $connection['port'] ?? null,
+                serverPort: $connection ? (int) $connection['port'] : null,
                 attributes: [
                     'laravel.db.connection' => $event->connectionName,
                 ]

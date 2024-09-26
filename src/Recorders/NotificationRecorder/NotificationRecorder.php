@@ -17,6 +17,7 @@ use Spatie\FlareClient\Tracer;
 
 class NotificationRecorder implements Recorder
 {
+    /** @use RecordsPendingSpans<Span> */
     use RecordsPendingSpans;
 
     public function __construct(
@@ -58,7 +59,7 @@ class NotificationRecorder implements Recorder
         });
     }
 
-    protected function resolveNotifiable($notifiable): string|null
+    protected function resolveNotifiable(mixed $notifiable): string|null
     {
         if ($notifiable instanceof Authenticatable) {
             return $this->userAttributesProvider->email($notifiable) ?? $this->userAttributesProvider->fullName($notifiable);

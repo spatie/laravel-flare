@@ -17,6 +17,7 @@ use Spatie\FlareClient\Tracer;
 // TODO: can be put into the base package
 class HttpRecorder implements SpansRecorder
 {
+    /** @use RecordsPendingSpans<Span> */
     use RecordsPendingSpans;
 
     public function __construct(
@@ -67,7 +68,7 @@ class HttpRecorder implements SpansRecorder
         return $this->startSpan(function () use ($requestBodySize, $method, $url) {
             $parsedUrl = parse_url($url);
 
-            $name = array_key_exists('host', $parsedUrl)
+            $name = is_array($parsedUrl) && array_key_exists('host', $parsedUrl)
                 ? "Http Request - {$parsedUrl['host']}"
                 : 'Http Request';
 

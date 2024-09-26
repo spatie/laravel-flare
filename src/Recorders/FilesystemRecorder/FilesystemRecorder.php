@@ -27,9 +27,9 @@ class FilesystemRecorder extends BaseFilesystemRecorder
         $this->trackAllDisks = $config['track_all_disks'] ?? false;
     }
 
-    public static function registered(Application $container, array $config)
+    public static function registered(Application $container, array $config): void
     {
-        $shouldWrapDisks = $config['track_all_disks'] ?? false
+        $shouldWrapDisks = ($config['track_all_disks'] ?? false)
         || Arr::first($config, fn ($disk) => is_array($disk) && array_key_exists('flare', $disk)) !== null;
 
         if ($shouldWrapDisks) {

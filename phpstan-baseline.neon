@@ -1,44 +1,14 @@
 parameters:
 	ignoreErrors:
 		-
+			message: "#^Dead catch \\- Throwable is never thrown in the try block\\.$#"
+			count: 3
+			path: src/AttributesProviders/LaravelUserAttributesProvider.php
+
+		-
 			message: "#^Call to an undefined method Livewire\\\\LivewireManager\\:\\:getClass\\(\\)\\.$#"
 			count: 1
-			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
-
-		-
-			message: "#^Cannot call method get\\(\\) on Symfony\\\\Component\\\\HttpFoundation\\\\Request\\|null\\.$#"
-			count: 1
-			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
-
-		-
-			message: "#^Cannot call method has\\(\\) on Symfony\\\\Component\\\\HttpFoundation\\\\Request\\|null\\.$#"
-			count: 1
-			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
-
-		-
-			message: "#^Method Spatie\\\\LaravelFlare\\\\ContextProviders\\\\LaravelLivewireRequestContextProvider\\:\\:resolveUpdates\\(\\) has parameter \\$updates with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/ContextProviders/LaravelLivewireRequestContextProvider.php
-
-		-
-			message: "#^Cannot call method toFlare\\(\\) on class\\-string\\|object\\.$#"
-			count: 1
-			path: src/ContextProviders/LaravelRequestContextProvider.php
-
-		-
-			message: "#^Expression on left side of \\?\\? is not nullable\\.$#"
-			count: 1
-			path: src/ContextProviders/LaravelRequestContextProvider.php
-
-		-
-			message: "#^Method Spatie\\\\LaravelFlare\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should return array\\<int, mixed\\> but returns array\\<string, mixed\\>\\.$#"
-			count: 1
-			path: src/ContextProviders/LaravelRequestContextProvider.php
-
-		-
-			message: "#^Return type \\(array\\<int, mixed\\>\\) of method Spatie\\\\LaravelFlare\\\\ContextProviders\\\\LaravelRequestContextProvider\\:\\:toArray\\(\\) should be compatible with return type \\(array\\<string, mixed\\>\\) of method Spatie\\\\FlareClient\\\\Context\\\\RequestContextProvider\\:\\:toArray\\(\\)$#"
-			count: 1
-			path: src/ContextProviders/LaravelRequestContextProvider.php
+			path: src/AttributesProviders/LivewireAttributesProvider.php
 
 		-
 			message: "#^Parameter \\#1 \\$callback of function array_map expects \\(callable\\(0\\|1\\|2\\|3\\|4\\|5\\|6\\|7\\)\\: mixed\\)\\|null, Closure\\(string\\)\\: string given\\.$#"
@@ -46,62 +16,93 @@ parameters:
 			path: src/Exceptions/InvalidConfig.php
 
 		-
-			message: "#^Argument of an invalid type array\\|DateTimeImmutable\\|int\\|string\\|null supplied for foreach, only iterables are supported\\.$#"
+			message: "#^Parameter \\$applicationStage of class Spatie\\\\LaravelFlare\\\\FlareConfig constructor expects string\\|null, bool\\|string given\\.$#"
+			count: 1
+			path: src/FlareConfig.php
+
+		-
+			message: "#^Cannot access offset 'events' on Illuminate\\\\Contracts\\\\Foundation\\\\Application\\.$#"
+			count: 4
+			path: src/FlareServiceProvider.php
+
+		-
+			message: "#^Cannot call method map\\(\\) on class\\-string\\|object\\.$#"
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: "#^Class Laravel\\\\Octane\\\\Events\\\\RequestReceived not found\\.$#"
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: "#^Class Laravel\\\\Octane\\\\Events\\\\RequestTerminated not found\\.$#"
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: "#^Class Laravel\\\\Octane\\\\Events\\\\TaskReceived not found\\.$#"
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: "#^Class Laravel\\\\Octane\\\\Events\\\\TickReceived not found\\.$#"
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: "#^Parameter \\#3 \\$registerRecorderAndMiddlewaresCallback of class Spatie\\\\FlareClient\\\\FlareProvider constructor expects \\(Closure\\(Illuminate\\\\Contracts\\\\Container\\\\Container\\|Spatie\\\\FlareClient\\\\Support\\\\Container, class\\-string\\<Spatie\\\\FlareClient\\\\Contracts\\\\Recorders\\\\Recorder\\>, array\\)\\: void\\)\\|null, Closure\\(Illuminate\\\\Contracts\\\\Container\\\\Container, string, array\\)\\: void given\\.$#"
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: "#^Call to an undefined method Spatie\\\\FlareClient\\\\Support\\\\BackTracer\\:\\:setFrameAsAttributes\\(\\)\\.$#"
 			count: 1
 			path: src/Support/FlareLogHandler.php
 
 		-
-			message: "#^Cannot access offset 'exception' on array\\|DateTimeImmutable\\|int\\|string\\|null\\.$#"
+			message: "#^Parameter \\#1 \\$key of method Spatie\\\\FlareClient\\\\ReportFactory\\:\\:context\\(\\) expects array\\|string, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
 			count: 1
 			path: src/Support/FlareLogHandler.php
 
 		-
-			message: "#^Parameter \\#1 \\$level of static method Monolog\\\\Logger\\:\\:toMonologLevel\\(\\) expects 100\\|200\\|250\\|300\\|400\\|500\\|550\\|600\\|'ALERT'\\|'alert'\\|'CRITICAL'\\|'critical'\\|'DEBUG'\\|'debug'\\|'EMERGENCY'\\|'emergency'\\|'ERROR'\\|'error'\\|'INFO'\\|'info'\\|'NOTICE'\\|'notice'\\|'WARNING'\\|'warning'\\|Monolog\\\\Level, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
+			message: "#^Parameter \\#1 \\$logLevel of static method Spatie\\\\LaravelFlare\\\\Exceptions\\\\InvalidConfig\\:\\:invalidLogLevel\\(\\) expects string, string\\|null given\\.$#"
 			count: 1
 			path: src/Support/FlareLogHandler.php
 
 		-
-			message: "#^Parameter \\#1 \\$message of method Spatie\\\\FlareClient\\\\Flare\\:\\:reportMessage\\(\\) expects string, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
+			message: "#^Parameter \\#1 \\$name of static method Monolog\\\\Level\\:\\:fromName\\(\\) expects 'ALERT'\\|'Alert'\\|'alert'\\|'CRITICAL'\\|'Critical'\\|'critical'\\|'DEBUG'\\|'Debug'\\|'debug'\\|'EMERGENCY'\\|'Emergency'\\|'emergency'\\|'ERROR'\\|'Error'\\|'error'\\|'INFO'\\|'Info'\\|'info'\\|'NOTICE'\\|'Notice'\\|'notice'\\|'WARNING'\\|'Warning'\\|'warning', string\\|null given\\.$#"
 			count: 1
 			path: src/Support/FlareLogHandler.php
+
+		-
+			message: "#^Parameter \\#2 \\$array of function array_key_exists expects array, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
+			count: 1
+			path: src/Support/FlareLogHandler.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Foundation\\\\Application\\:\\:registered\\(\\)\\.$#"
+			count: 1
+			path: src/Support/TracingKernel.php
+
+		-
+			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Foundation\\\\Application\\:\\:runningConsoleCommand\\(\\)\\.$#"
+			count: 1
+			path: src/Support/TracingKernel.php
+
+		-
+			message: "#^Offset 'line' does not exist on array\\{function\\: string, line\\?\\: int, file\\: non\\-falsy\\-string, class\\?\\: class\\-string, type\\?\\: '\\-\\>'\\|'\\:\\:', args\\?\\: array, object\\?\\: object\\}\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
+
+		-
+			message: "#^Offset 'path' does not exist on array\\{0\\?\\: string, path\\?\\: string, 1\\?\\: string\\}\\.$#"
+			count: 1
+			path: src/Views/ViewExceptionMapper.php
 
 		-
 			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\View\\\\Engine\\:\\:getCompiler\\(\\)\\.$#"
 			count: 1
-			path: src/Views/ViewExceptionMapper.php
+			path: src/Views/ViewFrameMapper.php
 
-		-
-			message: "#^Cannot call method getTrace\\(\\) on Throwable\\|null\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) has parameter \\$data with no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:filterViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:getKnownPaths\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Method Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:getViewData\\(\\) return type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Offset 'line' does not exist on array\\{function\\: string, line\\?\\: int, file\\: non\\-falsy\\-string, class\\?\\: class\\-string, type\\?\\: string, args\\?\\: array, object\\?\\: object\\}\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Property Spatie\\\\LaravelFlare\\\\Views\\\\ViewExceptionMapper\\:\\:\\$knownPaths type has no value type specified in iterable type array\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
 

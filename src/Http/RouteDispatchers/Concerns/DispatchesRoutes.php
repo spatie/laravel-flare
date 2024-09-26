@@ -7,7 +7,7 @@ use Spatie\LaravelFlare\Enums\SpanType;
 
 trait DispatchesRoutes
 {
-    protected function wrapDispatcher(Closure $dispatch)
+    protected function wrapDispatcher(Closure $dispatch): mixed
     {
         if ($this->tracer->hasCurrentSpan(SpanType::LocalMiddlewareBefore)) {
             $this->tracer->endSpan($this->tracer->currentSpan());

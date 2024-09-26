@@ -85,7 +85,7 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
             return collect($route->parameters)
                 ->map(fn ($parameter) => $parameter instanceof Model ? $parameter->withoutRelations() : $parameter)
                 ->map(function ($parameter) {
-                    return method_exists($parameter, 'toFlare') ? $parameter->toFlare() : $parameter;
+                    return is_object($parameter) && method_exists($parameter, 'toFlare') ? $parameter->toFlare() : $parameter;
                 })
                 ->toArray();
         } catch (Throwable) {

@@ -16,7 +16,7 @@ class LogRecorder extends BaseLogRecorder
         Tracer $tracer,
         BackTracer $backTracer,
         protected Dispatcher $dispatcher,
-        ?array $config = null
+        array $config
     ) {
         parent::__construct($tracer, $backTracer, $config);
     }

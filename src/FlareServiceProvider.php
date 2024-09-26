@@ -2,7 +2,7 @@
 
 namespace Spatie\LaravelFlare;
 
-use Illuminate\Container\Container;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -208,7 +208,7 @@ class FlareServiceProvider extends ServiceProvider
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
     }
 
-    protected function extendRouteDispatchers()
+    protected function extendRouteDispatchers(): void
     {
         $this->app->extend(
             CallableDispatcher::class,
