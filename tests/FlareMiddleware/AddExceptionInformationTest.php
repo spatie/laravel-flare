@@ -37,7 +37,7 @@ it('will add user context when provided on a custom exception', function () {
         }
     });
 
-    $context = $report->toArray()['attributes']['context.user'];
+    $context = $report->toArray()['attributes']['context.exception'];
 
     expect($context['hello'])->toBe('world');
 });

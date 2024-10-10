@@ -49,6 +49,6 @@ class AddExceptionInformation implements FlareMiddleware
             return;
         }
 
-        $report->context($context);
+        $report->addAttribute('context.exception', $context);
     }
 }
