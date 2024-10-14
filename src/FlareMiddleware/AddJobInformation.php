@@ -13,7 +13,7 @@ class AddJobInformation implements FlareMiddleware
 
     public function handle(ReportFactory $report, Closure $next): Closure|ReportFactory
     {
-        if(static::$currentJob){
+        if (static::$currentJob) {
             $report->addAttributes([
                 'flare.entry_point.type' => EntryPointType::Queue,
                 'flare.entry_point.value' => static::$currentJob['laravel.job.name'],

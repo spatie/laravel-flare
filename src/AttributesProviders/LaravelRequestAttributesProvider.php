@@ -5,7 +5,6 @@ namespace Spatie\LaravelFlare\AttributesProviders;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Routing\Route;
-use Illuminate\Support\Str;
 use Livewire\LivewireManager;
 use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider as BaseRequestAttributesProvider;
 use Symfony\Component\HttpFoundation\Request;
