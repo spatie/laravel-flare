@@ -53,9 +53,12 @@ class FlareLogHandler extends AbstractProcessingHandler
                     return;
                 }
 
-                $this->flare->backTracer->setFrameAsAttributes(
-                    $this->flare->backTracer->firstApplicationFrame(20),
-                    $flareReport
+                $frame = $this->flare->backTracer->firstApplicationFrame(20);
+
+                $flareReport->addAttributes(
+                    $this->flare->backTracer->frameToAttributes(
+                        $frame
+                    )
                 );
             }
         );

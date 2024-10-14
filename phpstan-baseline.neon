@@ -56,11 +56,6 @@ parameters:
 			path: src/FlareServiceProvider.php
 
 		-
-			message: "#^Call to an undefined method Spatie\\\\FlareClient\\\\Support\\\\BackTracer\\:\\:setFrameAsAttributes\\(\\)\\.$#"
-			count: 1
-			path: src/Support/FlareLogHandler.php
-
-		-
 			message: "#^Parameter \\#1 \\$key of method Spatie\\\\FlareClient\\\\ReportFactory\\:\\:context\\(\\) expects array\\|string, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
 			count: 1
 			path: src/Support/FlareLogHandler.php

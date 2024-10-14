@@ -68,12 +68,16 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
             return [];
         }
 
+        // TODO getActionName does not work for closures, just returns 'Closure' let's make this a bit more clear
+
         return [
             'http.route' => $route->uri(),
             'laravel.route.name' => $route->getName(),
             'laravel.route.parameters' => $this->getRouteParameters($route),
             'laravel.route.action' => $route->getActionName(),
             'laravel.route.middleware' => array_values($route->gatherMiddleware()),
+
+            'flare.entry_point.class' => $route->getActionName(),
         ];
     }
 

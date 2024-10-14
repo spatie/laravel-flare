@@ -14,6 +14,7 @@ use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
@@ -90,6 +91,7 @@ class FlareConfig extends BaseFlareConfig
             ->addLaravelContext()
             ->addExceptionInfo()
             ->addJobInfo()
+            ->addJobs()
             ->addExceptionHandledStatus()
             ->addCacheEvents()
             ->addLogs()
@@ -180,9 +182,20 @@ class FlareConfig extends BaseFlareConfig
     }
 
     /**
-     * @param class-string<Recorder> $recorder
+     * @param class-string<FlareMiddleware> $middleware
      */
     public function addJobInfo(
+        string $middleware = AddJobInformation::class
+    ): static {
+        $this->middleware[$middleware] = [];
+
+        return $this;
+    }
+
+    /**
+     * @param class-string<Recorder> $recorder
+     */
+    public function addJobs(
         bool $trace = true,
         bool $report = true,
         ?int $maxReported = 10,

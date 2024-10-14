@@ -23,34 +23,24 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
 use Spatie\FlareClient\Enums\CacheOperation;
-use Spatie\FlareClient\FlareMiddleware\AddConsoleInformation;
-use Spatie\FlareClient\FlareMiddleware\AddDumps;
+use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
-use Spatie\FlareClient\FlareMiddleware\AddRequestInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
 use Spatie\FlareClient\FlareMiddleware\AddSolutions;
-use Spatie\FlareClient\FlareMiddleware\CensorRequestBodyFields;
-use Spatie\FlareClient\FlareMiddleware\CensorRequestHeaders;
-use Spatie\FlareClient\FlareMiddleware\RemoveRequestIp;
 use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
-use Spatie\FlareClient\Recorders\ExceptionRecorder\ExceptionRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddFailedJobInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddJobs;
+use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddLogs;
-use Spatie\LaravelFlare\FlareMiddleware\AddNotifierName;
-use Spatie\LaravelFlare\FlareMiddleware\AddQueries;
 use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation as AddViewInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\HttpRecorder\HttpRecorder;
-use Spatie\LaravelFlare\Recorders\JobRecorder\FailedJobRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
@@ -86,8 +76,9 @@ return [
 
     'middleware' => [
         AddViewInformation::class => [],
-        AddRequestInformation::class => [],
         AddConsoleInformation::class => [],
+        AddRequestInformation::class => [],
+        AddJobInformation::class => [],
         AddGitInformation::class => [],
         AddLaravelInformation::class => [],
         AddExceptionInformation::class => [],
@@ -196,7 +187,7 @@ return [
     */
 
     'attribute_providers' => [
-        'user' => LaravelUserAttributesProvider::class
+        'user' => LaravelUserAttributesProvider::class,
     ],
 
     /*
