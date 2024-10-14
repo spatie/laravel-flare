@@ -5,6 +5,7 @@ namespace Spatie\LaravelFlare\AttributesProviders;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request as LaravelRequest;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Str;
 use Livewire\LivewireManager;
 use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider as BaseRequestAttributesProvider;
 use Symfony\Component\HttpFoundation\Request;
@@ -67,8 +68,6 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
         if (! $route instanceof Route) {
             return [];
         }
-
-        // TODO getActionName does not work for closures, just returns 'Closure' let's make this a bit more clear
 
         return [
             'http.route' => $route->uri(),

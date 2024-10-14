@@ -15,6 +15,7 @@ use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 
 class JobRecorder implements Recorder
 {
@@ -55,6 +56,8 @@ class JobRecorder implements Recorder
             $this->maxChainedJobReportingDepth
         );
 
+        AddJobInformation::$currentJob = $attributes;
+
         return $this->startSpan(function () use ($attributes) {
             return Span::build(
                 traceId: $this->tracer->currentTraceId() ?? '',
@@ -72,6 +75,8 @@ class JobRecorder implements Recorder
         $this->endSpan(attributes: [
             'laravel.job.success' => true,
         ]);
+
+        AddJobInformation::$currentJob = null;
     }
 
     public function recordExceptionOccurred(JobExceptionOccurred $event): void
