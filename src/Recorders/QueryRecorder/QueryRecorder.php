@@ -9,7 +9,6 @@ use Spatie\FlareClient\Recorders\QueryRecorder\QuerySpan;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Enums\SpanType;
 
 class QueryRecorder extends BaseQueryRecorder
 {
@@ -35,7 +34,6 @@ class QueryRecorder extends BaseQueryRecorder
             bindings: $event->bindings,
             databaseName: $event->connection->getDatabaseName(),
             driverName: $event->connection->getDriverName(),
-            spanType: SpanType::Query,
             attributes: [
                 'laravel.db.connection' => $event->connectionName,
             ]

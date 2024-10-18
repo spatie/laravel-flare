@@ -2,11 +2,11 @@
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectTrace;
 use Spatie\FlareClient\Tests\Shared\ExpectTracer;
 use Spatie\FlareClient\Time\TimeHelper;
-use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
