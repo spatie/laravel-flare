@@ -13,9 +13,9 @@ it('can provide attributes', function () {
 
     expect($attributes)->toBeArray();
     expect($attributes)->toHaveCount(5);
-    expect($attributes)->toHaveKey('laravel.version', app()->version());
     expect($attributes)->toHaveKey('laravel.locale', 'nl');
     expect($attributes)->toHaveKey('laravel.config_cached', false);
     expect($attributes)->toHaveKey('laravel.debug', true);
-    expect($attributes)->toHaveKey('flare.framework', Framework::Laravel);
+    expect($attributes)->toHaveKey('flare.framework.name', Framework::Laravel);
+    expect($attributes)->toHaveKey('flare.framework.version', app()->version());
 });
