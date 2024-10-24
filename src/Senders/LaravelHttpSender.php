@@ -10,7 +10,7 @@ class LaravelHttpSender implements Sender
 {
     public function post(string $endpoint, string $apiToken, array $payload): Response
     {
-        $response = Http::withHeader('X-Api-Key', $apiToken)
+        $response = Http::withHeader('x-api-token', $apiToken)
             ->withHeader('content-type', 'application/json')
             ->post($endpoint, $payload);
 
