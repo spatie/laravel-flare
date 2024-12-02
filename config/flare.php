@@ -252,4 +252,21 @@ return [
     */
 
     'enable_share_button' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Override grouping
+    |--------------------------------------------------------------------------
+    |
+    | Flare will try to group errors and exceptions as best as possible, that
+    | being said, sometimes you might want to override the grouping. You can
+    | do this by adding exception classes to this array which should always
+    | be grouped by exception class, exception message or exception class
+    | and message.
+    |
+    */
+
+    'overridden_groupings' => [
+//        Illuminate\Http\Client\ConnectionException::class => Spatie\FlareClient\Enums\OverriddenGrouping::ExceptionMessageAndClass,
+    ],
 ];

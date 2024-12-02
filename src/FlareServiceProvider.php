@@ -80,7 +80,7 @@ class FlareServiceProvider extends ServiceProvider
     protected function registerFlare(): void
     {
         $this->app->singleton(Flare::class, function () {
-            return Flare::make()
+            $flare = Flare::make()
                 ->setApiToken(config('flare.key') ?? '')
                 ->setBaseUrl(config('flare.base_url', 'https://flareapp.io/api'))
                 ->applicationPath(base_path())
@@ -93,6 +93,12 @@ class FlareServiceProvider extends ServiceProvider
                     config('flare.with_stack_frame_arguments', true),
                     config('flare.force_stack_frame_arguments_ini_setting', true)
                 );
+
+            foreach (config('flare.overridden_groupings') as $exceptionClass => $grouping) {
+                $flare->overrideGrouping($exceptionClass, $grouping);
+            }
+
+            return $flare;
         });
 
         $this->app->singleton(SentReports::class);
