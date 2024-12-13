@@ -69,6 +69,7 @@ class FlareConfig extends BaseFlareConfig
             censorHeaders: config('flare.censor.headers'),
             censorBodyFields: config('flare.censor.body_fields'),
             userAttributesProvider: config('flare.attribute_providers.user'),
+            overriddenGroupings: config('flare.overridden_groupings'),
         );
 
         $config->sendLogsAsEvents = config('flare.send_logs_as_events', true);
