@@ -11,7 +11,7 @@ parameters:
 			path: src/AttributesProviders/LivewireAttributesProvider.php
 
 		-
-			message: "#^Parameter \\#1 \\$callback of function array_map expects \\(callable\\(0\\|1\\|2\\|3\\|4\\|5\\|6\\|7\\)\\: mixed\\)\\|null, Closure\\(string\\)\\: string given\\.$#"
+			message: "#^Parameter \\#1 \\$callback of function array_map expects \\(callable\\(0\\|1\\|2\\|3\\|4\\|5\\|6\\|7\\)\\: mixed\\)\\|null, Closure\\(string\\)\\: lowercase\\-string given\\.$#"
 			count: 1
 			path: src/Exceptions/InvalidConfig.php
 
