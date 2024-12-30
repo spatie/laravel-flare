@@ -31,3 +31,12 @@ it('can manually report exceptions', function () {
 
     FakeSender::instance()->assertRequestsSent(1);
 });
+
+
+it('can report exceptions using the Laravel report helper', function () {
+    setupFlare();
+
+    report(new Exception());
+
+    FakeSender::instance()->assertRequestsSent(1);
+});
