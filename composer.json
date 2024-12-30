@@ -47,8 +47,8 @@
         "vlucas/phpdotenv": "^5.5"
     },
     "suggest": {
-        "openai-php/client": "Require get solutions from OpenAI",
-        "psr/simple-cache-implementation": "Needed to cache solutions from OpenAI"
+        "openai-php/client": "Required to get solutions from OpenAI",
+        "psr/simple-cache-implementation": "Used to cache solutions from OpenAI"
     },
     "config": {
         "sort-packages": true,
