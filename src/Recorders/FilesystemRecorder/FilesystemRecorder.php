@@ -14,7 +14,7 @@ class FilesystemRecorder extends BaseFilesystemRecorder
 {
     protected bool $trackAllDisks = false;
 
-    protected const FLARE_PASS_THROUGH = '_flare_passthrough_configured';
+    protected const FLARE_PASS_THROUGH = '_flare_pass_through_configured';
 
     public function __construct(
         protected Tracer $tracer,
