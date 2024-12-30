@@ -12,6 +12,7 @@ use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
+use Spatie\LaravelFlare\Enums\SpanType;
 
 class QueueRecorder implements SpansRecorder
 {
@@ -44,6 +45,7 @@ class QueueRecorder implements SpansRecorder
     ): ?Span {
         return $this->startSpan(function () use ($event) {
             $attributes = [
+                'flare.span_type' => SpanType::Queueing,
                 'laravel.job.queue.connection_name' => $event->connectionName,
                 'laravel.job.queue.name' => $event->queue,
                 ...$this->laravelJobAttributesProvider->getJobPropertiesFromPayload($event->payload()),

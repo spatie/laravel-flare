@@ -7,6 +7,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
+use Illuminate\Queue\Events\JobQueued;
 use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
@@ -39,7 +40,7 @@ class NotificationRecorder implements Recorder
     {
         $this->dispatcher->listen(NotificationSending::class, [$this, 'recordNotificationSending']);
         $this->dispatcher->listen(NotificationSent::class, [$this, 'recordNotificationSent']);
-        $this->dispatcher->listen(NotificationFailed::class, [$this, 'recordNotificationSent']);
+        $this->dispatcher->listen(NotificationFailed::class, [$this, 'recordNotificationFailed']);
     }
 
     public function recordNotificationSending(NotificationSending $event): void
@@ -50,6 +51,7 @@ class NotificationRecorder implements Recorder
                 $this->tracer->currentSpanId(),
                 name: "Notification - {$event->notification->id}",
                 attributes: [
+                    'flare.span_type' => 'notification.sending',
                     'notification.id' => $event->notification->id,
                     'notification.channel' => $event->channel,
                     'notification.type' => get_class($event->notification),
@@ -57,6 +59,18 @@ class NotificationRecorder implements Recorder
                 ]
             );
         });
+    }
+
+    public function recordNotificationSent(
+        NotificationSent $event,
+    ): ?Span {
+        return $this->endSpan();
+    }
+
+    public function recordNotificationFailed(
+        NotificationFailed $event,
+    ): ?Span {
+        return $this->endSpan(attributes: []);
     }
 
     protected function resolveNotifiable(mixed $notifiable): string|null
