@@ -23,6 +23,7 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
 use Spatie\FlareClient\Enums\CacheOperation;
+use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
@@ -40,7 +41,7 @@ use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation as AddViewInformation
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
-use Spatie\LaravelFlare\Recorders\HttpRecorder\HttpRecorder;
+use Spatie\LaravelFlare\Recorders\HttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
@@ -66,6 +67,20 @@ return [
     'key' => env('FLARE_KEY'),
 
     /*
+    |
+    |--------------------------------------------------------------------------
+    | Flare Base URL
+    |--------------------------------------------------------------------------
+    |
+    | Which server should be used to send the reports/traces to.
+    |
+    | Default: https://flareapp.io
+    |
+    */
+    'base_url' => env('FLARE_BASE_URL', 'https://flareapp.io'),
+
+
+    /*
     |--------------------------------------------------------------------------
     | Middleware
     |--------------------------------------------------------------------------
@@ -75,16 +90,7 @@ return [
     */
 
     'middleware' => [
-        AddViewInformation::class => [],
-        AddConsoleInformation::class => [],
-        AddRequestInformation::class => [],
-        AddJobInformation::class => [],
-        AddGitInformation::class => [],
-        AddLaravelInformation::class => [],
-        AddExceptionInformation::class => [],
-        AddLaravelContext::class => [],
-        AddExceptionHandledStatus::class => [],
-        AddSolutions::class => [],
+        ...FlareConfig::defaultMiddleware(),
     ],
 
     /*
@@ -99,79 +105,7 @@ return [
     */
 
     'recorders' => [
-        RoutingRecorder::class => [
-
-        ],
-        CommandRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 10,
-        ],
-        CacheRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-            'operations' => [CacheOperation::Get, CacheOperation::Set, CacheOperation::Forget],
-        ],
-        DumpRecorder::class => [
-            'trace' => false,
-            'report' => true,
-            'max_reported' => 25,
-            'find_dump_origin' => true,
-        ],
-        GlowRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-        ],
-        QueueRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-        ],
-        JobRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-            'max_chained_job_reporting_depth' => 2,
-        ],
-        FilesystemRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-            'track_all_disks' => true,
-        ],
-        HttpRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-        ],
-        LogRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-        ],
-        QueryRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-            'include_bindings' => true,
-            'find_origin' => true,
-            'find_origin_threshold' => TimeHelper::milliseconds(700),
-        ],
-        TransactionRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-        ],
-        RedisCommandRecorder::class => [
-            'trace' => true,
-            'report' => true,
-            'max_reported' => 100,
-        ],
-        ViewRecorder::class => [
-            'trace' => true,
-        ],
+        ...FlareConfig::defaultRecorders(),
     ],
 
     /*
@@ -240,31 +174,7 @@ return [
     */
 
     'solution_providers' => [
-        // from spatie/ignition
-        BadMethodCallSolutionProvider::class,
-        MergeConflictSolutionProvider::class,
-        UndefinedPropertySolutionProvider::class,
-
-        // from spatie/laravel-flare
-        IncorrectValetDbCredentialsSolutionProvider::class,
-        MissingAppKeySolutionProvider::class,
-        DefaultDbNameSolutionProvider::class,
-        TableNotFoundSolutionProvider::class,
-        MissingImportSolutionProvider::class,
-        InvalidRouteActionSolutionProvider::class,
-        ViewNotFoundSolutionProvider::class,
-        RunningLaravelDuskInProductionProvider::class,
-        MissingColumnSolutionProvider::class,
-        UnknownValidationSolutionProvider::class,
-        MissingMixManifestSolutionProvider::class,
-        MissingViteManifestSolutionProvider::class,
-        MissingLivewireComponentSolutionProvider::class,
-        UndefinedViewVariableSolutionProvider::class,
-        GenericLaravelExceptionSolutionProvider::class,
-        OpenAiSolutionProvider::class,
-        SailNetworkSolutionProvider::class,
-        UnknownMysql8CollationSolutionProvider::class,
-        UnknownMariadbCollationSolutionProvider::class,
+       ...FlareConfig::defaultSolutionProviders(),
     ],
 
     /*
@@ -316,17 +226,7 @@ return [
    */
 
     'argument_reducers' => [
-        \Spatie\Backtrace\Arguments\Reducers\BaseTypeArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\ArrayArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\StdClassArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\EnumArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\ClosureArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\DateTimeArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\DateTimeZoneArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\SymphonyRequestArgumentReducer::class,
-        \Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer::class,
-        \Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer::class,
-        \Spatie\Backtrace\Arguments\Reducers\StringableArgumentReducer::class,
+        ...FlareConfig::defaultArgumentReducers(),
     ],
 
     /*
@@ -371,7 +271,10 @@ return [
     */
     'sender' => [
         'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
-        'config' => [],
+        'config' => [
+            'async' => true,
+            'timeout' => 10,
+        ],
     ],
 
 

@@ -12,39 +12,29 @@ use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Enums\SpanType;
+use Spatie\FlareClient\Recorders\ViewRecorder\ViewRecorder as BaseViewRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
 
-// TODO: can be put into the base package
-class ViewRecorder implements SpansRecorder
+class ViewRecorder extends BaseViewRecorder
 {
     /** @use RecordsPendingSpans<Span> */
     use RecordsPendingSpans;
 
     public function __construct(
-        protected Tracer $tracer,
+        Tracer $tracer,
         protected Application $app,
         protected Dispatcher $dispatcher,
-        protected BackTracer $backTracer,
-        protected ArgumentReducers|null $argumentReducers,
+        BackTracer $backTracer,
+        ArgumentReducers|null $argumentReducers,
         array $config
     ) {
-        $this->configure([
-            'trace' => $config['trace'] ?? false,
-        ]);
-    }
-
-    public static function type(): string|RecorderType
-    {
-        return RecorderType::View;
+        parent::__construct($tracer, $backTracer, $argumentReducers, $config);
     }
 
     public function start(): void
     {
-        // TODO: on an error, view data (where the error occurred) was passed to the context, let's bring that back
-        // See: Spatie\FlareClient\View (removed? And why?)
-
         if ($this->trace === false) {
             return;
         }

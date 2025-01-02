@@ -108,7 +108,7 @@ class FlareServiceProvider extends ServiceProvider
             ]);
 
             $this->publishes([
-                __DIR__.'/../config/flare.php' => config_path('flare.php'),
+                __DIR__.'/../config/flare.php.stub' => config_path('flare.php'),
             ], 'flare-config');
         }
 

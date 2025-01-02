@@ -35,7 +35,6 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
 
         $this->resolveConnections(config('database.redis'));
 
-        // TODO: maybe we should disable this by default?
         // Probably this is disabled by default because it's not a good idea to enable it by default
         $this->redisManager->enableEvents();
 

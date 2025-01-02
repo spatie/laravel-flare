@@ -5,12 +5,50 @@ namespace Spatie\LaravelFlare;
 use Monolog\Level;
 use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
 use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\ArrayArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\BaseTypeArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\ClosureArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\DateTimeArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\DateTimeZoneArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\EnumArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\StdClassArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\StringableArgumentReducer;
+use Spatie\Backtrace\Arguments\Reducers\SymphonyRequestArgumentReducer;
+use Spatie\ErrorSolutions\SolutionProviders\BadMethodCallSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\DefaultDbNameSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\GenericLaravelExceptionSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\IncorrectValetDbCredentialsSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\InvalidRouteActionSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingAppKeySolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingColumnSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingImportSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingLivewireComponentSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingMixManifestSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingViteManifestSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\OpenAiSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\RunningLaravelDuskInProductionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\SailNetworkSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\TableNotFoundSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\UndefinedViewVariableSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMariadbCollationSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
+use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
+use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
+use Spatie\FlareClient\FlareMiddleware\AddSolutions;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
+use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
+use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Support\TraceLimits;
+use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
+use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
+use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
@@ -18,12 +56,18 @@ use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation as AddViewInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
+use Spatie\LaravelFlare\Recorders\HttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
+use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
+use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
+use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 
 class FlareConfig extends BaseFlareConfig
@@ -81,7 +125,146 @@ class FlareConfig extends BaseFlareConfig
         return $config;
     }
 
-    // TODO: make sure this is up to date with the flare.php config file
+    public static function defaultMiddleware(): array
+    {
+        return [
+            AddViewInformation::class => [],
+            AddConsoleInformation::class => [],
+            AddRequestInformation::class => [],
+            AddJobInformation::class => [],
+            AddGitInformation::class => [],
+            AddLaravelInformation::class => [],
+            AddExceptionInformation::class => [],
+            AddLaravelContext::class => [],
+            AddExceptionHandledStatus::class => [],
+            AddSolutions::class => [],
+        ];
+    }
+
+    public static function defaultRecorders(): array
+    {
+        return [
+            RoutingRecorder::class => [],
+            CommandRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 10,
+            ],
+            CacheRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+                'operations' => [CacheOperation::Get, CacheOperation::Set, CacheOperation::Forget],
+            ],
+            DumpRecorder::class => [
+                'trace' => false,
+                'report' => true,
+                'max_reported' => 25,
+                'find_dump_origin' => true,
+            ],
+            GlowRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+            ],
+            QueueRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+            ],
+            JobRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+                'max_chained_job_reporting_depth' => 2,
+            ],
+            FilesystemRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+                'track_all_disks' => true,
+            ],
+            ExternalHttpRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+            ],
+            LogRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+            ],
+            QueryRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+                'include_bindings' => true,
+                'find_origin' => true,
+                'find_origin_threshold' => TimeHelper::milliseconds(700),
+            ],
+            TransactionRecorder::class => [
+                'trace' => true,
+                'report' => true,
+                'max_reported' => 100,
+            ],
+//        RedisCommandRecorder::class => [
+//            'trace' => true,
+//            'report' => true,
+//            'max_reported' => 100,
+//        ],
+            ViewRecorder::class => [
+                'trace' => true,
+            ],
+        ];
+    }
+
+    public static function defaultSolutionProviders(): array
+    {
+        return [
+            // from spatie/ignition
+            BadMethodCallSolutionProvider::class,
+            MergeConflictSolutionProvider::class,
+            UndefinedPropertySolutionProvider::class,
+
+            // from spatie/laravel-flare
+            IncorrectValetDbCredentialsSolutionProvider::class,
+            MissingAppKeySolutionProvider::class,
+            DefaultDbNameSolutionProvider::class,
+            TableNotFoundSolutionProvider::class,
+            MissingImportSolutionProvider::class,
+            InvalidRouteActionSolutionProvider::class,
+            ViewNotFoundSolutionProvider::class,
+            RunningLaravelDuskInProductionProvider::class,
+            MissingColumnSolutionProvider::class,
+            UnknownValidationSolutionProvider::class,
+            MissingMixManifestSolutionProvider::class,
+            MissingViteManifestSolutionProvider::class,
+            MissingLivewireComponentSolutionProvider::class,
+            UndefinedViewVariableSolutionProvider::class,
+            GenericLaravelExceptionSolutionProvider::class,
+            OpenAiSolutionProvider::class,
+            SailNetworkSolutionProvider::class,
+            UnknownMysql8CollationSolutionProvider::class,
+            UnknownMariadbCollationSolutionProvider::class,
+        ];
+    }
+
+    public static function defaultArgumentReducers(): array
+    {
+        return [
+            BaseTypeArgumentReducer::class,
+            ArrayArgumentReducer::class,
+            StdClassArgumentReducer::class,
+            EnumArgumentReducer::class,
+            ClosureArgumentReducer::class,
+            DateTimeArgumentReducer::class,
+            DateTimeZoneArgumentReducer::class,
+            SymphonyRequestArgumentReducer::class,
+            ModelArgumentReducer::class,
+            CollectionArgumentReducer::class,
+            StringableArgumentReducer::class,
+        ];
+    }
 
     public function useDefaults(): static
     {

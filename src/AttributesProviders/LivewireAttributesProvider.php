@@ -17,10 +17,10 @@ class LivewireAttributesProvider
         return [
             'http.request.method' => $livewire->originalMethod(),
             'url.full' => $livewire->originalUrl(),
+            'url.scheme' => parse_url($livewire->originalUrl(), PHP_URL_SCHEME),
+            'url.path' => parse_url($livewire->originalUrl(), PHP_URL_PATH),
+            'url.query' => parse_url($livewire->originalUrl(), PHP_URL_QUERY),
             'flare.entry_point.value' => $livewire->originalUrl(),
-
-            // TODO url.scheme, url.path & url.query might be incorrect
-
             'livewire.components' => $this->getLivewire($request, $livewire),
         ];
     }
