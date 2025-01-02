@@ -10,7 +10,7 @@ use Spatie\FlareClient\ReportFactory;
 
 class AddLaravelContext implements FlareMiddleware
 {
-    public function handle(ReportFactory $report, Closure $next): Closure|ReportFactory
+    public function handle(ReportFactory $report, Closure $next): ReportFactory
     {
         if (! class_exists(Repository::class)) {
             return $next($report);

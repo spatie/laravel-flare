@@ -10,7 +10,7 @@ use Spatie\FlareClient\ReportFactory;
 
 class AddExceptionInformation implements FlareMiddleware
 {
-    public function handle(ReportFactory $report, Closure $next): Closure|ReportFactory
+    public function handle(ReportFactory $report, Closure $next): ReportFactory
     {
         $this->addUserDefinedContext($report);
 

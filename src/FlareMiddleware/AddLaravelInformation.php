@@ -9,7 +9,7 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 
 class AddLaravelInformation implements FlareMiddleware
 {
-    public function handle(ReportFactory $report, Closure $next): Closure|ReportFactory
+    public function handle(ReportFactory $report, Closure $next): ReportFactory
     {
         $report->addAttributes(
             (new LaravelAttributesProvider())->toArray()

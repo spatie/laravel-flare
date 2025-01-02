@@ -11,7 +11,7 @@ class AddJobInformation implements FlareMiddleware
 {
     public static ?array $currentJob = null;
 
-    public function handle(ReportFactory $report, Closure $next): Closure|ReportFactory
+    public function handle(ReportFactory $report, Closure $next): ReportFactory
     {
         if (static::$currentJob) {
             $report->addAttributes([
