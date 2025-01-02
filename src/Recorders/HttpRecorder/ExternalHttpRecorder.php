@@ -8,8 +8,6 @@ use Illuminate\Http\Client\Events\RequestSending;
 use Illuminate\Http\Client\Events\ResponseReceived;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Recorders\ExternalHttpRecorder\ExternalHttpRecorder as BaseExternalHttpRecorder;
-use Spatie\FlareClient\Enums\RecorderType;
-use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Redactor;
@@ -26,8 +24,7 @@ class ExternalHttpRecorder extends BaseExternalHttpRecorder
         protected Dispatcher $dispatcher,
         array $config,
         Redactor $redactor,
-    )
-    {
+    ) {
         parent::__construct($tracer, $backTracer, $config, $redactor);
     }
 

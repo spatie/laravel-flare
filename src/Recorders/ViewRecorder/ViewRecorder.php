@@ -9,8 +9,6 @@ use Illuminate\View\Factory;
 use Illuminate\View\View;
 use Spatie\Backtrace\Arguments\ArgumentReducers;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
-use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
-use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Recorders\ViewRecorder\ViewRecorder as BaseViewRecorder;
 use Spatie\FlareClient\Spans\Span;
