@@ -18,21 +18,13 @@ class LaravelHttpSender implements Sender
         protected array $config = []
     ) {
         $this->timeout = $this->config['timeout'] ?? 10;
-        $this->async = $this->config['async'] ?? true;
     }
 
     public function post(string $endpoint, string $apiToken, array $payload, Closure $callback): void
     {
         $response = Http::withHeader('x-api-token', $apiToken)
             ->timeout($this->timeout)
-            ->async($this->async)
             ->post($endpoint, $payload);
-
-        if ($this->async) {
-            $response->then(fn (HttpResponse $response) => $this->handleResponse($response, $callback));
-
-            return;
-        }
 
         $this->handleResponse($response, $callback);
     }

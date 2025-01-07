@@ -22,6 +22,7 @@ use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
 use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
@@ -86,6 +87,7 @@ class FlareServiceProvider extends ServiceProvider
             fn (Resource $resource) => $resource
                 ->telemetrySdkName(Telemetry::NAME)
                 ->telemetrySdkVersion(Telemetry::VERSION)
+                ->addAttributes((new LaravelAttributesProvider())->toArray())
         );
 
         $this->app->extend(

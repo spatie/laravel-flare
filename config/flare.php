@@ -272,7 +272,6 @@ return [
     'sender' => [
         'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
         'config' => [
-            'async' => true,
             'timeout' => 10,
         ],
     ],
