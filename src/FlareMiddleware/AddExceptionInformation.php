@@ -25,11 +25,11 @@ class AddExceptionInformation implements FlareMiddleware
             'raw_sql' => $throwable->getSql(),
         ]);
 
-        try{
+        try {
             $report->group('exception', [
                 'db_system' => DB::connection($throwable->connectionName)->getDriverName(),
             ]);
-        }catch (Throwable){
+        } catch (Throwable) {
             // Skip this
         }
 
