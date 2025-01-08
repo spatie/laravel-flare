@@ -3,9 +3,11 @@
 namespace Spatie\LaravelFlare\FlareMiddleware;
 
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use Spatie\FlareClient\Contracts\ProvidesFlareContext;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\Report;
+use Throwable;
 
 class AddExceptionInformation implements FlareMiddleware
 {
@@ -22,6 +24,14 @@ class AddExceptionInformation implements FlareMiddleware
         $report->group('exception', [
             'raw_sql' => $throwable->getSql(),
         ]);
+
+        try{
+            $report->group('exception', [
+                'db_system' => DB::connection($throwable->connectionName)->getDriverName(),
+            ]);
+        }catch (Throwable){
+            // Skip this
+        }
 
         return $next($report);
     }
