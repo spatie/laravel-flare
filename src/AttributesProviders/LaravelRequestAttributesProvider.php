@@ -12,14 +12,14 @@ use Throwable;
 
 class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
 {
-    public function toArray(Request $request, bool $includeLivewireComponents = false): array
+    public function toArray(Request $request, bool $includeContents = true, bool $includeLivewireComponents = false): array
     {
         if (! $request instanceof LaravelRequest) {
-            return parent::toArray($request);
+            return parent::toArray($request, $includeContents);
         }
 
         $attributes = [
-            ...parent::toArray($request),
+            ...parent::toArray($request, $includeContents),
             ...$this->getRoute($request),
         ];
 

@@ -16,11 +16,8 @@
     "homepage": "https://flareapp.io/",
     "license": "MIT",
     "repositories" : [{
-        "type": "path",
-        "url" : "../flare-client-php",
-        "options" : {
-            "symlink": true
-        }
+        "type" : "vcs",
+        "url" : "git@github.com:spatie/flare-php-client-private.git"
     }],
     "require": {
         "php": "^8.1",
@@ -28,7 +25,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "illuminate/support": "^11.0",
-        "spatie/flare-client-php": "@dev",
+        "spatie/flare-client-php": "v2.x-dev#214b300 ",
         "symfony/console": "^7.0",
         "symfony/var-dumper": "^7.0",
         "spatie/laravel-error-share": "^1.0",
@@ -75,10 +72,10 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Spatie\\LaravelFlare\\Tests\\": "tests"
+            "Spatie\\LaravelFlare\\Tests\\": "tests",
+            "Spatie\\FlareClient\\Tests\\Shared\\": "vendor/spatie/flare-client-php/shared"
         }
     },
-
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
