@@ -90,7 +90,7 @@ class FlareTracingMiddleware
         }
 
         $this->requestSpan->addAttributes(
-            $this->attributesProvider->toArray($request)
+            $this->attributesProvider->toArray($request, includeContents: false)
         );
         $this->requestSpan->addAttribute('http.response.status_code', $response->getStatusCode());
 
