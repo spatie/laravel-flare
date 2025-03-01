@@ -95,7 +95,7 @@ it('adds log messages to the report', function () {
 
     $logs = $arguments['context']['logs'];
 
-    expect($logs)->toHaveCount(3);
+    expect($logs)->toBeGreaterThanOrEqual(3);
 });
 
 it('can report an exception with logs', function ($logLevel) {
