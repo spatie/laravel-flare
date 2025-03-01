@@ -7,15 +7,7 @@ parameters:
         - src
         - config
     excludePaths:
-        - src/Recorders/JobRecorder/JobRecorder
-        - src/Recorders/DumpRecorder/HtmlDumper
-        - src/Recorders/DumpRecorder/DumpRecorder
-        - src/FlareServiceProvider
-        - src/FlareMiddleware
-        - src/Support/LivewireComponentParser
-        - src/Solutions/SolutionProviders/SolutionProviderRepository
-        - src/Commands/TestCommand
-
+        - src/Commands/TestCommand.php
+        - src/ContextProviders/LaravelRequestContextProvider.php
     tmpDir: build/phpstan
-    checkMissingIterableValueType: true
 
