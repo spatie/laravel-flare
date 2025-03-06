@@ -1,94 +1,96 @@
 {
-    "name": "spatie/laravel-flare",
-    "description": "Send Laravel errors to Flare",
-    "keywords": [
+    "name" : "spatie/laravel-flare",
+    "description" : "Send Laravel errors to Flare",
+    "keywords" : [
         "error",
         "laravel",
         "flare"
     ],
-    "authors": [
+    "authors" : [
         {
-            "name": "Spatie",
-            "email": "info@spatie.be",
-            "role": "Developer"
+            "name" : "Spatie",
+            "email" : "info@spatie.be",
+            "role" : "Developer"
         }
     ],
-    "homepage": "https://flareapp.io/",
-    "license": "MIT",
-    "repositories" : [{
-        "type" : "vcs",
-        "url" : "git@github.com:spatie/flare-php-client-private.git"
-    }],
-    "require": {
-        "php": "^8.1",
-        "ext-curl": "*",
-        "ext-json": "*",
-        "ext-mbstring": "*",
-        "illuminate/support": "^11.0|^12.0",
-        "spatie/flare-client-php": "v2.x-dev#214b300 ",
-        "symfony/console": "^7.0",
-        "symfony/var-dumper": "^7.0",
-        "spatie/laravel-error-share": "^1.0",
-        "spatie/error-solutions": "^1.0"
+    "homepage" : "https://flareapp.io/",
+    "license" : "MIT",
+    "repositories" : [
+        {
+            "type" : "vcs",
+            "url" : "git@github.com:spatie/flare-php-client-private.git"
+        }
+    ],
+    "require" : {
+        "php" : "^8.1",
+        "ext-curl" : "*",
+        "ext-json" : "*",
+        "ext-mbstring" : "*",
+        "illuminate/support" : "^11.0|^12.0",
+        "spatie/flare-client-php" : "v2.x-dev#e6c1826b6e9e6ba0094c783fa06df1b8fd70e4ff",
+        "symfony/console" : "^7.0",
+        "symfony/var-dumper" : "^7.0",
+        "spatie/laravel-error-share" : "^1.0",
+        "spatie/error-solutions" : "^1.0"
     },
-    "require-dev": {
-        "livewire/livewire": "^3.3.5",
-        "mockery/mockery": "^1.5.1",
-        "openai-php/client": "^0.8.1",
-        "orchestra/testbench": "8.22.3|^9.0|^10.0",
-        "pestphp/pest": "^2.34|^3.0",
-        "pestphp/pest-plugin-laravel": "^2.4|^3.0",
-        "phpstan/extension-installer": "^1.3.1",
-        "phpstan/phpstan-deprecation-rules": "^1.2",
-        "phpstan/phpstan-phpunit": "^1.4",
-        "vlucas/phpdotenv": "^5.5"
+    "require-dev" : {
+        "livewire/livewire" : "^3.3.5",
+        "mockery/mockery" : "^1.5.1",
+        "openai-php/client" : "^0.8.1",
+        "orchestra/testbench" : "8.22.3|^9.0|^10.0",
+        "pestphp/pest" : "^2.34|^3.0",
+        "pestphp/pest-plugin-laravel" : "^2.4|^3.0",
+        "phpstan/extension-installer" : "^1.3.1",
+        "phpstan/phpstan-deprecation-rules" : "^1.2",
+        "phpstan/phpstan-phpunit" : "^1.4",
+        "vlucas/phpdotenv" : "^5.5"
     },
-    "suggest": {
-        "openai-php/client": "Required to get solutions from OpenAI",
-        "psr/simple-cache-implementation": "Used to cache solutions from OpenAI"
+    "suggest" : {
+        "openai-php/client" : "Required to get solutions from OpenAI",
+        "psr/simple-cache-implementation" : "Used to cache solutions from OpenAI"
     },
-    "config": {
-        "sort-packages": true,
-        "allow-plugins": {
-            "phpstan/extension-installer": true,
-            "pestphp/pest-plugin": true,
-            "php-http/discovery": false
+    "config" : {
+        "sort-packages" : true,
+        "allow-plugins" : {
+            "phpstan/extension-installer" : true,
+            "pestphp/pest-plugin" : true,
+            "php-http/discovery" : false
         }
     },
-    "extra": {
-        "laravel": {
-            "providers": [
+    "extra" : {
+        "laravel" : {
+            "providers" : [
                 "Spatie\\LaravelFlare\\FlareServiceProvider"
             ],
-            "aliases": {
-                "Flare": "Spatie\\LaravelFlare\\Facades\\Flare"
+            "aliases" : {
+                "Flare" : "Spatie\\LaravelFlare\\Facades\\Flare"
             }
         }
     },
-    "autoload": {
-        "psr-4": {
-            "Spatie\\LaravelFlare\\": "src"
+    "autoload" : {
+        "psr-4" : {
+            "Spatie\\LaravelFlare\\" : "src"
         }
     },
-    "autoload-dev": {
-        "psr-4": {
-            "Spatie\\LaravelFlare\\Tests\\": "tests",
-            "Spatie\\FlareClient\\Tests\\Shared\\": "vendor/spatie/flare-client-php/shared"
+    "autoload-dev" : {
+        "psr-4" : {
+            "Spatie\\LaravelFlare\\Tests\\" : "tests",
+            "Spatie\\FlareClient\\Tests\\Shared\\" : "vendor/spatie/flare-client-php/shared"
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "scripts": {
-        "analyse": "vendor/bin/phpstan analyse",
-        "baseline": "vendor/bin/phpstan --generate-baseline",
-        "format": "vendor/bin/php-cs-fixer fix --allow-risky=yes",
-        "test": "vendor/bin/pest",
-        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+    "minimum-stability" : "dev",
+    "prefer-stable" : true,
+    "scripts" : {
+        "analyse" : "vendor/bin/phpstan analyse",
+        "baseline" : "vendor/bin/phpstan --generate-baseline",
+        "format" : "vendor/bin/php-cs-fixer fix --allow-risky=yes",
+        "test" : "vendor/bin/pest",
+        "test-coverage" : "vendor/bin/phpunit --coverage-html coverage"
     },
-    "support": {
-        "issues": "https://github.com/spatie/laravel-flare/issues",
-        "forum": "https://twitter.com/flareappio",
-        "source": "https://github.com/spatie/laravel-flare",
-        "docs": "https://flareapp.io/docs/integration/laravel-customizations/introduction"
+    "support" : {
+        "issues" : "https://github.com/spatie/laravel-flare/issues",
+        "forum" : "https://twitter.com/flareappio",
+        "source" : "https://github.com/spatie/laravel-flare",
+        "docs" : "https://flareapp.io/docs/integration/laravel-customizations/introduction"
     }
 }

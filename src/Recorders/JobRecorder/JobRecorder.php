@@ -9,9 +9,11 @@ use Illuminate\Queue\Events\JobProcessing;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\RecorderType;
+use Spatie\FlareClient\Enums\SamplingType;
 use Spatie\FlareClient\Recorders\ThrowableRecorder\ThrowableSpanEvent;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
+use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
@@ -58,6 +60,8 @@ class JobRecorder implements Recorder
 
         AddJobInformation::$currentJob = $attributes;
 
+        $this->tryToResumeTrace($event);
+
         return $this->startSpan(function () use ($attributes) {
             return Span::build(
                 traceId: $this->tracer->currentTraceId() ?? '',
@@ -86,6 +90,23 @@ class JobRecorder implements Recorder
         ), attributes: [
             'laravel.job.success' => false,
         ]);
+    }
+
+    protected function tryToResumeTrace(
+        JobProcessing $event
+    ): void
+    {
+        $traceParent = $event->job->payload()[Ids::FLARE_TRACE_PARENT] ?? null;
+
+        if($traceParent === null){
+            return;
+        }
+
+        $samplingType = $this->tracer->potentiallyResumeTrace($traceParent);
+
+        if($samplingType === SamplingType::Sampling){
+            $this->shouldEndTrace = true;
+        }
     }
 
     protected function canStartTraces(): bool

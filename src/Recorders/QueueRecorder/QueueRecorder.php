@@ -5,11 +5,13 @@ namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Events\JobQueueing;
+use Illuminate\Queue\Queue;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
+use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
@@ -36,6 +38,20 @@ class QueueRecorder implements SpansRecorder
 
     public function start(): void
     {
+        Queue::createPayloadUsing(function (?string $connection, ?string $queue, ?array $payload): ?array {
+            if ($this->tracer->isSampling() === false) {
+                return $payload;
+            }
+
+            if($payload === null){
+                return $payload;
+            }
+
+            $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
+
+            return $payload;
+        });
+
         $this->dispatcher->listen(JobQueueing::class, [$this, 'recordQueuing']);
         $this->dispatcher->listen(JobQueued::class, [$this, 'recordQueued']);
     }

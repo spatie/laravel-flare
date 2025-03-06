@@ -26,11 +26,6 @@ parameters:
 			path: src/FlareServiceProvider.php
 
 		-
-			message: "#^Cannot call method map\\(\\) on class\\-string\\|object\\.$#"
-			count: 1
-			path: src/FlareServiceProvider.php
-
-		-
 			message: "#^Class Laravel\\\\Octane\\\\Events\\\\RequestReceived not found\\.$#"
 			count: 1
 			path: src/FlareServiceProvider.php
