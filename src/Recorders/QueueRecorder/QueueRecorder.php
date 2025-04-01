@@ -43,7 +43,7 @@ class QueueRecorder implements SpansRecorder
                 return $payload;
             }
 
-            if($payload === null){
+            if ($payload === null) {
                 return $payload;
             }
 

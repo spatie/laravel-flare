@@ -94,17 +94,16 @@ class JobRecorder implements Recorder
 
     protected function tryToResumeTrace(
         JobProcessing $event
-    ): void
-    {
+    ): void {
         $traceParent = $event->job->payload()[Ids::FLARE_TRACE_PARENT] ?? null;
 
-        if($traceParent === null){
+        if ($traceParent === null) {
             return;
         }
 
         $samplingType = $this->tracer->potentiallyResumeTrace($traceParent);
 
-        if($samplingType === SamplingType::Sampling){
+        if ($samplingType === SamplingType::Sampling) {
             $this->shouldEndTrace = true;
         }
     }
