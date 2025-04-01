@@ -220,4 +220,3 @@ function createEvent(Closure $dispatch): JobExceptionOccurred
 
     return $triggeredEvent;
 }
-
