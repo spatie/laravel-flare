@@ -13,12 +13,6 @@
             "role" : "Developer"
         }
     ],
-    "repositories": [
-        {
-            "type" : "path",
-            "url" : "../flare-client-php"
-        }
-    ],
     "homepage" : "https://flareapp.io/",
     "license" : "MIT",
     "require" : {

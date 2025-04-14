@@ -1,79 +1,98 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Dead catch \\- Throwable is never thrown in the try block\\.$#"
+			message: '#^Binary operation "\*" between float\|int\|string and 1000000000 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/AttributesProviders/LaravelJobAttributesProvider.php
+
+		-
+			message: '#^Dead catch \- Throwable is never thrown in the try block\.$#'
+			identifier: catch.neverThrown
 			count: 3
 			path: src/AttributesProviders/LaravelUserAttributesProvider.php
 
 		-
-			message: "#^Call to an undefined method Livewire\\\\LivewireManager\\:\\:getClass\\(\\)\\.$#"
+			message: '#^Call to an undefined method Livewire\\LivewireManager\:\:getClass\(\)\.$#'
+			identifier: method.notFound
 			count: 1
 			path: src/AttributesProviders/LivewireAttributesProvider.php
 
 		-
-			message: "#^Parameter \\#1 \\$callback of function array_map expects \\(callable\\(0\\|1\\|2\\|3\\|4\\|5\\|6\\|7\\)\\: mixed\\)\\|null, Closure\\(string\\)\\: lowercase\\-string given\\.$#"
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(0\|1\|2\|3\|4\|5\|6\|7\)\: mixed\)\|null, Closure\(string\)\: lowercase\-string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Exceptions/InvalidConfig.php
 
 		-
-			message: "#^Parameter \\$applicationStage of class Spatie\\\\LaravelFlare\\\\FlareConfig constructor expects string\\|null, bool\\|string given\\.$#"
+			message: '#^Parameter \$applicationStage of class Spatie\\LaravelFlare\\FlareConfig constructor expects string\|null, bool\|string given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/FlareConfig.php
 
 		-
-			message: "#^Cannot access offset 'events' on Illuminate\\\\Contracts\\\\Foundation\\\\Application\\.$#"
+			message: '#^Cannot access offset ''events'' on Illuminate\\Contracts\\Foundation\\Application\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
 			count: 4
 			path: src/FlareServiceProvider.php
 
 		-
-			message: "#^Class Laravel\\\\Octane\\\\Events\\\\RequestReceived not found\\.$#"
+			message: '#^Class Laravel\\Octane\\Events\\RequestReceived not found\.$#'
+			identifier: class.notFound
 			count: 1
 			path: src/FlareServiceProvider.php
 
 		-
-			message: "#^Class Laravel\\\\Octane\\\\Events\\\\RequestTerminated not found\\.$#"
+			message: '#^Class Laravel\\Octane\\Events\\RequestTerminated not found\.$#'
+			identifier: class.notFound
 			count: 1
 			path: src/FlareServiceProvider.php
 
 		-
-			message: "#^Class Laravel\\\\Octane\\\\Events\\\\TaskReceived not found\\.$#"
+			message: '#^Class Laravel\\Octane\\Events\\TaskReceived not found\.$#'
+			identifier: class.notFound
 			count: 1
 			path: src/FlareServiceProvider.php
 
 		-
-			message: "#^Class Laravel\\\\Octane\\\\Events\\\\TickReceived not found\\.$#"
+			message: '#^Class Laravel\\Octane\\Events\\TickReceived not found\.$#'
+			identifier: class.notFound
 			count: 1
 			path: src/FlareServiceProvider.php
 
 		-
-			message: "#^Parameter \\#3 \\$registerRecorderAndMiddlewaresCallback of class Spatie\\\\FlareClient\\\\FlareProvider constructor expects \\(Closure\\(Illuminate\\\\Contracts\\\\Container\\\\Container\\|Spatie\\\\FlareClient\\\\Support\\\\Container, class\\-string\\<Spatie\\\\FlareClient\\\\Contracts\\\\Recorders\\\\Recorder\\>, array\\)\\: void\\)\\|null, Closure\\(Illuminate\\\\Contracts\\\\Container\\\\Container, string, array\\)\\: void given\\.$#"
+			message: '#^Parameter \#3 \$registerRecorderAndMiddlewaresCallback of class Spatie\\FlareClient\\FlareProvider constructor expects \(Closure\(Illuminate\\Contracts\\Container\\Container\|Spatie\\FlareClient\\Support\\Container, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\|null, Closure\(Illuminate\\Contracts\\Container\\Container, string, array\)\: void given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/FlareServiceProvider.php
 
-
 		-
-			message: "#^Parameter \\#1 \\$logLevel of static method Spatie\\\\LaravelFlare\\\\Exceptions\\\\InvalidConfig\\:\\:invalidLogLevel\\(\\) expects string, string\\|null given\\.$#"
+			message: '#^Parameter \#1 \$logLevel of static method Spatie\\LaravelFlare\\Exceptions\\InvalidConfig\:\:invalidLogLevel\(\) expects string, string\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Support/FlareLogHandler.php
 
 		-
-			message: "#^Parameter \\#1 \\$name of static method Monolog\\\\Level\\:\\:fromName\\(\\) expects 'ALERT'\\|'Alert'\\|'alert'\\|'CRITICAL'\\|'Critical'\\|'critical'\\|'DEBUG'\\|'Debug'\\|'debug'\\|'EMERGENCY'\\|'Emergency'\\|'emergency'\\|'ERROR'\\|'Error'\\|'error'\\|'INFO'\\|'Info'\\|'info'\\|'NOTICE'\\|'Notice'\\|'notice'\\|'WARNING'\\|'Warning'\\|'warning', string\\|null given\\.$#"
+			message: '#^Parameter \#1 \$name of static method Monolog\\Level\:\:fromName\(\) expects ''ALERT''\|''Alert''\|''alert''\|''CRITICAL''\|''Critical''\|''critical''\|''DEBUG''\|''Debug''\|''debug''\|''EMERGENCY''\|''Emergency''\|''emergency''\|''ERROR''\|''Error''\|''error''\|''INFO''\|''Info''\|''info''\|''NOTICE''\|''Notice''\|''notice''\|''WARNING''\|''Warning''\|''warning'', string\|null given\.$#'
+			identifier: argument.type
 			count: 1
 			path: src/Support/FlareLogHandler.php
 
-
 		-
-			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Foundation\\\\Application\\:\\:registered\\(\\)\\.$#"
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:registered\(\)\.$#'
+			identifier: method.notFound
 			count: 1
 			path: src/Support/TracingKernel.php
 
 		-
-			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Foundation\\\\Application\\:\\:runningConsoleCommand\\(\\)\\.$#"
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:runningConsoleCommand\(\)\.$#'
+			identifier: method.notFound
 			count: 1
 			path: src/Support/TracingKernel.php
 
 		-
-			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\View\\\\Engine\\:\\:getCompiler\\(\\)\\.$#"
+			message: '#^Call to an undefined method Illuminate\\Contracts\\View\\Engine\:\:getCompiler\(\)\.$#'
+			identifier: method.notFound
 			count: 1
 			path: src/Views/ViewFrameMapper.php
 
