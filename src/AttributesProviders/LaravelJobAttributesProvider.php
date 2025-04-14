@@ -91,7 +91,7 @@ class LaravelJobAttributesProvider
             $pushedAt = CarbonImmutable::createFromFormat('U.u', $payload['pushedAt']);
 
             if ($pushedAt) {
-                $attributes['laravel.job.pushed_at'] = TimeHelper::carbonToNano($pushedAt);
+                $attributes['laravel.job.pushed_at'] = $pushedAt->timestamp * 1_000_000_000 + $pushedAt->micro * 1_000;
             }
         }
 
