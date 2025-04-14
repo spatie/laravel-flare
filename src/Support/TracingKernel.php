@@ -39,8 +39,8 @@ class TracingKernel
             self::appBooted($tracer);
         });
 
-        $app->terminating(function () use ($tracer) {
-            self::appTerminated($tracer);
+        $app->terminating(function () use ($app, $tracer) {
+            self::appTerminated($app, $tracer, initialCall: true);
         });
 
         self::startPotentialTrace($tracer);
@@ -102,8 +102,14 @@ class TracingKernel
         $tracer->endSpan();
     }
 
-    protected static function appTerminated(Tracer $tracer): void
+    protected static function appTerminated(Application $app, Tracer $tracer, bool $initialCall): void
     {
+        if ($initialCall === true) {
+            self::registerTerminatingCallbackAsLast($app, $tracer);
+
+            return;
+        }
+
         if (! $tracer->isSampling()) {
             return;
         }
@@ -114,6 +120,13 @@ class TracingKernel
 
         $tracer->endSpan();
         $tracer->endTrace();
+    }
+
+    protected static function registerTerminatingCallbackAsLast(Application $app, Tracer $tracer): void
+    {
+        $app->terminating(function () use ($app, $tracer) {
+            self::appTerminated($app, $tracer, initialCall: false);
+        });
     }
 
     protected static function isCompositeProcess(Application $app): bool

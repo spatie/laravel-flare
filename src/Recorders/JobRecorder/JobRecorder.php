@@ -90,6 +90,8 @@ class JobRecorder implements Recorder
         ), attributes: [
             'laravel.job.success' => false,
         ]);
+
+        AddJobInformation::$currentJob = null;
     }
 
     protected function tryToResumeTrace(

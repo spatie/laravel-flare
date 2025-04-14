@@ -2,6 +2,7 @@
 
 namespace Spatie\LaravelFlare\AttributesProviders;
 
+use Carbon\CarbonImmutable;
 use DateTime;
 use Error;
 use Exception;
@@ -88,10 +89,10 @@ class LaravelJobAttributesProvider
         }
 
         if (array_key_exists('pushedAt', $payload) && $payload['pushedAt'] !== null) {
-            $pushedAt = DateTime::createFromFormat('U.u', $payload['pushedAt']);
+            $pushedAt = CarbonImmutable::createFromFormat('U.u', $payload['pushedAt']);
 
             if ($pushedAt) {
-                $attributes['laravel.job.pushed_at'] = TimeHelper::seconds((int)$pushedAt->format('Uu'));
+                $attributes['laravel.job.pushed_at'] = TimeHelper::carbonToNano($pushedAt);
             }
         }
 
@@ -106,8 +107,12 @@ class LaravelJobAttributesProvider
         $propertyAttributes = [];
 
         try {
+            $command = is_string($payload['data']['command'])
+                ? $this->resolveObjectFromCommand($payload['data']['command'])
+                : $payload['data']['command'];
+
             $propertyAttributes = $this->resolveCommandProperties(
-                $this->resolveObjectFromCommand($payload['data']['command']),
+                $command,
                 $maxChainedJobReportingDepth
             );
         } catch (Exception $exception) {
