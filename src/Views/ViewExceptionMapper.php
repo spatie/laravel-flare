@@ -33,7 +33,7 @@ class ViewExceptionMapper
 
         $exception = $this->createException($baseException);
 
-        if($compiledViewPath === null){
+        if ($compiledViewPath === null) {
             return $exception;
         }
 
