@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Carbon\CarbonImmutable;
-use DateTime;
 use Error;
 use Exception;
 use Illuminate\Contracts\Encryption\Encrypter;

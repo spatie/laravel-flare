@@ -1,10 +1,5 @@
 <?php
 
-use Illuminate\Container\Container;
-use Illuminate\Queue\Events\JobExceptionOccurred;
-use Illuminate\Queue\Jobs\RedisJob;
-use Illuminate\Queue\RedisQueue;
-use Illuminate\Support\Facades\Event;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
@@ -12,9 +7,7 @@ use Spatie\FlareClient\Tests\Shared\ExpectTrace;
 use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
 
 uses(ConfigureFlare::class);
 

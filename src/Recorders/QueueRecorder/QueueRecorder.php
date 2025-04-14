@@ -47,7 +47,7 @@ class QueueRecorder implements SpansRecorder
                 return $payload;
             }
 
-            if($this->isSyncConnection($connection)){
+            if ($this->isSyncConnection($connection)) {
                 return $payload;
             }
 
@@ -72,11 +72,11 @@ class QueueRecorder implements SpansRecorder
             return $payload;
         });
 
-//        $this->dispatcher->listen(JobQueueing::class, fn ($e) => ray($e));
-//        $this->dispatcher->listen(JobQueued::class, fn ($e) => ray($e));
-//        $this->dispatcher->listen(JobProcessing::class, fn ($e) => ray($e));
-//
-//        $this->dispatcher->listen(JobProcessed::class, fn ($e) => ray($e));
+        //        $this->dispatcher->listen(JobQueueing::class, fn ($e) => ray($e));
+        //        $this->dispatcher->listen(JobQueued::class, fn ($e) => ray($e));
+        //        $this->dispatcher->listen(JobProcessing::class, fn ($e) => ray($e));
+        //
+        //        $this->dispatcher->listen(JobProcessed::class, fn ($e) => ray($e));
         $this->dispatcher->listen(JobQueued::class, [$this, 'recordQueued']);
     }
 
