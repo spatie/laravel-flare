@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Carbon\CarbonImmutable;
+use Carbon\Exceptions\InvalidFormatException;
 use Error;
 use Exception;
 use Illuminate\Contracts\Encryption\Encrypter;
@@ -88,7 +89,13 @@ class LaravelJobAttributesProvider
         }
 
         if (array_key_exists('pushedAt', $payload) && $payload['pushedAt'] !== null) {
-            $pushedAt = CarbonImmutable::createFromFormat('U.u', $payload['pushedAt']);
+            try {
+                $pushedAt = str_contains($payload['pushedAt'], '.')
+                    ? CarbonImmutable::createFromFormat('U.u', $payload['pushedAt'])
+                    : CarbonImmutable::createFromFormat('U', $payload['pushedAt']);
+            } catch (InvalidFormatException) {
+                $pushedAt = null;
+            }
 
             if ($pushedAt) {
                 $attributes['laravel.job.pushed_at'] = $pushedAt->timestamp * 1_000_000_000 + $pushedAt->micro * 1_000;
