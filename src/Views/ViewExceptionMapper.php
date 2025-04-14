@@ -29,9 +29,13 @@ class ViewExceptionMapper
 
         preg_match('/\(View: (?P<path>.*?)\)/', $viewException->getMessage(), $matches);
 
-        $compiledViewPath = $matches['path'];
+        $compiledViewPath = $matches['path'] ?? null;
 
         $exception = $this->createException($baseException);
+
+        if($compiledViewPath === null){
+            return $exception;
+        }
 
         if ($baseException instanceof ProvidesSolution) {
             /** @var ViewExceptionWithSolution $exception */
@@ -79,7 +83,7 @@ class ViewExceptionMapper
         $trace = array_map(function ($frame, $index) use (&$viewIndex) {
             if ($originalPath = $this->viewFrameMapper->findCompiledView(Arr::get($frame, 'file', ''))) {
                 $frame['file'] = $originalPath;
-                $frame['line'] = $this->viewFrameMapper->getBladeLineNumber($frame['file'], $frame['line']);
+                $frame['line'] = $this->viewFrameMapper->getBladeLineNumber($frame['file'], $frame['line'] ?? 0);
 
                 if ($viewIndex === null) {
                     $viewIndex = $index;

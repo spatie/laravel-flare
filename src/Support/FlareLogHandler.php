@@ -39,7 +39,7 @@ class FlareLogHandler extends AbstractProcessingHandler
             return;
         }
 
-        if (array_key_exists('exception', $record['context'])) {
+        if (array_key_exists('exception', $record->context)) {
             return;
         }
 
@@ -47,7 +47,7 @@ class FlareLogHandler extends AbstractProcessingHandler
             $record->message,
             $record->level->name,
             function (ReportFactory $flareReport) use ($record) {
-                $flareReport->context($record['context']);
+                $flareReport->context($record->context);
 
                 if ($this->traceOrigins === false) {
                     return;

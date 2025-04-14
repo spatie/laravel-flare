@@ -12,7 +12,7 @@ use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Throwable;
 
 /**
- * @method static FlareClient context(string|array $key, mixed $value = null)
+ * @method static FlareClient context(string|array<mixed> $key, mixed $value = null)
  * @method static FlareClient sendReportsImmediately(bool $sendReportsImmediately = true)
  * @method static FlareClient withApplicationVersion(string|Closure $version)
  * @method static FlareClient filterExceptionsUsing(Closure $filterExceptionsCallable)

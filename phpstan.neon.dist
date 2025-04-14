@@ -13,5 +13,4 @@ parameters:
      - "#Property [a-zA-Z0-9\\$\\_\\\\:\\(\\)]+ type has no value type specified in iterable type array.#"
 
     tmpDir: build/phpstan
-    checkMissingIterableValueType: true
 

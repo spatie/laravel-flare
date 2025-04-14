@@ -50,10 +50,6 @@ parameters:
 			count: 1
 			path: src/FlareServiceProvider.php
 
-		-
-			message: "#^Parameter \\#1 \\$key of method Spatie\\\\FlareClient\\\\ReportFactory\\:\\:context\\(\\) expects array\\|string, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
-			count: 1
-			path: src/Support/FlareLogHandler.php
 
 		-
 			message: "#^Parameter \\#1 \\$logLevel of static method Spatie\\\\LaravelFlare\\\\Exceptions\\\\InvalidConfig\\:\\:invalidLogLevel\\(\\) expects string, string\\|null given\\.$#"
@@ -65,10 +61,6 @@ parameters:
 			count: 1
 			path: src/Support/FlareLogHandler.php
 
-		-
-			message: "#^Parameter \\#2 \\$array of function array_key_exists expects array, array\\|DateTimeImmutable\\|int\\|string\\|null given\\.$#"
-			count: 1
-			path: src/Support/FlareLogHandler.php
 
 		-
 			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Foundation\\\\Application\\:\\:registered\\(\\)\\.$#"
@@ -79,16 +71,6 @@ parameters:
 			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\Foundation\\\\Application\\:\\:runningConsoleCommand\\(\\)\\.$#"
 			count: 1
 			path: src/Support/TracingKernel.php
-
-		-
-			message: "#^Offset 'line' does not exist on array\\{function\\: string, line\\?\\: int, file\\: non\\-falsy\\-string, class\\?\\: class\\-string, type\\?\\: '\\-\\>'\\|'\\:\\:', args\\?\\: array, object\\?\\: object\\}\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
-
-		-
-			message: "#^Offset 'path' does not exist on array\\{0\\?\\: string, path\\?\\: string, 1\\?\\: string\\}\\.$#"
-			count: 1
-			path: src/Views/ViewExceptionMapper.php
 
 		-
 			message: "#^Call to an undefined method Illuminate\\\\Contracts\\\\View\\\\Engine\\:\\:getCompiler\\(\\)\\.$#"
