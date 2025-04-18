@@ -4,6 +4,7 @@ namespace Spatie\LaravelFlare\Tests\stubs\Jobs;
 
 use Carbon\CarbonImmutable;
 use Exception;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,6 +17,7 @@ class QueueableJob implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+    use Batchable;
 
     private array $property;
 
@@ -26,7 +28,7 @@ class QueueableJob implements ShouldQueue
         ?CarbonImmutable $retryUntilValue = null,
         ?int $tries = null,
         ?int $maxExceptions = null,
-        ?int $timeout = null
+        ?int $timeout = null,
     ) {
         $this->property = $property;
         $this->retryUntilValue = $retryUntilValue;

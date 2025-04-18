@@ -2,83 +2,79 @@
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
-use Spatie\FlareClient\Flare;
-use Spatie\LaravelFlare\Support\SentReports;
-use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
+use Monolog\Level;
+use Spatie\FlareClient\Enums\SpanEventType;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
+use Spatie\FlareClient\Tests\Shared\FakeTime;
+use Spatie\LaravelFlare\FlareConfig;
+use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
+
+uses(ConfigureFlare::class);
 
 beforeEach(function () {
     config()->set('logging.channels.flare.driver', 'flare');
     config()->set('logging.default', 'flare');
-    config()->set('flare.key', 'some-key');
 
-    $this->fakeClient = new FakeClient();
-
-    $currentFlare = app()->make(Flare::class);
-
-    $middleware = $currentFlare->getMiddleware();
-
-    app()->singleton(Flare::class, function () use ($middleware) {
-        $flare = new Flare($this->fakeClient, null, []);
-
-        $flare->sendReportsImmediately();
-
-        foreach ($middleware as $singleMiddleware) {
-            $flare->registerMiddleware($singleMiddleware);
-        }
-
-        return $flare;
-    });
-
-    $this->useTime('2019-01-01 12:34:56');
+    FakeTime::setup('2019-01-01 12:34:56');
 });
 
-it('reports exceptions using the flare api', function () {
+it('it does not report exceptions using the flare api via logger', function () {
+    setupFlare(handleErrorsWithFlare: false);
+
     Route::get('exception', fn () => nonExistingFunction());
 
-    $response = $this
+    $this
         ->get('/exception')
         ->assertStatus(500);
 
-    $this->fakeClient->assertRequestsSent(1);
+    FakeSender::instance()->assertRequestsSent(0);
 });
 
 it('does not report normal log messages', function () {
+    setupFlare();
+
     Log::info('this is a log message');
     Log::debug('this is a log message');
 
-    $this->fakeClient->assertRequestsSent(0);
+    FakeSender::instance()->assertRequestsSent(0);
 });
 
 it('reports log messages above the specified minimum level', function () {
+    setupFlare();
+
     Log::error('this is a log message');
     Log::emergency('this is a log message');
     Log::critical('this is a log message');
 
-    $this->fakeClient->assertRequestsSent(3);
+    FakeSender::instance()->assertRequestsSent(3);
 });
 
 it('reports different log levels when configured', function () {
-    app()['config']['logging.channels.flare.level'] = 'debug';
+    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(minimumReportLogLevel: Level::Debug));
 
     Log::debug('this is a log message');
     Log::error('this is a log message');
     Log::emergency('this is a log message');
     Log::critical('this is a log message');
 
-    $this->fakeClient->assertRequestsSent(4);
+    FakeSender::instance()->assertRequestsSent(4);
 });
 
 it('can log null values', function () {
+    setupFlare();
+
     Log::info(null);
     Log::debug(null);
     Log::error(null);
     Log::emergency(null);
     Log::critical(null);
 
-    $this->fakeClient->assertRequestsSent(3);
+    FakeSender::instance()->assertRequestsSent(3);
 });
 
 it('adds log messages to the report', function () {
+    setupFlare();
+
     Route::get('exception', function () {
         Log::info('info log');
         Log::debug('debug log');
@@ -89,17 +85,35 @@ it('adds log messages to the report', function () {
 
     $this->get('/exception');
 
-    $this->fakeClient->assertRequestsSent(1);
+    FakeSender::instance()->assertRequestsSent(1);
 
-    $arguments = $this->fakeClient->requests[0]['arguments'];
+    $arguments = FakeSender::instance()->getLastPayload();
 
-    $logs = $arguments['context']['logs'];
+    expect($arguments['events'])
+        ->toHaveCount(3)
+        ->each
+        ->toHaveKey('startTimeUnixNano', 1546346096000000000)
+        ->toHaveKey('endTimeUnixNano', null)
+        ->toHaveKey('type', SpanEventType::Log);
 
-    expect($logs)->toBeGreaterThanOrEqual(3);
+    expect($arguments['events'][0]['attributes'])
+        ->toHaveKey('log.level', 'info')
+        ->toHaveKey('log.message', 'info log')
+        ->toHaveKey('log.context', []);
+
+    expect($arguments['events'][1]['attributes'])
+        ->toHaveKey('log.level', 'debug')
+        ->toHaveKey('log.message', 'debug log')
+        ->toHaveKey('log.context', []);
+
+    expect($arguments['events'][2]['attributes'])
+        ->toHaveKey('log.level', 'notice')
+        ->toHaveKey('log.message', 'notice log')
+        ->toHaveKey('log.context', []);
 });
 
-it('can report an exception with logs', function ($logLevel) {
-    app()['config']['flare.send_logs_as_events'] = false;
+it('can disable sending logs as a report but keep them as span events in an exception report', function ($logLevel) {
+    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(false));
 
     Log::log($logLevel, 'log');
 
@@ -109,18 +123,28 @@ it('can report an exception with logs', function ($logLevel) {
 
     $this->get('/exception');
 
-    $arguments = $this->fakeClient->requests[0]['arguments'];
+    FakeSender::instance()->assertRequestsSent(1);
 
-    $logs = $arguments['context']['logs'];
+    $arguments = FakeSender::instance()->getLastPayload();
 
-    expect($logs)->toHaveCount(1);
-    expect($logs[0]['level'])->toEqual($logLevel);
-    expect($logs[0]['message'])->toEqual('log');
-    expect($logs[0]['context'])->toEqual([]);
+    expect($arguments['exceptionClass'])->toBe('Error');
+    expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
+
+    expect($arguments['events'])
+        ->toHaveCount(1)
+        ->each
+        ->toHaveKey('startTimeUnixNano', 1546346096000000000)
+        ->toHaveKey('endTimeUnixNano', null)
+        ->toHaveKey('type', SpanEventType::Log);
+
+    expect($arguments['events'][0]['attributes'])
+        ->toHaveKey('log.level', $logLevel)
+        ->toHaveKey('log.message', 'log')
+        ->toHaveKey('log.context', []);
 })->with('provideMessageLevels');
 
-it('can report an exception with logs with metadata', function () {
-    app()['config']['flare.send_logs_as_events'] = false;
+it('it will report an exception with log span events with metadata', function () {
+    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(false));
 
     Log::info('log', [
         'meta' => 'data',
@@ -132,24 +156,16 @@ it('can report an exception with logs with metadata', function () {
 
     $this->get('/exception');
 
-    $arguments = $this->fakeClient->requests[0]['arguments'];
+    FakeSender::instance()->assertRequestsSent(1);
 
-    $logs = $arguments['context']['logs'];
+    $arguments = FakeSender::instance()->getLastPayload();
 
-    expect($logs[0]['context'])->toEqual(['meta' => 'data']);
-});
+    expect($arguments['exceptionClass'])->toBe('Error');
+    expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
 
-it('will keep sent reports', function () {
-    Route::get('exception', fn () => nonExistingFunction());
+    expect($arguments['events'])->toHaveCount(1);
 
-    $response = $this
-        ->get('/exception')
-        ->assertStatus(500);
-
-    $this->fakeClient->assertRequestsSent(1);
-
-    expect(app(SentReports::class)->all())->toHaveCount(1);
-    expect(\Spatie\LaravelFlare\Facades\Flare::sentReports()->all())->toHaveCount(1);
+    expect($arguments['events'][0]['attributes'])->toHaveKey('log.context', ['meta' => 'data']);
 });
 
 // Datasets

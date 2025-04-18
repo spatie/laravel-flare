@@ -15,30 +15,30 @@ it('will add context information with an exception', function () {
     Context::add('foo', 'bar');
     Context::addHidden('hidden', 'value');
 
-    $report = Flare::createReport(new Exception);
+    $report = Flare::report(new Exception);
 
-    $context = $report->toArray()['context'];
+    $context = $report->toArray()['attributes'];
 
-    $this->assertArrayHasKey('laravel_context', $context);
-    $this->assertArrayHasKey('foo', $context['laravel_context']);
-    $this->assertArrayNotHasKey('hidden', $context['laravel_context']);
-    $this->assertEquals('bar', $context['laravel_context']['foo']);
+    $this->assertArrayHasKey('context.laravel', $context);
+    $this->assertArrayHasKey('foo', $context['context.laravel']);
+    $this->assertArrayNotHasKey('hidden', $context['context.laravel']);
+    $this->assertEquals('bar', $context['context.laravel']['foo']);
 });
 
 it('will not add context information with an exception if no context was set', function () {
-    $report = Flare::createReport(new Exception);
+    $report = Flare::report(new Exception);
 
-    $context = $report->toArray()['context'];
+    $context = $report->toArray()['attributes'];
 
-    $this->assertArrayNotHasKey('laravel_context', $context);
+    $this->assertArrayNotHasKey('laravel.context', $context);
 });
 
 it('will not add context information with an exception if only hidden context was set', function () {
     Context::addHidden('hidden', 'value');
 
-    $report = Flare::createReport(new Exception);
+    $report = Flare::report(new Exception);
 
-    $context = $report->toArray()['context'];
+    $context = $report->toArray()['attributes'];
 
-    $this->assertArrayNotHasKey('laravel_context', $context);
+    $this->assertArrayNotHasKey('laravel.context', $context);
 });

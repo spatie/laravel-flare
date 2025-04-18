@@ -2,13 +2,10 @@
 
 namespace Spatie\LaravelFlare\Views;
 
-use Illuminate\Contracts\View\Engine;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\View\ViewException;
-use ReflectionClass;
 use ReflectionProperty;
 use Spatie\ErrorSolutions\Contracts\ProvidesSolution;
 use Spatie\LaravelFlare\Exceptions\ViewException as FlareViewException;
@@ -17,19 +14,9 @@ use Throwable;
 
 class ViewExceptionMapper
 {
-    protected Engine $compilerEngine;
-
-    protected BladeSourceMapCompiler $bladeSourceMapCompiler;
-
-    protected array $knownPaths;
-
-    public function __construct(BladeSourceMapCompiler $bladeSourceMapCompiler)
-    {
-        $resolver = app('view.engine.resolver');
-
-        $this->compilerEngine = $resolver->resolve('blade');
-
-        $this->bladeSourceMapCompiler = $bladeSourceMapCompiler;
+    public function __construct(
+        protected ViewFrameMapper $viewFrameMapper
+    ) {
     }
 
     public function map(ViewException $viewException): FlareViewException
@@ -42,9 +29,13 @@ class ViewExceptionMapper
 
         preg_match('/\(View: (?P<path>.*?)\)/', $viewException->getMessage(), $matches);
 
-        $compiledViewPath = $matches['path'];
+        $compiledViewPath = $matches['path'] ?? null;
 
         $exception = $this->createException($baseException);
+
+        if ($compiledViewPath === null) {
+            return $exception;
+        }
 
         if ($baseException instanceof ProvidesSolution) {
             /** @var ViewExceptionWithSolution $exception */
@@ -53,7 +44,7 @@ class ViewExceptionMapper
 
         $this->modifyViewsInTrace($exception);
 
-        $exception->setView($compiledViewPath);
+        $exception->setViewFile($compiledViewPath);
         $exception->setViewData($this->getViewData($exception));
 
         return $exception;
@@ -65,9 +56,9 @@ class ViewExceptionMapper
             ? ViewExceptionWithSolution::class
             : FlareViewException::class;
 
-        $viewFile = $this->findCompiledView($baseException->getFile());
+        $viewFile = $this->viewFrameMapper->findCompiledView($baseException->getFile());
         $file = $viewFile ?? $baseException->getFile();
-        $line = $viewFile ? $this->getBladeLineNumber($file, $baseException->getLine()) : $baseException->getLine();
+        $line = $viewFile ? $this->viewFrameMapper->getBladeLineNumber($file, $baseException->getLine()) : $baseException->getLine();
 
         return new $viewExceptionClass(
             $baseException->getMessage(),
@@ -83,25 +74,28 @@ class ViewExceptionMapper
     {
         $viewIndex = null;
 
-        $trace = Collection::make($exception->getPrevious()->getTrace())
-            ->map(function ($trace, $index) use (&$viewIndex) {
-                if ($originalPath = $this->findCompiledView(Arr::get($trace, 'file', ''))) {
+        $trace = $exception->getPrevious()?->getTrace();
 
-                    $trace['file'] = $originalPath;
-                    $trace['line'] = $this->getBladeLineNumber($trace['file'], $trace['line']);
+        if (! is_array($trace)) {
+            return;
+        }
 
-                    if ($viewIndex === null) {
-                        $viewIndex = $index;
-                    }
+        $trace = array_map(function ($frame, $index) use (&$viewIndex) {
+            if ($originalPath = $this->viewFrameMapper->findCompiledView(Arr::get($frame, 'file', ''))) {
+                $frame['file'] = $originalPath;
+                $frame['line'] = $this->viewFrameMapper->getBladeLineNumber($frame['file'], $frame['line'] ?? 0);
+
+                if ($viewIndex === null) {
+                    $viewIndex = $index;
                 }
+            }
 
-                return $trace;
-            })
-            ->when(
-                $viewIndex !== null && str_ends_with($exception->getFile(), '.blade.php'),
-                fn (Collection $trace) => $trace->slice($viewIndex + 1)  // Remove all traces before the view
-            )
-            ->toArray();
+            return $frame;
+        }, $trace, array_keys($trace));
+
+        if ($viewIndex !== null && str_ends_with($exception->getFile(), '.blade.php')) {
+            $trace = array_slice($trace, $viewIndex + 1); // Remove all traces before the view
+        }
 
         $traceProperty = new ReflectionProperty('Exception', 'trace');
         $traceProperty->setAccessible(true);
@@ -121,45 +115,6 @@ class ViewExceptionMapper
         }
 
         return $rootException;
-    }
-
-    protected function findCompiledView(string $compiledPath): ?string
-    {
-        $this->knownPaths ??= $this->getKnownPaths();
-
-        return $this->knownPaths[$compiledPath] ?? null;
-    }
-
-    protected function getKnownPaths(): array
-    {
-        $compilerEngineReflection = new ReflectionClass($this->compilerEngine);
-
-        if (! $compilerEngineReflection->hasProperty('lastCompiled') && $compilerEngineReflection->hasProperty('engine')) {
-            $compilerEngine = $compilerEngineReflection->getProperty('engine');
-            $compilerEngine->setAccessible(true);
-            $compilerEngine = $compilerEngine->getValue($this->compilerEngine);
-            $lastCompiled = new ReflectionProperty($compilerEngine, 'lastCompiled');
-            $lastCompiled->setAccessible(true);
-            $lastCompiled = $lastCompiled->getValue($compilerEngine);
-        } else {
-            $lastCompiled = $compilerEngineReflection->getProperty('lastCompiled');
-            $lastCompiled->setAccessible(true);
-            $lastCompiled = $lastCompiled->getValue($this->compilerEngine);
-        }
-
-        $knownPaths = [];
-        foreach ($lastCompiled as $lastCompiledPath) {
-            $compiledPath = $this->compilerEngine->getCompiler()->getCompiledPath($lastCompiledPath);
-
-            $knownPaths[realpath($compiledPath ?? $lastCompiledPath)] = realpath($lastCompiledPath);
-        }
-
-        return $knownPaths;
-    }
-
-    protected function getBladeLineNumber(string $view, int $compiledLineNumber): int
-    {
-        return $this->bladeSourceMapCompiler->detectLineNumber($view, $compiledLineNumber);
     }
 
     protected function getViewData(Throwable $exception): array

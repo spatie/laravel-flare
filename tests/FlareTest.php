@@ -2,8 +2,11 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
-use Spatie\FlareClient\Flare;
-use Spatie\LaravelFlare\Tests\Mocks\FakeClient;
+use Spatie\FlareClient\Tests\Shared\FakeSender;
+use Spatie\FlareClient\Tests\Shared\FakeTime;
+use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
+
+uses(ConfigureFlare::class);
 
 beforeEach(function () {
     Artisan::call('view:clear');
@@ -16,20 +19,24 @@ beforeEach(function () {
     config()->set('logging.default', 'flare');
     config()->set('flare.key', 'some-key');
 
-    $this->fakeClient = new FakeClient();
-
-    app()->singleton(Flare::class, fn () => new Flare($this->fakeClient));
-
-
-    $this->useTime('2019-01-01 12:34:56');
+    FakeTime::setup('2019-01-01 12:34:56');
 
     View::addLocation(__DIR__.'/stubs/views');
 });
 
 it('can manually report exceptions', function () {
-    \Spatie\LaravelFlare\Facades\Flare::sendReportsImmediately();
+    $flare = setupFlare();
 
-    \Spatie\LaravelFlare\Facades\Flare::report(new Exception());
+    $flare->report(new Exception());
 
-    $this->fakeClient->assertRequestsSent(1);
+    FakeSender::instance()->assertRequestsSent(1);
+});
+
+
+it('can report exceptions using the Laravel report helper', function () {
+    setupFlare();
+
+    report(new Exception());
+
+    FakeSender::instance()->assertRequestsSent(1);
 });

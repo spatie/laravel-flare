@@ -4,18 +4,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler;
 use Spatie\LaravelFlare\Facades\Flare;
 
-it('can execute the test command when a flare key is present with a Laravel config configuration', function () {
-    withFlareKey();
-
-    config()->set('logging.channels.flare', [
-        'driver' => 'flare',
-    ]);
-
-    config()->set('logging.channels.stack.channels', ['flare']);
-
-    $this->artisan('flare:test')->assertOk();
-});
-
 it('can execute the test command when a flare key is present with a Laravel handler configuration', function () {
     withFlareKey();
 
