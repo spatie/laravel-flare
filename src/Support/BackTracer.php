@@ -15,7 +15,7 @@ class BackTracer extends BaseBackTracer
         parent::__construct($applicationPath);
     }
 
-    public function frames(int $limit = null): array
+    public function frames(?int $limit = null): array
     {
         return array_map(function (Frame $frame) {
             if ($originalPath = $this->viewFrameMapper->findCompiledView($frame->file)) {
