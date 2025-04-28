@@ -10,6 +10,7 @@ use Spatie\FlareClient\Tests\Shared\FakeTraceExporter;
 use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\FlareServiceProvider;
+use Spatie\LaravelFlare\Support\CollectsResolver;
 use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\TestCase;
@@ -50,6 +51,7 @@ function setupFlare(
     $config = new FlareConfig(
         apiToken: 'fake-api-key',
         sendReportsImmediately: $sendReportsImmediately,
+        collectsResolver: CollectsResolver::class,
     );
 
     $config->useDefaults();

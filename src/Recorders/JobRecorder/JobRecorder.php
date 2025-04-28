@@ -7,9 +7,10 @@ use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
-use Spatie\FlareClient\Contracts\Recorders\Recorder;
+use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Enums\SamplingType;
+use Spatie\FlareClient\Recorders\Recorder;
 use Spatie\FlareClient\Recorders\ThrowableRecorder\ThrowableSpanEvent;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
@@ -19,12 +20,14 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 
-class JobRecorder implements Recorder
+class JobRecorder  extends Recorder implements SpansRecorder
 {
     /** @use RecordsPendingSpans<Span> */
     use RecordsPendingSpans;
 
     protected int $maxChainedJobReportingDepth = 0;
+
+    public const DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH = 2;
 
     public function __construct(
         protected Tracer $tracer,

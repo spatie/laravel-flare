@@ -10,7 +10,7 @@ use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\ReportFactory;
 use Throwable;
 
-class AddExceptionInformation implements FlareMiddleware
+class AddExceptionContextInformation implements FlareMiddleware
 {
     public function handle(ReportFactory $report, Closure $next): ReportFactory
     {

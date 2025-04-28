@@ -16,6 +16,8 @@ class FilesystemRecorder extends BaseFilesystemRecorder
 
     protected const FLARE_PASS_THROUGH = '_flare_pass_through_configured';
 
+    public const DEFAULT_TRACK_ALL_DISKS = false;
+
     public function __construct(
         protected Tracer $tracer,
         protected BackTracer $backTracer,
@@ -24,12 +26,12 @@ class FilesystemRecorder extends BaseFilesystemRecorder
     ) {
         parent::__construct($tracer, $backTracer, $config);
 
-        $this->trackAllDisks = $config['track_all_disks'] ?? false;
+        $this->trackAllDisks = $config['track_all_disks'] ?? static::DEFAULT_TRACK_ALL_DISKS;
     }
 
     public static function registered(Application $container, array $config): void
     {
-        $shouldWrapDisks = ($config['track_all_disks'] ?? false)
+        $shouldWrapDisks = ($config['track_all_disks'] ?? static::DEFAULT_TRACK_ALL_DISKS)
         || Arr::first($config, fn ($disk) => is_array($disk) && array_key_exists('flare', $disk)) !== null;
 
         if ($shouldWrapDisks) {

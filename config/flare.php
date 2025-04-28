@@ -33,7 +33,7 @@ use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
-use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddExceptionContextInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
@@ -79,33 +79,18 @@ return [
     */
     'base_url' => env('FLARE_BASE_URL', 'https://flareapp.io'),
 
-
     /*
     |--------------------------------------------------------------------------
-    | Middleware
+    | Collects
     |--------------------------------------------------------------------------
     |
-    | These middleware will modify the contents of the report sent to Flare.
+    | Flare will collect a lot of information about your application. You can
+    | disable some of the collectors here, configure them or add your own.
     |
     */
 
-    'middleware' => [
-        ...FlareConfig::defaultMiddleware(),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Recorders
-    |--------------------------------------------------------------------------
-    |
-    | These recorders, will record events that happen in your application. They
-    | will be included in the error report or trace that is sent to Flare,
-    | depending on the configuration.
-    |
-    */
-
-    'recorders' => [
-        ...FlareConfig::defaultRecorders(),
+    'collects' => [
+        ...FlareConfig::defaultCollectors()
     ],
 
     /*
@@ -241,7 +226,6 @@ return [
     */
 
     'enable_share_button' => true,
-
 
     /*
     |--------------------------------------------------------------------------

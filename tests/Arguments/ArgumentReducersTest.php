@@ -60,7 +60,7 @@ it('can reduce a model', function () {
 });
 
 it('can disable the use of arguments', function () {
-    $flare = setupFlare(fn (FlareConfig $config) => $config->addStackFrameArguments(withStackFrameArguments: false));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->ignoreStackFrameArguments());
 
     function exceptionWithArgumentsDisabled(string $string)
     {
@@ -73,7 +73,7 @@ it('can disable the use of arguments', function () {
 });
 
 it('can set a custom arguments reducer', function () {
-    $flare = setupFlare(fn (FlareConfig $config) => $config->addStackFrameArguments(argumentReducers: ArgumentReducers::create([
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectStackFrameArguments(argumentReducers: ArgumentReducers::create([
         FakeArgumentsReducer::class,
     ])));
 

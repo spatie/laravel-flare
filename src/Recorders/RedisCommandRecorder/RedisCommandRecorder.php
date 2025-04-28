@@ -29,7 +29,7 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
 
     public function start(): void
     {
-        if ($this->trace === false && $this->report === false) {
+        if ($this->withTraces === false && $this->withErrors === false) {
             return;
         }
 

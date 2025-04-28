@@ -33,7 +33,7 @@ class ViewRecorder extends BaseViewRecorder
 
     public function start(): void
     {
-        if ($this->trace === false) {
+        if ($this->withTraces === false) {
             return;
         }
 

@@ -68,7 +68,7 @@ it('can report queries', function () {
 });
 
 it('can stop recording bindings', function () {
-    $flare = setupFlare(fn (FlareConfig $config) => $config->addQueries(includeBindings: false));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(includeBindings: false));
 
     DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
@@ -78,7 +78,7 @@ it('can stop recording bindings', function () {
 });
 
 it('will add origin attributes when a threshold is met and tracing', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
+    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
 
     $flare->tracer->startTrace();
 
@@ -94,7 +94,7 @@ it('will add origin attributes when a threshold is met and tracing', function ()
 });
 
 it('will not add origin attributes when a threshold is met and only reporting', function () {
-    $flare = setupFlare(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
 
     $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 
@@ -108,7 +108,7 @@ it('will not add origin attributes when a threshold is met and only reporting', 
 });
 
 it('will not add origin attributes when a threshold is not met', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
+    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
 
     $flare->tracer->startTrace();
 
@@ -124,7 +124,7 @@ it('will not add origin attributes when a threshold is not met', function () {
 });
 
 it('will not add origin attributes when the trace origin feature is disabled', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOrigin: false, findOriginThreshold: TimeHelper::milliseconds(300)));
+    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOrigin: false, findOriginThreshold: TimeHelper::milliseconds(300)));
 
     $flare->tracer->startTrace();
 
@@ -141,7 +141,7 @@ it('will not add origin attributes when the trace origin feature is disabled', f
 
 
 it('will always add origin attributes when no threshold is set', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->addQueries(findOriginThreshold: null));
+    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: null));
 
     $flare->tracer->startTrace();
 

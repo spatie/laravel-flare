@@ -37,21 +37,19 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
-use Spatie\FlareClient\Enums\CacheOperation;
+use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
-use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
-use Spatie\FlareClient\FlareMiddleware\AddSolutions;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Support\TraceLimits;
-use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
+use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
+use Spatie\LaravelFlare\FlareMiddleware\AddExceptionContextInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
-use Spatie\LaravelFlare\FlareMiddleware\AddExceptionInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
@@ -65,9 +63,11 @@ use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
+use Spatie\LaravelFlare\Recorders\RedisCommandRecorder\RedisCommandRecorder;
 use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
+use Spatie\LaravelFlare\Support\CollectsResolver;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 
 class FlareConfig extends BaseFlareConfig
@@ -84,11 +84,27 @@ class FlareConfig extends BaseFlareConfig
             config('flare.argument_reducers')
         ) : ArgumentReducers::default();
 
+        $collects = [];
+
+        foreach (config('flare.collects') as $type => $options) {
+             $collectType = CollectType::tryFrom($type) ?? LaravelCollectType::tryFrom($type) ?? null;
+
+             if($type === null){
+                 continue;
+             }
+
+             $collects[$collectType->value] = [
+                 'type' => $collectType,
+                'options' => $options
+             ];
+        }
+
         $config = new self(
             apiToken: config('flare.key'),
             baseUrl: config('flare.base_url', 'https://flareapp.io/api'),
-            middleware: config('flare.middleware'),
-            recorders: config('flare.recorders'),
+            middleware: config('flare.middleware', []),
+            recorders: config('flare.recorders', []),
+            collects: $collects,
             reportErrorLevels: config('flare.report_error_levels'),
             applicationPath: base_path(),
             applicationName: config('app.name'),
@@ -113,6 +129,7 @@ class FlareConfig extends BaseFlareConfig
             censorHeaders: config('flare.censor.headers'),
             censorBodyFields: config('flare.censor.body_fields'),
             userAttributesProvider: config('flare.attribute_providers.user'),
+            collectsResolver: CollectsResolver::class,
             overriddenGroupings: config('flare.overridden_groupings'),
         );
 
@@ -122,101 +139,83 @@ class FlareConfig extends BaseFlareConfig
             : Level::Error;
         $config->enableShareButton = config('flare.enable_share_button', true);
 
+
         return $config;
     }
 
-    public static function defaultMiddleware(): array
+    /**
+     * @return array
+     */
+    public static function defaultCollectors(): array
     {
         return [
-            AddViewInformation::class => [],
-            AddConsoleInformation::class => [],
-            AddRequestInformation::class => [],
-            AddJobInformation::class => [],
-            AddGitInformation::class => [],
-            AddLaravelInformation::class => [],
-            AddExceptionInformation::class => [],
-            AddLaravelContext::class => [],
-            AddExceptionHandledStatus::class => [],
-            AddSolutions::class => [],
+            CollectType::Requests->value => [],
+            LaravelCollectType::LivewireComponents->value => [],
+            CollectType::ServerInfo->value => [],
+            CollectType::GitInfo->value => [],
+            CollectType::Solutions->value => [],
+            LaravelCollectType::LaravelInfo->value => [],
+            LaravelCollectType::LaravelContext->value => [],
+            LaravelCollectType::ExceptionContext->value => [],
+            LaravelCollectType::HandledExceptions->value => [],
+            CollectType::Commands->value => [
+                'with_traces' => CommandRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => CommandRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => CommandRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+            ],
+            CollectType::Jobs->value => [
+                'with_traces' => JobRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => JobRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => JobRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+                'max_chained_job_reporting_depth' => JobRecorder::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH,
+            ],
+            CollectType::Cache->value => [
+                'with_traces' => CacheRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => CacheRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => CacheRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+                'operations' => CacheRecorder::DEFAULT_OPERATIONS,
+            ],
+            CollectType::Logs->value => [
+                'with_traces' => LogRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => LogRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => LogRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+            ],
+            CollectType::Queries->value => [
+                'with_traces' => QueryRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => QueryRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => QueryRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+                'include_bindings' => QueryRecorder::DEFAULT_INCLUDE_BINDINGS,
+                'find_origin' => QueryRecorder::DEFAULT_FIND_ORIGIN,
+                'find_origin_threshold' => QueryRecorder::DEFAULT_FIND_ORIGIN_THRESHOLD,
+            ],
+            CollectType::Transactions->value => [
+                'with_traces' => TransactionRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => TransactionRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => TransactionRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+            ],
+            CollectType::Views->value => [
+                'with_traces' => ViewRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => ViewRecorder::DEFAULT_WITH_ERRORS,
+            ],
+            CollectType::Filesystem->value => [
+                'with_traces' => FilesystemRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => FilesystemRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => FilesystemRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+                'track_all_disks' => FilesystemRecorder::DEFAULT_TRACK_ALL_DISKS,
+            ],
+            CollectType::ExternalHttp->value => [
+                'with_traces' => ExternalHttpRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => ExternalHttpRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => ExternalHttpRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+            ],
+            CollectType::Glows->value => [
+                'with_traces' => GlowRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => GlowRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => GlowRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+            ],
         ];
     }
 
-    public static function defaultRecorders(): array
-    {
-        return [
-            RoutingRecorder::class => [],
-            CommandRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 10,
-            ],
-            CacheRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-                'operations' => [CacheOperation::Get, CacheOperation::Set, CacheOperation::Forget],
-            ],
-            DumpRecorder::class => [
-                'trace' => false,
-                'report' => true,
-                'max_reported' => 25,
-                'find_dump_origin' => true,
-            ],
-            GlowRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-            ],
-            QueueRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-            ],
-            JobRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-                'max_chained_job_reporting_depth' => 2,
-            ],
-            FilesystemRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-                'track_all_disks' => true,
-            ],
-            ExternalHttpRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-            ],
-            LogRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-            ],
-            QueryRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-                'include_bindings' => true,
-                'find_origin' => true,
-                'find_origin_threshold' => TimeHelper::milliseconds(700),
-            ],
-            TransactionRecorder::class => [
-                'trace' => true,
-                'report' => true,
-                'max_reported' => 100,
-            ],
-//        RedisCommandRecorder::class => [
-//            'trace' => true,
-//            'report' => true,
-//            'max_reported' => 100,
-//        ],
-            ViewRecorder::class => [
-                'trace' => true,
-            ],
-        ];
-    }
 
     public static function defaultSolutionProviders(): array
     {
@@ -270,18 +269,12 @@ class FlareConfig extends BaseFlareConfig
     {
         return parent::useDefaults()
             ->sendLogsAsEvents()
-            ->addLivewireComponents()
-            ->addLaravelInfo()
-            ->addLaravelContext()
-            ->addExceptionInfo()
-            ->addJobInfo()
-            ->addJobs()
-            ->addExceptionHandledStatus()
-            ->addCacheEvents()
-            ->addLogs()
-            ->addQueries()
-            ->addCommands()
-            ->addTransactions();
+            ->collectLivewireComponents()
+            ->collectLaravelInfo()
+            ->collectLaravelContext()
+            ->collectExceptionContext()
+            ->collectJobs()
+            ->collectHandledExceptions();
     }
 
     public function sendLogsAsEvents(
@@ -294,181 +287,94 @@ class FlareConfig extends BaseFlareConfig
         return $this;
     }
 
-    public function addRequestInfo(
-        string $middleware = AddRequestInformation::class,
-    ): static {
-        parent::addRequestInfo(
-            middleware: $middleware,
-        );
 
-        return $this;
-    }
-
-    /**
-     * @param class-string<FlareMiddleware> $middleware
-     */
-    public function addLivewireComponents(
-        bool $includeLivewireComponents = true,
-        string $middleware = AddRequestInformation::class
-    ): static {
-        if (! array_key_exists($middleware, $this->middleware)) {
-            $this->middleware[$middleware] = [];
-        }
-
-        $this->middleware[$middleware] += [
-            'include_livewire_components' => $includeLivewireComponents,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * @param class-string<FlareMiddleware> $middleware
-     */
-    public function addConsoleInfo(string $middleware = AddConsoleInformation::class): static
+    public function collectLivewireComponents(array $extra = []): static
     {
-        parent::addConsoleInfo(middleware: $middleware);
-
-        return $this;
+        return $this->addCollect(LaravelCollectType::LivewireComponents, [
+            'include_livewire_components' => true,
+            ...$extra,
+        ]);
     }
 
-    /**
-     * @param class-string<FlareMiddleware> $middleware
-     */
-    public function addLaravelInfo(
-        string $middleware = AddLaravelInformation::class
-    ): static {
-        $this->middleware[$middleware] = [];
-
-        return $this;
+    public function ignoreLivewireComponents(array $extra = []): static
+    {
+        return $this->addCollect(LaravelCollectType::LivewireComponents, [
+            'include_livewire_components' => false,
+            ...$extra,
+        ]); // Explicitly ignore livewire components
     }
 
-    /**
-     * @param class-string<FlareMiddleware> $middleware
-     */
-    public function addLaravelContext(
-        string $middleware = AddLaravelContext::class
-    ): static {
-        $this->middleware[$middleware] = [];
-
-        return $this;
+    public function collectLaravelInfo(array $extra = []): static
+    {
+        return $this->addCollect(LaravelCollectType::LaravelInfo, $extra);
     }
 
-    /**
-     * @param class-string<FlareMiddleware> $middleware
-     */
-    public function addExceptionInfo(
-        string $middleware = AddExceptionInformation::class
-    ): static {
-        $this->middleware[$middleware] = [];
-
-        return $this;
+    public function ignoreLaravelInfo(): static
+    {
+        return $this->ignoreCollect(LaravelCollectType::LaravelInfo);
     }
 
-    /**
-     * @param class-string<FlareMiddleware> $middleware
-     */
-    public function addJobInfo(
-        string $middleware = AddJobInformation::class
-    ): static {
-        $this->middleware[$middleware] = [];
-
-        return $this;
+    public function collectLaravelContext(array $extra = []): static
+    {
+        return $this->addCollect(LaravelCollectType::LaravelContext, $extra);
     }
 
-    /**
-     * @param class-string<Recorder> $recorder
-     */
-    public function addJobs(
-        bool $trace = true,
-        bool $report = true,
-        ?int $maxReported = 10,
-        int $maxChainedJobReportingDepth = 2,
-        string $recorder = JobRecorder::class
+    public function ignoreLaravelContext(): static
+    {
+        return $this->ignoreCollect(LaravelCollectType::LaravelContext);
+    }
+
+    public function collectExceptionContext(array $extra = []): static
+    {
+        return $this->addCollect(LaravelCollectType::ExceptionContext, $extra);
+    }
+
+    public function ignoreExceptionContext(): static
+    {
+        return $this->ignoreCollect(LaravelCollectType::ExceptionContext);
+    }
+
+    public function collectHandledExceptions(array $extra = []): static
+    {
+        return $this->addCollect(LaravelCollectType::HandledExceptions, $extra);
+    }
+
+    public function ignoreHandledExceptions(): static
+    {
+        return  $this->ignoreCollect(LaravelCollectType::HandledExceptions);
+    }
+
+    public function collectJobs(
+        bool $withTraces = JobRecorder::DEFAULT_WITH_TRACES,
+        bool $withErrors = JobRecorder::DEFAULT_WITH_ERRORS,
+        ?int $maxItemsWithErrors = JobRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+        int $maxChainedJobReportingDepth = JobRecorder::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH
     ): static {
-        $this->recorders[$recorder] = [
-            'trace' => $trace,
-            'report' => $report,
-            'max_reported' => $maxReported,
+        return $this->addCollect(CollectType::Jobs, [
+            'with_traces' => $withTraces,
+            'with_errors' => $withErrors,
+            'max_items_with_errors' => $maxItemsWithErrors,
             'max_chained_job_reporting_depth' => $maxChainedJobReportingDepth,
-        ];
-
-        return $this;
+        ]);
     }
 
-    /**
-     * @param class-string<FlareMiddleware> $middleware
-     */
-    public function addExceptionHandledStatus(
-        string $middleware = AddExceptionHandledStatus::class
+    public function ignoreJobs(): static
+    {
+        return $this->ignoreCollect(CollectType::Jobs);
+    }
+
+    public function collectFilesystemOperations(
+        bool $withTraces = FilesystemRecorder::DEFAULT_WITH_TRACES,
+        bool $withErrors = FilesystemRecorder::DEFAULT_WITH_ERRORS,
+        ?int $maxItemsWithErrors = FilesystemRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+        array $extra = [
+            'track_all_disks' => FilesystemRecorder::DEFAULT_TRACK_ALL_DISKS,
+        ]
     ): static {
-        $this->middleware[$middleware] = [];
-
-        return $this;
+        return parent::collectFilesystemOperations(...func_get_args());
     }
 
-    /**
-     * @param class-string<Recorder> $recorder
-     */
-    public function addCacheEvents(
-        bool $trace = true,
-        bool $report = true,
-        ?int $maxReported = 100,
-        array $operations = [CacheOperation::Get, CacheOperation::Set, CacheOperation::Forget],
-        string $recorder = CacheRecorder::class,
-    ): static {
-        parent::addCacheEvents($trace, $report, $maxReported, $operations, $recorder);
-
-        return $this;
-    }
-
-    /**
-     * @param class-string<Recorder> $recorder
-     */
-    public function addLogs(
-        bool $trace = true,
-        bool $report = true,
-        ?int $maxReported = 10,
-        string $recorder = LogRecorder::class
-    ): static {
-        parent::addLogs($trace, $report, $maxReported, $recorder);
-
-        return $this;
-    }
-
-    /**
-     * @param class-string<Recorder> $recorder
-     */
-    public function addQueries(
-        bool $trace = true,
-        bool $report = true,
-        ?int $maxReported = 100,
-        bool $includeBindings = true,
-        bool $findOrigin = true,
-        ?int $findOriginThreshold = 300_000,
-        string $recorder = QueryRecorder::class,
-    ): static {
-        parent::addQueries($trace, $report, $maxReported, $includeBindings, $findOrigin, $findOriginThreshold, $recorder);
-
-        return $this;
-    }
-
-    /**
-     * @param class-string<Recorder> $recorder
-     */
-    public function addTransactions(
-        bool $trace = true,
-        bool $report = true,
-        ?int $maxReported = 100,
-        string $recorder = TransactionRecorder::class
-    ): static {
-        parent::addTransactions($trace, $report, $maxReported, $recorder);
-
-        return $this;
-    }
-
-    public function addStackFrameArguments(
-        bool $withStackFrameArguments = true,
+    public function collectStackFrameArguments(
         BackTraceArgumentReducers|array|string|ArgumentReducer|null $argumentReducers = null,
         bool $forcePHPIniSetting = true
     ): static {
@@ -476,24 +382,9 @@ class FlareConfig extends BaseFlareConfig
             $argumentReducers = ArgumentReducers::default();
         }
 
-        return parent::addStackFrameArguments(
-            $withStackFrameArguments,
+        return parent::collectStackFrameArguments(
             $argumentReducers,
             $forcePHPIniSetting
         );
-    }
-
-    /**
-     * @param class-string<Recorder> $recorder
-     */
-    public function addCommands(
-        bool $trace = true,
-        bool $report = true,
-        ?int $maxReported = 10,
-        string $recorder = CommandRecorder::class
-    ): static {
-        parent::addCommands($trace, $report, $maxReported, $recorder);
-
-        return $this;
     }
 }
