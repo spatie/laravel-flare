@@ -56,3 +56,19 @@ it('will only add arrays as user provided context', function () {
 
     expect($context)->not()->toHaveKey('context');
 });
+
+it('accepts strings in report', function() {
+    $message = 'hello world';
+
+    $report = Flare::report($message);
+
+    expect($report->getMessage())->toBe($message);
+});
+
+it('accepts strings in reportHandled', function() {
+    $message = 'hello world';
+
+    $report = Flare::reportHandled($message);
+
+    expect($report->getMessage())->toBe($message);
+});
