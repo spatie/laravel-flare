@@ -7,6 +7,7 @@ use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
+use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Enums\SamplingType;
@@ -22,8 +23,8 @@ use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 
 class JobRecorder  extends Recorder implements SpansRecorder
 {
-    /** @use RecordsPendingSpans<Span> */
-    use RecordsPendingSpans;
+    /** @use RecordsSpans<Span> */
+    use RecordsSpans;
 
     protected int $maxChainedJobReportingDepth = 0;
 

@@ -7,14 +7,16 @@ use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Psr\Http\Message\StreamInterface;
 use Spatie\FlareClient\Concerns\PrefersHumanFormats;
-use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\FlareClient\Enums\FilesystemOperation;
+use Spatie\FlareClient\Spans\Span;
+use Spatie\LaravelFlare\Enums\LaravelFilesystemOperation;
 use Spatie\LaravelFlare\Facades\Flare;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
+use Spatie\LaravelFlare\Support\Humanizer;
 use Throwable;
 
 trait WrapsFileSystem
 {
-    use PrefersHumanFormats;
-
     /**
      * Get the full path to the file that exists at the given relative path.
      *
@@ -24,16 +26,13 @@ trait WrapsFileSystem
      */
     public function path($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
+            fn(FilesystemRecorder $recorder) => $recorder->recordPath($path),
+            fn(mixed $return) => [
+                'filesystem.full_path' => $return,
             ],
-            fn ($return) => ['laravel.filesystem.full_path' => $return]
         );
     }
 
@@ -46,16 +45,13 @@ trait WrapsFileSystem
      */
     public function exists($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
+            fn(FilesystemRecorder $recorder) => $recorder->recordExists($path ?? '/'),
+            fn(mixed $return) => [
+                'filesystem.exists' => $return,
             ],
-            fn ($return) => ['laravel.filesystem.exists' => $return]
         );
     }
 
@@ -68,16 +64,13 @@ trait WrapsFileSystem
      */
     public function get($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
+            fn(FilesystemRecorder $recorder) => $recorder->recordGet($path ?? '/'),
+            fn(mixed $file) => [
+                'filesystem.contents.size' => Humanizer::contentSize($file),
             ],
-            fn ($return) => ['laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($return))]
         );
     }
 
@@ -90,15 +83,12 @@ trait WrapsFileSystem
      */
     public function readStream($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ]
+            fn(FilesystemRecorder $recorder) => $recorder->recordGet($path, [
+                'filesystem.is_stream' => true,
+            ]),
         );
     }
 
@@ -113,17 +103,13 @@ trait WrapsFileSystem
      */
     public function put($path, $contents, $options = [])
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($contents)),
+            fn(FilesystemRecorder $recorder) => $recorder->recordPut($path, $contents),
+            fn(mixed $return) => [
+                'filesystem.operation.success' => $return,
             ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
         );
     }
 
@@ -138,17 +124,14 @@ trait WrapsFileSystem
      */
     public function putFile($path, $file = null, $options = [])
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($file)),
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordPut(
+                $path,
+                $file,
+            ),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -164,18 +147,17 @@ trait WrapsFileSystem
      */
     public function putFileAs($path, $file, $name = null, $options = [])
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.as_file_name' => $name,
-                'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($file)),
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordPut(
+                $path,
+                $file,
+                [
+                    'filesystem.as_path' => Humanizer::filesystemPaths($name),
+                ]
+            ),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -190,17 +172,17 @@ trait WrapsFileSystem
      */
     public function writeStream($path, $resource, array $options = [])
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->getSizeOfContents($resource),
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordPut(
+                $path,
+                $resource,
+                [
+                    'filesystem.is_stream' => true,
+                ]
+            ),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -213,16 +195,11 @@ trait WrapsFileSystem
      */
     public function getVisibility($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ],
-            fn ($return) => ['laravel.filesystem.visibility' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordGetVisibility($path,),
+            fn ($return) => ['filesystem.visibility' => $return]
         );
     }
 
@@ -236,17 +213,11 @@ trait WrapsFileSystem
      */
     public function setVisibility($path, $visibility)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.visibility' => $visibility,
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordSetVisibility($path, $visibility),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -261,17 +232,11 @@ trait WrapsFileSystem
      */
     public function prepend($path, $data, $separator = PHP_EOL)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($data)),
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordPrepend($path, $data),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -286,17 +251,11 @@ trait WrapsFileSystem
      */
     public function append($path, $data, $separator = PHP_EOL)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($data)),
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordAppend($path, $data),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -309,16 +268,11 @@ trait WrapsFileSystem
      */
     public function delete($paths)
     {
-        $paths = $this->humanizeFilesystemEntries($paths);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $paths,
-            [
-                'laravel.filesystem.paths' => $paths,
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordDelete($paths),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -332,18 +286,11 @@ trait WrapsFileSystem
      */
     public function copy($from, $to)
     {
-        $from = $this->humanizeFilesystemEntries($from);
-        $to = $this->humanizeFilesystemEntries($to);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            "from \"{$from}\" to \"{$to}\"",
-            [
-                'laravel.filesystem.from_path' => $from,
-                'laravel.filesystem.to_path' => $to,
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordCopy($from, $to),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -357,18 +304,11 @@ trait WrapsFileSystem
      */
     public function move($from, $to)
     {
-        $from = $this->humanizeFilesystemEntries($from);
-        $to = $this->humanizeFilesystemEntries($to);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            "from \"{$from}\" to \"{$to}\"",
-            [
-                'laravel.filesystem.from_path' => $from,
-                'laravel.filesystem.to_path' => $to,
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordMove($from, $to),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -381,16 +321,11 @@ trait WrapsFileSystem
      */
     public function size($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ],
-            fn ($return) => ['laravel.filesystem.contents.size' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordSize($path),
+            fn ($return) => ['filesystem.contents.size' => Humanizer::contentSize($return)]
         );
     }
 
@@ -403,16 +338,11 @@ trait WrapsFileSystem
      */
     public function lastModified($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ],
-            fn ($return) => ['laravel.filesystem.last_modified' => $this->humanizeUnixTime($return)]
+            fn(FilesystemRecorder $recorder) => $recorder->recordLastModified($path),
+            fn ($return) => ['filesystem.last_modified' => Humanizer::unixTime($return)]
         );
     }
 
@@ -426,17 +356,11 @@ trait WrapsFileSystem
      */
     public function files($directory = null, $recursive = false)
     {
-        $directory = $this->humanizeFilesystemEntries($directory);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $directory,
-            [
-                'laravel.filesystem.path' => $directory,
-                'laravel.filesystem.recursive' => $recursive,
-            ],
-            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'files')]
+            fn(FilesystemRecorder $recorder) => $recorder->recordFiles($directory  ?? '/', $recursive),
+            fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'files')]
         );
     }
 
@@ -449,16 +373,11 @@ trait WrapsFileSystem
      */
     public function allFiles($directory = null)
     {
-        $directory = $this->humanizeFilesystemEntries($directory);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $directory,
-            [
-                'laravel.filesystem.path' => $directory,
-            ],
-            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'files')]
+            fn(FilesystemRecorder $recorder) => $recorder->recordFiles($directory  ?? '/', true),
+            fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'files')]
         );
     }
 
@@ -472,17 +391,11 @@ trait WrapsFileSystem
      */
     public function directories($directory = null, $recursive = false)
     {
-        $directory = $this->humanizeFilesystemEntries($directory);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $directory,
-            [
-                'laravel.filesystem.path' => $directory,
-                'laravel.filesystem.recursive' => $recursive,
-            ],
-            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'directories')]
+            fn(FilesystemRecorder $recorder) => $recorder->recordDirectories($directory ?? '/', $recursive),
+            fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'directories')]
         );
     }
 
@@ -495,16 +408,11 @@ trait WrapsFileSystem
      */
     public function allDirectories($directory = null)
     {
-        $directory = $this->humanizeFilesystemEntries($directory);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $directory,
-            [
-                'laravel.filesystem.path' => $directory,
-            ],
-            fn ($return) => ['laravel.filesystem.paths' => $this->humanizeFilesystemEntries($return, 'directories')]
+            fn(FilesystemRecorder $recorder) => $recorder->recordDirectories($directory  ?? '/', true),
+            fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'directories')]
         );
     }
 
@@ -517,16 +425,11 @@ trait WrapsFileSystem
      */
     public function makeDirectory($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordMakeDirectory($path),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
 
@@ -539,106 +442,33 @@ trait WrapsFileSystem
      */
     public function deleteDirectory($directory)
     {
-        $directory = $this->humanizeFilesystemEntries($directory);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $directory,
-            [
-                'laravel.filesystem.path' => $directory,
-            ],
-            fn ($return) => ['laravel.filesystem.success' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordDeleteDirectory($directory),
+            fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
-
     /**
-     * @param array<string, mixed> $attributes
-     * @param Closure(mixed):array<string, mixed>|null $afterAttributes
+     * @param Closure(FileSystemRecorder):(Span|null) $start
+     * @param Closure(mixed):array<string, mixed>|null $end
      */
     protected function wrapCall(
         string $method,
         array $arguments,
-        string $description,
-        array $attributes = [],
-        ?Closure $afterAttributes = null
+        Closure $start,
+        ?Closure $end = null,
     ): mixed {
-        $attributes = array_merge($attributes, [
-            'flare.span.type' => SpanType::Filesystem,
-            'laravel.filesystem.operation' => $method,
-        ]);
+        $recorder = Flare::filesystem();
 
-        Flare::filesystem()->recordOperationStart("{$method} : {$description}", $attributes);
+        $start($recorder);
 
         $returned = $this->filesystem->{$method}(...$arguments);
 
-        $attributes = $afterAttributes !== null ? $afterAttributes($returned) : null;
-
-        Flare::filesystem()->recordOperationEnd($attributes);
+        $recorder->recordOperationEnd(
+            $end !== null ? $end($returned) : []
+        );
 
         return $returned;
-    }
-
-    /**
-     * @param StreamInterface|File|UploadedFile|string|resource|null|array $contents
-     */
-    protected function getSizeOfContents(
-        mixed $contents
-    ): ?int {
-        if ($contents === null) {
-            return 0;
-        }
-
-        if ($contents instanceof StreamInterface || $contents instanceof UploadedFile || $contents instanceof File) {
-            $size = $contents->getSize();
-
-            return is_bool($size) ? null : $size;
-        }
-
-        if (is_string($contents)) {
-            return strlen($contents);
-        }
-
-        if (is_resource($contents)) {
-            return null;
-        }
-
-        if (is_array($contents)) {
-            try {
-                $this->getSizeOfContents(json_encode($contents, flags: JSON_THROW_ON_ERROR));
-            } catch (Throwable) {
-                return null;
-            }
-        }
-
-        return null;
-    }
-
-    protected function humanizeFilesystemEntries(array|string|null $paths, string $type = 'paths'): string
-    {
-        if (is_string($paths)) {
-            return $paths;
-        }
-
-        if (is_null($paths)) {
-            return '/';
-        }
-
-        $paths = array_map(fn ($path) => $path === null ? '/' : $path, $paths);
-
-        $count = count($paths);
-
-        if ($count === 1) {
-            return $paths[0];
-        }
-
-        if ($count <= 3) {
-            return implode(', ', $paths);
-        }
-
-        $firstThreePaths = array_slice($paths, 0, 3);
-        $remainingCount = $count - 3;
-
-        return implode(', ', $firstThreePaths)." and +{$remainingCount} {$type}";
     }
 }

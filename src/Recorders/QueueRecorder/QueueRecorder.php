@@ -7,6 +7,7 @@ use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
+use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Spans\Span;
@@ -18,8 +19,8 @@ use Spatie\LaravelFlare\Enums\SpanType;
 
 class QueueRecorder implements SpansRecorder
 {
-    /** @use RecordsPendingSpans<Span> */
-    use RecordsPendingSpans;
+    /** @use RecordsSpans<Span> */
+    use RecordsSpans;
 
     public function __construct(
         protected Tracer $tracer,

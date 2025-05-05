@@ -35,7 +35,6 @@ function canRunOpenAiTest(): bool
     return true;
 }
 
-
 /**
  * @param ?Closure(FlareConfig):void $closure
  */

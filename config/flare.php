@@ -1,55 +1,7 @@
 <?php
 
-use Spatie\ErrorSolutions\SolutionProviders\BadMethodCallSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\DefaultDbNameSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\GenericLaravelExceptionSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\IncorrectValetDbCredentialsSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\InvalidRouteActionSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingAppKeySolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingColumnSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingImportSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingLivewireComponentSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingMixManifestSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingViteManifestSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\OpenAiSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\RunningLaravelDuskInProductionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\SailNetworkSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\TableNotFoundSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UndefinedViewVariableSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMariadbCollationSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
-use Spatie\FlareClient\Enums\CacheOperation;
-use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
-use Spatie\FlareClient\FlareMiddleware\AddGitInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
-use Spatie\FlareClient\FlareMiddleware\AddSolutions;
-use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
-use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
-use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
-use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
-use Spatie\LaravelFlare\FlareMiddleware\AddExceptionContextInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
-use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation as AddViewInformation;
-use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
-use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
-use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
-use Spatie\LaravelFlare\Recorders\HttpRecorder\ExternalHttpRecorder;
-use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
-use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
-use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
-use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
-use Spatie\LaravelFlare\Recorders\RedisCommandRecorder\RedisCommandRecorder;
-use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
-use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
-use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
+use Spatie\LaravelFlare\FlareConfig;
 
 return [
     /*
@@ -89,9 +41,10 @@ return [
     |
     */
 
-    'collects' => [
-        ...FlareConfig::defaultCollectors()
-    ],
+    'collects' => FlareConfig::defaultCollects(
+        ignore: [],
+        extra: []
+    ),
 
     /*
     |--------------------------------------------------------------------------
@@ -159,7 +112,7 @@ return [
     */
 
     'solution_providers' => [
-       ...FlareConfig::defaultSolutionProviders(),
+        ...FlareConfig::defaultSolutionProviders(),
     ],
 
     /*

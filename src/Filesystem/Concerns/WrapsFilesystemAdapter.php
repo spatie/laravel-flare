@@ -3,6 +3,10 @@
 namespace Spatie\LaravelFlare\Filesystem\Concerns;
 
 use League\Flysystem\UnableToProvideChecksum;
+use Spatie\FlareClient\Enums\FilesystemOperation;
+use Spatie\FlareClient\Support\Humanizer;
+use Spatie\LaravelFlare\Enums\LaravelFilesystemOperation;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 
 trait WrapsFilesystemAdapter
 {
@@ -18,16 +22,16 @@ trait WrapsFilesystemAdapter
      */
     public function assertExists($path, $content = null)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.contents.size' => $this->humanFilesize($this->getSizeOfContents($content)),
-            ]
+            fn(FilesystemRecorder $recorder) => $recorder->recordOperationStart(
+                operation: LaravelFilesystemOperation::AssertExists->value,
+                attributes: [
+                    'filesystem.path' => Humanizer::filesystemPaths($path),
+                    'filesystem.contents.size' => Humanizer::contentSize($content),
+                ]
+            )
         );
     }
 
@@ -40,15 +44,15 @@ trait WrapsFilesystemAdapter
      */
     public function assertMissing($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ]
+            fn(FilesystemRecorder $recorder) => $recorder->recordOperationStart(
+                operation:LaravelFilesystemOperation::AssertMissing->value,
+                attributes:[
+                    'filesystem.path' => Humanizer::filesystemPaths($path),
+                ]
+            ),
         );
     }
 
@@ -61,15 +65,15 @@ trait WrapsFilesystemAdapter
      */
     public function assertDirectoryEmpty($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ]
+            fn(FilesystemRecorder $recorder) => $recorder->recordOperationStart(
+                operation:LaravelFilesystemOperation::AssertDirectoryEmpty->value,
+                attributes:[
+                    'filesystem.path' => Humanizer::filesystemPaths($path),
+                ]
+            ),
         );
     }
 
@@ -82,16 +86,11 @@ trait WrapsFilesystemAdapter
      */
     public function checksum(string $path, array $options = [])
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ],
-            fn ($return) => ['laravel.filesystem.checksum' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordChecksum($path),
+            fn ($return) => ['filesystem.checksum' => $return]
         );
     }
 
@@ -104,16 +103,11 @@ trait WrapsFilesystemAdapter
      */
     public function mimeType($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ],
-            fn ($return) => ['laravel.filesystem.mime_type' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordMimeType($path),
+            fn ($return) => ['filesystem.mime_type' => $return]
         );
     }
 
@@ -130,17 +124,14 @@ trait WrapsFilesystemAdapter
      */
     public function temporaryUrl($path, $expiration, array $options = [])
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.expiration' => $expiration,
-            ],
-            fn ($return) => ['laravel.filesystem.url' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordTemporaryUrl(
+                $path,
+                $expiration,
+            ),
+            fn ($return) => ['filesystem.url' => $return]
         );
     }
 
@@ -157,16 +148,13 @@ trait WrapsFilesystemAdapter
      */
     public function temporaryUploadUrl($path, $expiration, array $options = [])
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-                'laravel.filesystem.expiration' => $expiration,
-            ]
+            fn(FilesystemRecorder $recorder) => $recorder->recordTemporaryUrl(
+                $path,
+                $expiration,
+            ),
         );
     }
 }

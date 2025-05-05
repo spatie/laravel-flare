@@ -2,6 +2,9 @@
 
 namespace Spatie\LaravelFlare\Filesystem\Concerns;
 
+use Spatie\FlareClient\Enums\FilesystemOperation;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
+
 trait WrapsCloudFilesystem
 {
     use WrapsFileSystem;
@@ -15,16 +18,11 @@ trait WrapsCloudFilesystem
      */
     public function url($path)
     {
-        $path = $this->humanizeFilesystemEntries($path);
-
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            $path,
-            [
-                'laravel.filesystem.path' => $path,
-            ],
-            fn ($return) => ['laravel.filesystem.url' => $return]
+            fn(FilesystemRecorder $recorder) => $recorder->recordUrl($path),
+            fn ($return) => ['laravel.url' => $return]
         );
     }
 }

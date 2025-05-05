@@ -9,6 +9,7 @@ use Illuminate\View\Factory;
 use Illuminate\View\View;
 use Spatie\Backtrace\Arguments\ArgumentReducers;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
+use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Recorders\ViewRecorder\ViewRecorder as BaseViewRecorder;
 use Spatie\FlareClient\Spans\Span;
@@ -17,9 +18,6 @@ use Spatie\FlareClient\Tracer;
 
 class ViewRecorder extends BaseViewRecorder
 {
-    /** @use RecordsPendingSpans<Span> */
-    use RecordsPendingSpans;
-
     public function __construct(
         Tracer $tracer,
         protected Application $app,

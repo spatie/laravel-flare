@@ -1,5 +1,7 @@
 <?php
 
+use Spatie\LaravelFlare\FlareConfig;
+
 return [
     /*
           |
@@ -41,6 +43,21 @@ return [
               ],
               'client_ips' => false,
           ],
+
+          /*
+          |--------------------------------------------------------------------------
+          | Collects
+          |--------------------------------------------------------------------------
+          |
+          | Flare will collect a lot of information about your application. You can
+          | disable some of the collectors here, configure them or add your own.
+          |
+          */
+
+          'collects' => FlareConfig::defaultCollects
+              ignore: [],
+              extra: []
+          ),
 
           /*
           |--------------------------------------------------------------------------

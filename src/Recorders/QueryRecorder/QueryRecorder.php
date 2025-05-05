@@ -6,6 +6,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\Events\QueryExecuted;
 use Spatie\FlareClient\Recorders\QueryRecorder\QueryRecorder as BaseQueryRecorder;
 use Spatie\FlareClient\Recorders\QueryRecorder\QuerySpan;
+use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\FlareClient\Tracer;
@@ -26,7 +27,7 @@ class QueryRecorder extends BaseQueryRecorder
         $this->dispatcher->listen(QueryExecuted::class, [$this, 'recordEvent']);
     }
 
-    public function recordEvent(QueryExecuted $event): ?QuerySpan
+    public function recordEvent(QueryExecuted $event): ?Span
     {
         return $this->record(
             sql: $event->sql,

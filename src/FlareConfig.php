@@ -2,6 +2,7 @@
 
 namespace Spatie\LaravelFlare;
 
+use Illuminate\Support\Arr;
 use Monolog\Level;
 use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
 use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
@@ -36,35 +37,22 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionPro
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
-use Spatie\FlareClient\Contracts\Recorders\Recorder;
+use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
-use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
-use Spatie\FlareClient\Recorders\DumpRecorder\DumpRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
-use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddExceptionContextInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
-use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
-use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation as AddViewInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
-use Spatie\LaravelFlare\Recorders\HttpRecorder\ExternalHttpRecorder;
+use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
-use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
-use Spatie\LaravelFlare\Recorders\RedisCommandRecorder\RedisCommandRecorder;
-use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
 use Spatie\LaravelFlare\Support\CollectsResolver;
@@ -87,16 +75,16 @@ class FlareConfig extends BaseFlareConfig
         $collects = [];
 
         foreach (config('flare.collects') as $type => $options) {
-             $collectType = CollectType::tryFrom($type) ?? LaravelCollectType::tryFrom($type) ?? null;
+            $collectType = CollectType::tryFrom($type) ?? LaravelCollectType::tryFrom($type) ?? null;
 
-             if($type === null){
-                 continue;
-             }
+            if ($type === null) {
+                continue;
+            }
 
-             $collects[$collectType->value] = [
-                 'type' => $collectType,
-                'options' => $options
-             ];
+            $collects[$collectType->value] = [
+                'type' => $collectType,
+                'options' => $options,
+            ];
         }
 
         $config = new self(
@@ -144,11 +132,14 @@ class FlareConfig extends BaseFlareConfig
     }
 
     /**
-     * @return array
+     * @param array<FlareCollectType> $ignore ,
+     * @param array<string, array<string, mixed>> $extra
      */
-    public static function defaultCollectors(): array
-    {
-        return [
+    public static function defaultCollects(
+        array $ignore = [],
+        array $extra = []
+    ): array {
+        $collects = [
             CollectType::Requests->value => [],
             LaravelCollectType::LivewireComponents->value => [],
             CollectType::ServerInfo->value => [],
@@ -214,6 +205,16 @@ class FlareConfig extends BaseFlareConfig
                 'max_items_with_errors' => GlowRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
             ],
         ];
+
+        if (count($ignore) > 0) {
+            $collects = Arr::except($collects, array_map(fn (FlareCollectType $type) => $type->value, $ignore));
+        }
+
+        if (count($extra) > 0) {
+            return array_merge($collects, $extra);
+        }
+
+        return $collects;
     }
 
 
@@ -341,7 +342,7 @@ class FlareConfig extends BaseFlareConfig
 
     public function ignoreHandledExceptions(): static
     {
-        return  $this->ignoreCollect(LaravelCollectType::HandledExceptions);
+        return $this->ignoreCollect(LaravelCollectType::HandledExceptions);
     }
 
     public function collectJobs(

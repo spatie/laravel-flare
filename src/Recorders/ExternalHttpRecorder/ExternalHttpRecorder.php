@@ -1,12 +1,13 @@
 <?php
 
-namespace Spatie\LaravelFlare\Recorders\HttpRecorder;
+namespace Spatie\LaravelFlare\Recorders\ExternalHttpRecorder;
 
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Client\Events\ConnectionFailed;
 use Illuminate\Http\Client\Events\RequestSending;
 use Illuminate\Http\Client\Events\ResponseReceived;
 use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
+use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Recorders\ExternalHttpRecorder\ExternalHttpRecorder as BaseExternalHttpRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
@@ -15,9 +16,6 @@ use Spatie\FlareClient\Tracer;
 
 class ExternalHttpRecorder extends BaseExternalHttpRecorder
 {
-    /** @use RecordsPendingSpans<Span> */
-    use RecordsPendingSpans;
-
     public function __construct(
         Tracer $tracer,
         BackTracer $backTracer,
