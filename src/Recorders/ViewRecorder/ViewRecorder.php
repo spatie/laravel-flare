@@ -49,23 +49,9 @@ class ViewRecorder extends BaseViewRecorder
         ?string $file = null,
         array $attributes = []
     ): ?Span {
-        return $this->startSpan(fn () => Span::build(
-            $this->tracer->currentTraceId(),
-            $this->tracer->currentSpanId(),
-            "View - {$viewName}",
-            attributes: [
-                'flare.span_type' => SpanType::View,
-                'view.name' => $viewName,
-                'view.loop' => $this->resolveLoop($data),
-                'view.file' => $file,
-                ...$attributes,
-            ]
-        ));
-    }
-
-    public function recordRendered(): ?Span
-    {
-        return $this->endSpan();
+        return parent::recordRendering($viewName, [], $file, [
+            'view.loop' => $this->resolveLoop($data),
+        ]);
     }
 
     protected function wrapEnginesInEngineResolver(EngineResolver $engineResolver): void

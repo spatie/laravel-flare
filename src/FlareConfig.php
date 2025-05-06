@@ -68,10 +68,6 @@ class FlareConfig extends BaseFlareConfig
 
     public static function fromLaravelConfig(): self
     {
-        $argumentReducers = config()->has('flare.argument_reducers') ? ArgumentReducers::create(
-            config('flare.argument_reducers')
-        ) : ArgumentReducers::default();
-
         $collects = [];
 
         foreach (config('flare.collects') as $type => $options) {
@@ -97,12 +93,8 @@ class FlareConfig extends BaseFlareConfig
             applicationPath: base_path(),
             applicationName: config('app.name'),
             applicationStage: app()->environment(),
-            argumentReducers: $argumentReducers,
-            withStackFrameArguments: config('flare.with_stack_frame_arguments'),
-            forcePHPStackFrameArgumentsIniSetting: config('flare.force_stack_frame_arguments_ini_setting'),
             sender: config('flare.sender.class'),
             senderConfig: config('flare.sender.config', []),
-            solutionsProviders: config('flare.solution_providers'),
             trace: config('flare.tracing.enabled'),
             sampler: config('flare.tracing.sampler.class'),
             samplerConfig: config('flare.tracing.sampler.config'),
@@ -142,9 +134,18 @@ class FlareConfig extends BaseFlareConfig
         $collects = [
             CollectType::Requests->value => [],
             LaravelCollectType::LivewireComponents->value => [],
-            CollectType::ServerInfo->value => [],
+            CollectType::ServerInfo->value => [
+                'host' => true,
+                'php' => true,
+                'os' => true,
+                'composer' => true,
+            ],
             CollectType::GitInfo->value => [],
-            CollectType::Solutions->value => [],
+            CollectType::Solutions->value => [
+                'solution_providers' => [
+                    ...FlareConfig::defaultSolutionProviders(),
+                ],
+            ],
             LaravelCollectType::LaravelInfo->value => [],
             LaravelCollectType::LaravelContext->value => [],
             LaravelCollectType::ExceptionContext->value => [],
@@ -204,6 +205,10 @@ class FlareConfig extends BaseFlareConfig
                 'with_errors' => GlowRecorder::DEFAULT_WITH_ERRORS,
                 'max_items_with_errors' => GlowRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
             ],
+            CollectType::StackFrameArguments->value => [
+                'argument_reducers' => static::defaultArgumentReducers(),
+                'force_php_ini_setting' => true,
+            ]
         ];
 
         if (count($ignore) > 0) {
@@ -221,12 +226,7 @@ class FlareConfig extends BaseFlareConfig
     public static function defaultSolutionProviders(): array
     {
         return [
-            // from spatie/ignition
-            BadMethodCallSolutionProvider::class,
-            MergeConflictSolutionProvider::class,
-            UndefinedPropertySolutionProvider::class,
-
-            // from spatie/laravel-flare
+            ...parent::defaultSolutionProviders(),
             IncorrectValetDbCredentialsSolutionProvider::class,
             MissingAppKeySolutionProvider::class,
             DefaultDbNameSolutionProvider::class,
@@ -252,14 +252,7 @@ class FlareConfig extends BaseFlareConfig
     public static function defaultArgumentReducers(): array
     {
         return [
-            BaseTypeArgumentReducer::class,
-            ArrayArgumentReducer::class,
-            StdClassArgumentReducer::class,
-            EnumArgumentReducer::class,
-            ClosureArgumentReducer::class,
-            DateTimeArgumentReducer::class,
-            DateTimeZoneArgumentReducer::class,
-            SymphonyRequestArgumentReducer::class,
+            ...parent::defaultArgumentReducers(),
             ModelArgumentReducer::class,
             CollectionArgumentReducer::class,
             StringableArgumentReducer::class,
@@ -373,19 +366,5 @@ class FlareConfig extends BaseFlareConfig
         ]
     ): static {
         return parent::collectFilesystemOperations(...func_get_args());
-    }
-
-    public function collectStackFrameArguments(
-        BackTraceArgumentReducers|array|string|ArgumentReducer|null $argumentReducers = null,
-        bool $forcePHPIniSetting = true
-    ): static {
-        if ($argumentReducers === null) {
-            $argumentReducers = ArgumentReducers::default();
-        }
-
-        return parent::collectStackFrameArguments(
-            $argumentReducers,
-            $forcePHPIniSetting
-        );
     }
 }

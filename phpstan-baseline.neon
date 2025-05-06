@@ -43,7 +43,7 @@ parameters:
 			path: src/FlareConfig.php
 
 		-
-			message: '#^Parameter \$collects of class Spatie\\LaravelFlare\\FlareConfig constructor expects array\<string, array\{type\: Spatie\\FlareClient\\Contracts\\FlareCollectType, ignored\: bool\|null, options\: array\}\>, array\<''application_info''\|''cache''\|''console''\|''database…''\|''dumps''\|''external_http''\|''filesystem''\|''git_info''\|''glows''\|''jobs''\|''laravel_context''\|''laravel_exception…''\|''laravel_handled…''\|''laravel_info''\|''laravel_livewire…''\|''logs''\|''notifications''\|''queries''\|''redis_commands''\|''requests''\|''server_info''\|''solutions''\|''throwables''\|''views'', array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType\|null, options\: mixed\}\> given\.$#'
+			message: '#^Parameter \$collects of class Spatie\\LaravelFlare\\FlareConfig constructor expects array\<string, array\{type\: Spatie\\FlareClient\\Contracts\\FlareCollectType, ignored\: bool\|null, options\: array\}\>, array\<''application_info''\|''cache''\|''console''\|''database…''\|''dumps''\|''external_http''\|''filesystem''\|''git_info''\|''glows''\|''jobs''\|''laravel_context''\|''laravel_exception…''\|''laravel_handled…''\|''laravel_info''\|''laravel_livewire…''\|''logs''\|''notifications''\|''queries''\|''redis_commands''\|''requests''\|''server_info''\|''solutions''\|''stack_frame…''\|''throwables''\|''views'', array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType\|null, options\: mixed\}\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/FlareConfig.php

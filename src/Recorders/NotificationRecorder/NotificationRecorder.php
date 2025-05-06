@@ -8,7 +8,7 @@ use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
-use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
+use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Spans\Span;
@@ -17,8 +17,8 @@ use Spatie\FlareClient\Tracer;
 
 class NotificationRecorder implements Recorder
 {
-    /** @use RecordsPendingSpans<Span> */
-    use RecordsPendingSpans;
+    /** @use RecordsSpans<Span> */
+    use RecordsSpans;
 
     public function __construct(
         protected Tracer $tracer,

@@ -54,7 +54,7 @@ return [
           |
           */
 
-          'collects' => FlareConfig::defaultCollects
+          'collects' => FlareConfig::defaultCollects(
               ignore: [],
               extra: []
           ),

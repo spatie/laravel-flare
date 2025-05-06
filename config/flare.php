@@ -103,20 +103,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Solution Providers
-    |--------------------------------------------------------------------------
-    |
-    | List of solution providers that should be loaded. You may specify additional
-    | providers as fully qualified class names.
-    |
-    */
-
-    'solution_providers' => [
-        ...FlareConfig::defaultSolutionProviders(),
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Report error levels
     |--------------------------------------------------------------------------
     | When reporting errors, you can specify which error levels should be
@@ -126,46 +112,6 @@ return [
 
     'report_error_levels' => null,
 
-
-    /*
-   |--------------------------------------------------------------------------
-   | Include arguments
-   |--------------------------------------------------------------------------
-   |
-   | Flare show you stack traces of exceptions with the arguments that were
-   | passed to each method. This feature can be disabled here.
-   |
-   */
-
-    'with_stack_frame_arguments' => true,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Force stack frame arguments ini setting
-    |--------------------------------------------------------------------------
-    |
-    | On some machines, the `zend.exception_ignore_args` ini setting is
-    | enabled by default making it impossible to get the arguments of stack
-    | frames. You can force this setting to be disabled here.
-    |
-    */
-
-    'force_stack_frame_arguments_ini_setting' => true,
-
-    /*
-   |--------------------------------------------------------------------------
-   | Argument reducers
-   |--------------------------------------------------------------------------
-   |
-   | Flare show you stack traces of exceptions with the arguments that were
-   | passed to each method. To make these variables more readable, you can
-   | specify a list of classes here which summarize the variables.
-   |
-   */
-
-    'argument_reducers' => [
-        ...FlareConfig::defaultArgumentReducers(),
-    ],
 
     /*
     |--------------------------------------------------------------------------
