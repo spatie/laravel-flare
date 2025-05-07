@@ -35,7 +35,7 @@ class NotificationRecorder implements Recorder
         return RecorderType::Notification;
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(NotificationSending::class, [$this, 'recordNotificationSending']);
         $this->dispatcher->listen(NotificationSent::class, [$this, 'recordNotificationSent']);

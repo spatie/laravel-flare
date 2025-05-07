@@ -29,7 +29,7 @@ class ViewRecorder extends BaseViewRecorder
         parent::__construct($tracer, $backTracer, $argumentReducers, $config);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         if ($this->withTraces === false) {
             return;

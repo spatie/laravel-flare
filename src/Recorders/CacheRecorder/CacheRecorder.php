@@ -22,7 +22,7 @@ class CacheRecorder extends BaseCacheRecorder
         parent::__construct($tracer, $backTracer, $config);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(CacheHit::class, fn (CacheHit $event) => $this->recordHit(
             $event->key,

@@ -22,7 +22,7 @@ class QueryRecorder extends BaseQueryRecorder
         parent::__construct($tracer, $backTracer, $config);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(QueryExecuted::class, [$this, 'recordEvent']);
     }

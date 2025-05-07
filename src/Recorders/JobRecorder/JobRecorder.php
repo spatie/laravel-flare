@@ -47,7 +47,7 @@ class JobRecorder  extends Recorder implements SpansRecorder
         return RecorderType::Job;
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(JobProcessing::class, [$this, 'recordProcessing']);
         $this->dispatcher->listen(JobProcessed::class, [$this, 'recordProcessed']);

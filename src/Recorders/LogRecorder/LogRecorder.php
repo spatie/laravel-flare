@@ -22,7 +22,7 @@ class LogRecorder extends BaseLogRecorder
         parent::__construct($tracer, $backTracer, $config);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(MessageLogged::class, fn (MessageLogged $event) => $this->recordEvent($event));
     }

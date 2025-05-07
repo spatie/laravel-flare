@@ -20,7 +20,7 @@ class CommandRecorder extends BaseCommandRecorder
         parent::__construct($tracer, $backTracer, $config);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(CommandStarting::class, [$this, 'recordCommandStarting']);
         $this->dispatcher->listen(CommandFinished::class, [$this, 'recordCommandFinished']);

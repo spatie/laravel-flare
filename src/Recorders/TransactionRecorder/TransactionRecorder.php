@@ -21,7 +21,7 @@ class TransactionRecorder extends BaseTransactionRecorder
         parent::__construct($tracer, $backTracer, $config);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(TransactionBeginning::class, fn (TransactionBeginning $event) => $this->recordBegin(
             attributes: ['laravel.db.connection' => $event->connectionName]

@@ -52,7 +52,7 @@ class FilesystemRecorder extends BaseFilesystemRecorder
         }
     }
 
-    public function start(): void
+    public function boot(): void
     {
         // Registration of the FlareFilesystemManager is done in the registered method
     }

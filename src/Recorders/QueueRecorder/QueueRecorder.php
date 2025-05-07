@@ -37,7 +37,7 @@ class QueueRecorder implements SpansRecorder
         return RecorderType::Queue;
     }
 
-    public function start(): void
+    public function boot(): void
     {
         Queue::createPayloadUsing(function (?string $connection, ?string $queue, ?array $payload): ?array {
             if ($this->tracer->isSampling() === false) {

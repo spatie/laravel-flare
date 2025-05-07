@@ -26,7 +26,7 @@ class RoutingRecorder implements SpansRecorder
     ) {
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(Routing::class, function (Routing $event) {
             if (! $this->tracer->isSampling()) {

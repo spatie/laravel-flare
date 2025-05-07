@@ -26,7 +26,7 @@ class ExternalHttpRecorder extends BaseExternalHttpRecorder
         parent::__construct($tracer, $backTracer, $config, $redactor);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         $this->dispatcher->listen(RequestSending::class, fn (RequestSending $event) => $this->recordSending(
             $event->request->url(),

@@ -27,7 +27,7 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
         parent::__construct($tracer, $backTracer, $config);
     }
 
-    public function start(): void
+    public function boot(): void
     {
         if ($this->withTraces === false && $this->withErrors === false) {
             return;
