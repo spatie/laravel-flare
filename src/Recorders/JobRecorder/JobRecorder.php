@@ -88,7 +88,7 @@ class JobRecorder extends Recorder implements SpansRecorder
         $this->endSpan(additionalAttributes: [
             'laravel.job.success' => false,
         ], spanCallback: fn (Span $span) => $span->addEvent(
-            ThrowableSpanEvent::fromThrowable($event->exception)
+            ThrowableSpanEvent::fromThrowable($event->exception, $this->tracer->time->getCurrentTime())
         ));
 
         AddJobInformation::$currentJob = null;

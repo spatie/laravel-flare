@@ -4,14 +4,13 @@ namespace Spatie\LaravelFlare\Support;
 
 use Illuminate\Contracts\Foundation\Application;
 use Spatie\FlareClient\Concerns\UsesTime;
+use Spatie\FlareClient\Time\Time;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Enums\SpanType;
 
 class TracingKernel
 {
-    use UsesTime;
-
     public static ?int $appRegisteredTime = null;
 
     public static bool $run = true;
@@ -22,8 +21,8 @@ class TracingKernel
             return;
         }
 
-        $app->registered(function () {
-            self::$appRegisteredTime = self::getCurrentTime();
+        $app->registered(function () use ($app) {
+            self::$appRegisteredTime = $app->get(Time::class)->getCurrentTime();
         });
     }
 

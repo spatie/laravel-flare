@@ -7,6 +7,7 @@ use Illuminate\Log\Events\MessageLogged;
 use Spatie\FlareClient\Enums\MessageLevels;
 use Spatie\FlareClient\Recorders\LogRecorder\LogMessageSpanEvent;
 use Spatie\FlareClient\Recorders\LogRecorder\LogRecorder as BaseLogRecorder;
+use Spatie\FlareClient\Spans\SpanEvent;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
 use Throwable;
@@ -27,7 +28,7 @@ class LogRecorder extends BaseLogRecorder
         $this->dispatcher->listen(MessageLogged::class, fn (MessageLogged $event) => $this->recordEvent($event));
     }
 
-    public function recordEvent(MessageLogged $event): ?LogMessageSpanEvent
+    public function recordEvent(MessageLogged $event): ?SpanEvent
     {
         if ($this->shouldIgnore($event)) {
             return null;

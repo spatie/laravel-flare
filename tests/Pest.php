@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeSender;
+use Spatie\FlareClient\Tests\Shared\FakeTime;
 use Spatie\FlareClient\Tests\Shared\FakeTraceExporter;
 use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Spatie\LaravelFlare\FlareConfig;
@@ -59,6 +60,14 @@ function setupFlare(
 
     $config->sender = FakeSender::class;
     $config->traceExporter = FakeTraceExporter::class;
+
+    if(FakeTime::isSetup()){
+        $config->time = FakeTime::class;
+    }
+
+    if(FakeIds::isSetup()){
+        $config->ids = FakeIds::class;
+    }
 
     if ($closure) {
         $closure($config);
