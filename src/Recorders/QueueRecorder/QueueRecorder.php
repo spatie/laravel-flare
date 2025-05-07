@@ -6,7 +6,6 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
-use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
@@ -52,7 +51,7 @@ class QueueRecorder implements SpansRecorder
                 return $payload;
             }
 
-            $this->startSpan(function () use ($payload, $queue, $connection) {
+            $this->startSpan(nameAndAttributes: function () use ($payload, $queue, $connection) {
                 $attributes = [
                     'flare.span_type' => SpanType::Queueing,
                     'laravel.job.queue.connection_name' => $connection,
@@ -60,12 +59,10 @@ class QueueRecorder implements SpansRecorder
                     ...$this->laravelJobAttributesProvider->getJobPropertiesFromPayload($payload),
                 ];
 
-                return Span::build(
-                    traceId: $this->tracer->currentTraceId() ?? '',
-                    parentId: $this->tracer->currentSpanId(),
-                    name: "Queueing -  {$attributes['laravel.job.name']}",
-                    attributes: $attributes
-                );
+                return [
+                    'name' => "Queueing - {$attributes['laravel.job.name']}",
+                    'attributes' => $attributes,
+                ];
             });
 
             $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();

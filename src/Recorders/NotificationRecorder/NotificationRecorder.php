@@ -42,22 +42,18 @@ class NotificationRecorder implements Recorder
         $this->dispatcher->listen(NotificationFailed::class, [$this, 'recordNotificationFailed']);
     }
 
-    public function recordNotificationSending(NotificationSending $event): void
+    public function recordNotificationSending(NotificationSending $event): ?Span
     {
-        $this->startSpan(function () use ($event) {
-            return Span::build(
-                $this->tracer->currentTraceId(),
-                $this->tracer->currentSpanId(),
-                name: "Notification - {$event->notification->id}",
-                attributes: [
-                    'flare.span_type' => 'notification.sending',
-                    'notification.id' => $event->notification->id,
-                    'notification.channel' => $event->channel,
-                    'notification.type' => get_class($event->notification),
-                    'notification.to' => $this->resolveNotifiable($event->notifiable),
-                ]
-            );
-        });
+        return $this->startSpan(
+            name: "Notification - {$event->notification->id}",
+            attributes: fn() => [
+                'flare.span_type' => 'notification.sending',
+                'notification.id' => $event->notification->id,
+                'notification.channel' => $event->channel,
+                'notification.type' => get_class($event->notification),
+                'notification.to' => $this->resolveNotifiable($event->notifiable),
+            ],
+        );
     }
 
     public function recordNotificationSent(
@@ -69,7 +65,7 @@ class NotificationRecorder implements Recorder
     public function recordNotificationFailed(
         NotificationFailed $event,
     ): ?Span {
-        return $this->endSpan(attributes: []);
+        return $this->endSpan();
     }
 
     protected function resolveNotifiable(mixed $notifiable): string|null

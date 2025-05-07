@@ -6,7 +6,6 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
-use Spatie\FlareClient\Concerns\Recorders\RecordsPendingSpans;
 use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
@@ -21,7 +20,7 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 
-class JobRecorder  extends Recorder implements SpansRecorder
+class JobRecorder extends Recorder implements SpansRecorder
 {
     /** @use RecordsSpans<Span> */
     use RecordsSpans;
@@ -66,21 +65,18 @@ class JobRecorder  extends Recorder implements SpansRecorder
 
         $this->tryToResumeTrace($event);
 
-        return $this->startSpan(function () use ($attributes) {
-            return Span::build(
-                traceId: $this->tracer->currentTraceId() ?? '',
-                parentId: $this->tracer->currentSpanId(),
-                name: "Job - {$attributes['laravel.job.name']}",
-                attributes: $attributes + [
-                    'flare.span_type' => SpanType::Job,
-                ],
-            );
-        });
+        return $this->startSpan(
+            name: "Job - {$attributes['laravel.job.name']}",
+            attributes: [
+                'flare.span_type' => SpanType::Job,
+                ...$attributes,
+            ]
+        );
     }
 
     public function recordProcessed(JobProcessed $event): void
     {
-        $this->endSpan(attributes: [
+        $this->endSpan(additionalAttributes: [
             'laravel.job.success' => true,
         ]);
 
@@ -89,11 +85,11 @@ class JobRecorder  extends Recorder implements SpansRecorder
 
     public function recordExceptionOccurred(JobExceptionOccurred $event): void
     {
-        $this->endSpan(closure: fn (Span $span) => $span->addEvent(
-            ThrowableSpanEvent::fromThrowable($event->exception)
-        ), attributes: [
+        $this->endSpan(additionalAttributes: [
             'laravel.job.success' => false,
-        ]);
+        ], spanCallback: fn (Span $span) => $span->addEvent(
+            ThrowableSpanEvent::fromThrowable($event->exception)
+        ));
 
         AddJobInformation::$currentJob = null;
     }
