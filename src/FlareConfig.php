@@ -86,8 +86,6 @@ class FlareConfig extends BaseFlareConfig
         $config = new self(
             apiToken: config('flare.key'),
             baseUrl: config('flare.base_url', 'https://flareapp.io/api'),
-            middleware: config('flare.middleware', []),
-            recorders: config('flare.recorders', []),
             collects: $collects,
             reportErrorLevels: config('flare.report_error_levels'),
             applicationPath: base_path(),
@@ -208,6 +206,12 @@ class FlareConfig extends BaseFlareConfig
             CollectType::StackFrameArguments->value => [
                 'argument_reducers' => static::defaultArgumentReducers(),
                 'force_php_ini_setting' => true,
+            ],
+            CollectType::Recorders->value => [
+                'recorders' => []
+            ],
+            CollectType::FlareMiddleware->value => [
+                'flare_middleware' => [],
             ]
         ];
 

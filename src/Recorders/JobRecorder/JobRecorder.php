@@ -103,7 +103,7 @@ class JobRecorder extends Recorder implements SpansRecorder
             return;
         }
 
-        $samplingType = $this->tracer->potentiallyResumeTrace($traceParent);
+        $samplingType = $this->tracer->startTrace($traceParent);
 
         if ($samplingType === SamplingType::Sampling) {
             $this->shouldEndTrace = true;

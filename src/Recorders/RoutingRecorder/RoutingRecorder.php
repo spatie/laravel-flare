@@ -11,6 +11,7 @@ use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\LaravelFlare\Facades\Flare;
 
 class RoutingRecorder implements SpansRecorder
 {
@@ -67,10 +68,7 @@ class RoutingRecorder implements SpansRecorder
                 $this->tracer->endSpan();
             }
 
-            $this->tracer->startSpan(
-                'Terminating',
-                attributes: ['flare.span_type' => SpanType::Terminating]
-            );
+            Flare::application()->recordTerminating();
         });
     }
 

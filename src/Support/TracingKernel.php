@@ -3,11 +3,9 @@
 namespace Spatie\LaravelFlare\Support;
 
 use Illuminate\Contracts\Foundation\Application;
-use Spatie\FlareClient\Concerns\UsesTime;
+use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Time\Time;
 use Spatie\FlareClient\Time\TimeHelper;
-use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Enums\SpanType;
 
 class TracingKernel
 {
@@ -32,99 +30,63 @@ class TracingKernel
             return;
         }
 
-        $tracer = $app->make(Tracer::class);
+        $flare = $app->make(Flare::class);
 
-        $app->booted(function () use ($tracer) {
-            self::appBooted($tracer);
+        $app->booted(function () use ($flare) {
+            self::appBooted($flare);
         });
 
-        $app->terminating(function () use ($app, $tracer) {
-            self::appTerminated($app, $tracer, initialCall: true);
+        $app->terminating(function () use ($app, $flare) {
+            self::appTerminated($app, $flare, initialCall: true);
         });
 
-        self::startPotentialTrace($tracer);
+        self::startPotentialTrace($flare);
     }
 
     protected static function startPotentialTrace(
-        Tracer $tracer
+        Flare $flare
     ): void {
-        $tracer->potentialStartTrace();
-
-        if (! $tracer->isSampling()) {
-            return;
-        }
-
         $start = TimeHelper::phpMicroTime(
             defined('LARAVEL_START') ? LARAVEL_START : $_SERVER['REQUEST_TIME_FLOAT']
         );
 
-        $tracer->startSpan(
-            'Laravel Application',
-            start: $start,
-            attributes: [
-                'flare.span_type' => SpanType::Application,
-            ],
-        );
+        $flare->application()->recordStart(time: $start);
 
         if (self::$appRegisteredTime === null) {
             return;
         }
 
-        $tracer->startSpan(
-            'App Registration',
+        $flare->application()->recordRegistration(
             start: $start,
-            end: self::$appRegisteredTime,
-            attributes: [
-                'flare.span_type' => SpanType::Registration,
-            ],
+            end: self::$appRegisteredTime
         );
 
-        $tracer->startSpan(
-            'App Boot',
-            start: self::$appRegisteredTime,
-            attributes: [
-                'flare.span_type' => SpanType::Boot,
-            ],
-        );
+        $flare->application()->recordBooting(time: self::$appRegisteredTime);
     }
 
-    protected static function appBooted(Tracer $tracer): void
+    protected static function appBooted(Flare $flare): void
     {
-        if (! $tracer->isSampling()) {
-            return;
-        }
-
-        if (! $tracer->hasCurrentSpan(SpanType::Boot)) {
-            return;
-        }
-
-        $tracer->endSpan();
+        $flare->application()->recordBooted();
     }
 
-    protected static function appTerminated(Application $app, Tracer $tracer, bool $initialCall): void
+    protected static function appTerminated(Application $app, Flare $flare, bool $initialCall): void
     {
         if ($initialCall === true) {
-            self::registerTerminatingCallbackAsLast($app, $tracer);
+            $flare->application()->recordTerminating();
+
+            self::registerTerminatingCallbackAsLast($app, $flare);
 
             return;
         }
 
-        if (! $tracer->isSampling()) {
-            return;
-        }
-
-        if (! $tracer->hasCurrentSpan(SpanType::Application)) {
-            return;
-        }
-
-        $tracer->endSpan();
-        $tracer->endTrace();
+        $flare->application()->recordTerminated();
+        $flare->application()->recordEnd();
     }
 
-    protected static function registerTerminatingCallbackAsLast(Application $app, Tracer $tracer): void
+    protected static function registerTerminatingCallbackAsLast(Application $app, Flare $flare): void
     {
-        $app->terminating(function () use ($app, $tracer) {
-            self::appTerminated($app, $tracer, initialCall: false);
+        $app->terminating(function () use ($app, $flare) {
+            self::appTerminated($app, $flare, initialCall: false);
         });
     }
 

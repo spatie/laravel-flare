@@ -11,6 +11,7 @@ use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
+use Spatie\LaravelFlare\Facades\Flare;
 use Symfony\Component\HttpFoundation\Response;
 
 class FlareTracingMiddleware
@@ -39,11 +40,7 @@ class FlareTracingMiddleware
             return $next($request);
         }
 
-        $this->tracer->potentialStartTrace(); // In case of Octane
-
-        if ($this->tracer->isSampling()) {
-            $this->startTrace($request);
-        }
+        $this->startTrace($request);
 
         return $next($request);
     }
@@ -55,12 +52,16 @@ class FlareTracingMiddleware
             'http.request.method' => strtoupper($request->getMethod()),
         ];
 
-        $this->requestSpan = $this->tracer->startSpan(
+        $requestSpan = $this->tracer->startSpan(
             name: "request - ".$request->url(),
             attributes: $attributes
         );
 
-        $this->tracer->addSpan($this->requestSpan, makeCurrent: true);
+        if($requestSpan === null){
+            return; // We did not start sampling
+        }
+
+        $this->requestSpan = $requestSpan;
 
         if ($this->traceGlobalMiddleware) {
             $this->tracer->startSpan(
@@ -74,9 +75,7 @@ class FlareTracingMiddleware
 
     public function terminate(Request $request, Response $response): void
     {
-        if ($this->tracer->hasCurrentSpan(LaravelSpanType::Terminating)) {
-            $this->tracer->endSpan();
-        }
+        Flare::application()->recordTerminated();
 
         if (! $this->tracer->hasCurrentSpan(SpanType::Request)) {
             return;

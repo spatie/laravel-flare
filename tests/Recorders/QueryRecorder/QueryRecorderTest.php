@@ -36,14 +36,14 @@ it('traces queries', function () {
             ->hasSpanCount(1)
             ->span(
                 fn (ExpectSpan $span) => $span
-                ->isEnded()
-                ->hasName('Query - SELECT * FROM users WHERE id = ?')
-                ->hasType(SpanType::Query)
-                ->hasAttribute('db.system', 'sqlite')
-                ->hasAttribute('db.name', ':memory:')
-                ->hasAttribute('db.statement', 'SELECT * FROM users WHERE id = ?')
-                ->hasAttribute('laravel.db.connection', 'testing')
-                ->hasAttribute('db.sql.bindings', ['42'])
+                    ->isEnded()
+                    ->hasName('Query - SELECT * FROM users WHERE id = ?')
+                    ->hasType(SpanType::Query)
+                    ->hasAttribute('db.system', 'sqlite')
+                    ->hasAttribute('db.name', ':memory:')
+                    ->hasAttribute('db.statement', 'SELECT * FROM users WHERE id = ?')
+                    ->hasAttribute('laravel.db.connection', 'testing')
+                    ->hasAttribute('db.sql.bindings', ['42'])
             ));
 });
 

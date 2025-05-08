@@ -15,6 +15,7 @@ use Spatie\LaravelFlare\Tests\stubs\Exceptions\ExpectedException;
 
 uses(ConfigureFlare::class)->beforeEach(function () {
     FakeIds::setup();
+    FakeTime::setup('2019-01-01 12:34:56');
 
     TracingKernel::$run = false;
 
@@ -27,8 +28,6 @@ uses(ConfigureFlare::class)->beforeEach(function () {
 });
 
 it('can report a command', function () {
-    FakeTime::setup('2019-01-01 12:34:56');
-
     /** @var Flare $flare */
     $flare = test()->flare;
 
