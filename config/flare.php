@@ -152,6 +152,7 @@ return [
     | Flare it can be configured if needed.
     |
     */
+
     'sender' => [
         'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
         'config' => [
@@ -162,33 +163,47 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Tracing
+    | Trace
     |--------------------------------------------------------------------------
     |
     | Tracing allows you to see the flow of your application. It shows you
     | which parts of your application are slow and which parts are fast.
     |
     */
-    'tracing' => [
-        'enabled' => true,
 
-        // The sampler is used to determine which traces should be recorded
-        'sampler' => [
-            'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
-            'config' => [
-                'rate' => 1,
-            ],
+    'trace' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sampler
+    |--------------------------------------------------------------------------
+    |
+    | The sampler is used to determine which traces should be recorded and
+    | which traces should be dropped. It is possible to set the rate
+    | at which traces should be recorded. The default rate is 0.1
+    | which means that 10% of the traces will be recorded.
+    |
+    */
+    'sampler' => [
+        'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
+        'config' => [
+            'rate' => 0.1,
         ],
+    ],
 
-        // Whether to trace throwables
-        'trace_throwables' => true,
-
-        // Limits for the tracing data
-        'limits' => [
-            'max_spans' => 512,
-            'max_attributes_per_span' => 128,
-            'max_span_events_per_span' => 128,
-            'max_attributes_per_span_event' => 128,
-        ],
+    /*
+    |--------------------------------------------------------------------------
+    | Trace limits
+    |--------------------------------------------------------------------------
+    |
+    | Limits for the tracing data. These limits are used to prevent
+    | the tracing data from growing too large.
+    |
+    */
+    'trace_limits' => [
+        'max_spans' => 512,
+        'max_attributes_per_span' => 128,
+        'max_span_events_per_span' => 128,
+        'max_attributes_per_span_event' => 128,
     ],
 ];

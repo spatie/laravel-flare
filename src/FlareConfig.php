@@ -40,6 +40,7 @@ use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
+use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
@@ -93,16 +94,15 @@ class FlareConfig extends BaseFlareConfig
             applicationStage: app()->environment(),
             sender: config('flare.sender.class'),
             senderConfig: config('flare.sender.config', []),
-            trace: config('flare.tracing.enabled'),
-            sampler: config('flare.tracing.sampler.class'),
-            samplerConfig: config('flare.tracing.sampler.config'),
+            trace: config('flare.trace'),
+            sampler: config('flare.sampler.class'),
+            samplerConfig: config('flare.sampler.config'),
             traceLimits: new TraceLimits(
-                maxSpans: config('flare.tracing.limits.max_spans'),
-                maxAttributesPerSpan: config('flare.tracing.limits.max_attributes_per_span'),
-                maxSpanEventsPerSpan: config('flare.tracing.limits.max_span_events_per_span'),
-                maxAttributesPerSpanEvent: config('flare.tracing.limits.max_attributes_per_span_event')
+                maxSpans: config('flare.trace_limits.max_spans'),
+                maxAttributesPerSpan: config('flare.trace_limits.max_attributes_per_span'),
+                maxSpanEventsPerSpan: config('flare.trace_limits.max_span_events_per_span'),
+                maxAttributesPerSpanEvent: config('flare.trace_limits.max_attributes_per_span_event')
             ),
-            traceThrowables: config('flare.tracing.trace_throwables'),
             censorClientIps: config('flare.censor.client_ips'),
             censorHeaders: config('flare.censor.headers'),
             censorBodyFields: config('flare.censor.body_fields'),
@@ -131,6 +131,9 @@ class FlareConfig extends BaseFlareConfig
     ): array {
         $collects = [
             CollectType::Requests->value => [],
+            CollectType::ErrorsWithTraces->value => [
+                'with_traces' => ErrorRecorder::DEFAULT_WITH_TRACES,
+            ],
             LaravelCollectType::LivewireComponents->value => [],
             CollectType::ServerInfo->value => [
                 'host' => true,

@@ -10,6 +10,7 @@ use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Enums\SamplingType;
+use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorSpanEvent;
 use Spatie\FlareClient\Recorders\Recorder;
 use Spatie\FlareClient\Recorders\ThrowableRecorder\ThrowableSpanEvent;
 use Spatie\FlareClient\Spans\Span;
@@ -88,7 +89,7 @@ class JobRecorder extends Recorder implements SpansRecorder
         $this->endSpan(additionalAttributes: [
             'laravel.job.success' => false,
         ], spanCallback: fn (Span $span) => $span->addEvent(
-            ThrowableSpanEvent::fromThrowable($event->exception, $this->tracer->time->getCurrentTime())
+            ErrorSpanEvent::fromThrowable($event->exception, $this->tracer->time->getCurrentTime())
         ));
 
         AddJobInformation::$currentJob = null;
