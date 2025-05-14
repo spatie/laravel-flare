@@ -46,6 +46,7 @@ use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
+use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
@@ -262,7 +263,7 @@ class FlareConfig extends BaseFlareConfig
             ...parent::defaultArgumentReducers(),
             ModelArgumentReducer::class,
             CollectionArgumentReducer::class,
-            StringableArgumentReducer::class,
+            ViewArgumentReducer::class,
         ];
     }
 

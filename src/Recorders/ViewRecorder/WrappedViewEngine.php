@@ -16,6 +16,11 @@ class WrappedViewEngine implements Engine
 
     public function get($path, array $data = []): string
     {
+        if (str_contains($path, 'resources/views/exception.blade.php')) {
+            ray()->backtrace();
+
+        }
+
         $this->recorder->recordRendering(
             static::$currentView,
             $data,

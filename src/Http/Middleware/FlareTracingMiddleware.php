@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class FlareTracingMiddleware
 {
-    protected Span $requestSpan;
+    protected ?Span $requestSpan = null;
 
     public function __construct(
         protected Tracer $tracer,
@@ -57,7 +57,7 @@ class FlareTracingMiddleware
             attributes: $attributes
         );
 
-        if($requestSpan === null){
+        if ($requestSpan === null) {
             return; // We did not start sampling
         }
 
@@ -75,9 +75,9 @@ class FlareTracingMiddleware
 
     public function terminate(Request $request, Response $response): void
     {
-        Flare::application()->recordTerminated();
+        Flare::application()->recordTerminating();
 
-        if (! $this->tracer->hasCurrentSpan(SpanType::Request)) {
+        if ($this->requestSpan === null) {
             return;
         }
 
@@ -87,11 +87,8 @@ class FlareTracingMiddleware
 
         $this->requestSpan->addAttribute('http.response.status_code', $response->getStatusCode());
 
-        $requestSpan = $this->tracer->endSpan();
-
-        if ($requestSpan->parentSpanId === null) {
-            // In case of Octane
-            $this->tracer->endTrace();
+        if ($this->requestSpan->end === null) {
+            $this->requestSpan->end = $this->tracer->time->getCurrentTime();
         }
     }
 }

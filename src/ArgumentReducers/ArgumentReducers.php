@@ -12,6 +12,7 @@ class ArgumentReducers extends BaseArgumentReducers
             [
                 new CollectionArgumentReducer(),
                 new ModelArgumentReducer(),
+                new ViewArgumentReducer(),
             ],
             $extra,
         ));

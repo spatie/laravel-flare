@@ -5,6 +5,7 @@ namespace Spatie\LaravelFlare\Filesystem;
 use Illuminate\Contracts\Filesystem\Cloud;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Filesystem\FilesystemManager;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 
 class FlareFilesystemManager extends FilesystemManager
 {
@@ -33,9 +34,9 @@ class FlareFilesystemManager extends FilesystemManager
             return $filesystem;
         }
 
-        $trace = $config['flare']['trace'] ?? $this->flareConfig['trace'] ?? false;
-        $report = $config['flare']['report'] ?? $this->flareConfig['report'] ?? false;
-        $maxReports = $config['flare']['max_reported'] ?? $this->flareConfig['max_reported'] ?? null;
+        $trace = $config['flare']['trace'] ?? $this->flareConfig['trace'] ?? FilesystemRecorder::DEFAULT_WITH_TRACES;
+        $report = $config['flare']['report'] ?? $this->flareConfig['report'] ?? FilesystemRecorder::DEFAULT_WITH_ERRORS;
+        $maxReports = $config['flare']['max_reported'] ?? $this->flareConfig['max_reported'] ?? FilesystemRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS;
 
         if ($filesystem instanceof FilesystemAdapter) {
             return new FlareFilesystemAdapter($filesystem, $trace, $report, $maxReports);

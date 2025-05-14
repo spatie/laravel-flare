@@ -22,6 +22,7 @@ use Spatie\FlareClient\FlareProvider;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
+use Spatie\FlareClient\Support\GracefulSpanEnder;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
@@ -30,6 +31,7 @@ use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
 use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
+use Spatie\LaravelFlare\Support\GracefulSpanEnder as LaravelGracefulSpanEnder;
 use Spatie\LaravelFlare\Support\Telemetry;
 use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
@@ -44,7 +46,7 @@ class FlareServiceProvider extends ServiceProvider
     public function register(): void
     {
         if (! $this->app->has(FlareConfig::class)) {
-            $this->mergeConfigFrom(__DIR__.'/../config/flare.php', 'flare');
+            $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/flare.php', 'flare');
 
             $this->config = FlareConfig::fromLaravelConfig();
 
@@ -69,6 +71,8 @@ class FlareServiceProvider extends ServiceProvider
         );
 
         $this->provider->register();
+
+        $this->app->singleton(GracefulSpanEnder::class, LaravelGracefulSpanEnder::class);
 
         $this->app->singleton(BaseBackTracer::class, fn () => new BackTracer(
             $this->app->make(ViewFrameMapper::class),

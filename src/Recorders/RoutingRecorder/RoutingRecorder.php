@@ -9,8 +9,9 @@ use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Events\Routing;
 use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
+use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Facades\Flare;
 
 class RoutingRecorder implements SpansRecorder
@@ -34,13 +35,13 @@ class RoutingRecorder implements SpansRecorder
                 return;
             }
 
-            if ($this->tracer->hasCurrentSpan(SpanType::GlobalMiddlewareBefore)) {
+            if ($this->tracer->hasCurrentSpan(LaravelSpanType::GlobalMiddlewareBefore)) {
                 $this->tracer->endSpan();
             }
 
             $this->tracer->startSpan(
                 'Routing',
-                attributes: ['flare.span_type' => SpanType::Routing]
+                attributes: ['flare.span_type' => LaravelSpanType::Routing]
             );
         });
 
@@ -49,13 +50,13 @@ class RoutingRecorder implements SpansRecorder
                 return;
             }
 
-            if ($this->tracer->hasCurrentSpan(SpanType::Routing)) {
+            if ($this->tracer->hasCurrentSpan(LaravelSpanType::Routing)) {
                 $this->tracer->endSpan();
             }
 
             $this->tracer->startSpan(
                 'Middleware (local, before)',
-                attributes: ['flare.span_type' => SpanType::LocalMiddlewareBefore]
+                attributes: ['flare.span_type' => LaravelSpanType::LocalMiddlewareBefore]
             );
         });
 
@@ -64,7 +65,11 @@ class RoutingRecorder implements SpansRecorder
                 return;
             }
 
-            if ($this->tracer->hasCurrentSpan(SpanType::Response)) {
+            if ($this->tracer->hasCurrentSpan(LaravelSpanType::Response)) {
+                $this->tracer->endSpan();
+            }
+
+            if($this->tracer->hasCurrentSpan(SpanType::Request)) {
                 $this->tracer->endSpan();
             }
 
