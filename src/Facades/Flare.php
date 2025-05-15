@@ -11,6 +11,7 @@ use Spatie\FlareClient\Recorders\ApplicationRecorder\ApplicationRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
+use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Throwable;
 
 /**
@@ -22,6 +23,7 @@ use Throwable;
  * @method static GlowRecorder glow()
  * @method static FilesystemRecorder filesystem()
  * @method static ApplicationRecorder application()
+ * @method static RoutingRecorder routing()
  * @method static Tracer tracer()
  * @see \Spatie\FlareClient\Flare
  */

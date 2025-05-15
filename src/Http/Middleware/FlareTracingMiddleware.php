@@ -10,7 +10,6 @@ use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
-use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Facades\Flare;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -22,7 +21,6 @@ class FlareTracingMiddleware
         protected Tracer $tracer,
         protected Application $app,
         protected LaravelRequestAttributesProvider $attributesProvider,
-        protected bool $traceGlobalMiddleware = true,
     ) {
     }
 
@@ -63,14 +61,7 @@ class FlareTracingMiddleware
 
         $this->requestSpan = $requestSpan;
 
-        if ($this->traceGlobalMiddleware) {
-            $this->tracer->startSpan(
-                name: "Middleware (global, before)",
-                attributes: [
-                    'flare.span_type' => LaravelSpanType::GlobalMiddlewareBefore,
-                ],
-            );
-        }
+        Flare::routing()->recordGlobalBeforeMiddlewareStart();
     }
 
     public function terminate(Request $request, Response $response): void
