@@ -2,7 +2,6 @@
 
 namespace Spatie\LaravelFlare\ArgumentReducers;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\View\View;
 use Spatie\Backtrace\Arguments\ReducedArgument\ReducedArgument;
 use Spatie\Backtrace\Arguments\ReducedArgument\ReducedArgumentContract;

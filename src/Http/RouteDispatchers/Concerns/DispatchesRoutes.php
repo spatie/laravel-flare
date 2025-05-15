@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Http\RouteDispatchers\Concerns;
 
 use Closure;
-use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Facades\Flare;
 
 trait DispatchesRoutes

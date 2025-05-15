@@ -4,18 +4,6 @@ namespace Spatie\LaravelFlare;
 
 use Illuminate\Support\Arr;
 use Monolog\Level;
-use Spatie\Backtrace\Arguments\ArgumentReducers as BackTraceArgumentReducers;
-use Spatie\Backtrace\Arguments\Reducers\ArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\ArrayArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\BaseTypeArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\ClosureArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\DateTimeArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\DateTimeZoneArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\EnumArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\StdClassArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\StringableArgumentReducer;
-use Spatie\Backtrace\Arguments\Reducers\SymphonyRequestArgumentReducer;
-use Spatie\ErrorSolutions\SolutionProviders\BadMethodCallSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\DefaultDbNameSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\GenericLaravelExceptionSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\IncorrectValetDbCredentialsSolutionProvider;
@@ -35,23 +23,20 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMariadbCollationSolut
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\MergeConflictSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\UndefinedPropertySolutionProvider;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
 use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Support\TraceLimits;
-use Spatie\LaravelFlare\ArgumentReducers\ArgumentReducers;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
-use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
@@ -213,11 +198,11 @@ class FlareConfig extends BaseFlareConfig
                 'force_php_ini_setting' => true,
             ],
             CollectType::Recorders->value => [
-                'recorders' => []
+                'recorders' => [],
             ],
             CollectType::FlareMiddleware->value => [
                 'flare_middleware' => [],
-            ]
+            ],
         ];
 
         if (count($ignore) > 0) {

@@ -13,7 +13,6 @@ use Spatie\FlareClient\Enums\SamplingType;
 use Spatie\FlareClient\Enums\SpanStatusCode;
 use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorSpanEvent;
 use Spatie\FlareClient\Recorders\Recorder;
-use Spatie\FlareClient\Recorders\ThrowableRecorder\ThrowableSpanEvent;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Ids;

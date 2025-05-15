@@ -6,14 +6,10 @@ use Closure;
 use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Psr\Http\Message\StreamInterface;
-use Spatie\FlareClient\Concerns\PrefersHumanFormats;
-use Spatie\FlareClient\Enums\FilesystemOperation;
 use Spatie\FlareClient\Spans\Span;
-use Spatie\LaravelFlare\Enums\LaravelFilesystemOperation;
 use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Support\Humanizer;
-use Throwable;
 
 trait WrapsFileSystem
 {
@@ -29,8 +25,8 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordPath($path),
-            fn(mixed $return) => [
+            fn (FilesystemRecorder $recorder) => $recorder->recordPath($path),
+            fn (mixed $return) => [
                 'filesystem.full_path' => $return,
             ],
         );
@@ -48,8 +44,8 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordExists($path ?? '/'),
-            fn(mixed $return) => [
+            fn (FilesystemRecorder $recorder) => $recorder->recordExists($path ?? '/'),
+            fn (mixed $return) => [
                 'filesystem.exists' => $return,
             ],
         );
@@ -67,8 +63,8 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordGet($path ?? '/'),
-            fn(mixed $file) => [
+            fn (FilesystemRecorder $recorder) => $recorder->recordGet($path ?? '/'),
+            fn (mixed $file) => [
                 'filesystem.contents.size' => Humanizer::contentSize($file),
             ],
         );
@@ -86,7 +82,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordGet($path, [
+            fn (FilesystemRecorder $recorder) => $recorder->recordGet($path, [
                 'filesystem.is_stream' => true,
             ]),
         );
@@ -106,8 +102,8 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordPut($path, $contents),
-            fn(mixed $return) => [
+            fn (FilesystemRecorder $recorder) => $recorder->recordPut($path, $contents),
+            fn (mixed $return) => [
                 'filesystem.operation.success' => $return,
             ],
         );
@@ -127,7 +123,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordPut(
+            fn (FilesystemRecorder $recorder) => $recorder->recordPut(
                 $path,
                 $file,
             ),
@@ -150,7 +146,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordPut(
+            fn (FilesystemRecorder $recorder) => $recorder->recordPut(
                 $path,
                 $file,
                 [
@@ -175,7 +171,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordPut(
+            fn (FilesystemRecorder $recorder) => $recorder->recordPut(
                 $path,
                 $resource,
                 [
@@ -198,7 +194,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordGetVisibility($path,),
+            fn (FilesystemRecorder $recorder) => $recorder->recordGetVisibility($path, ),
             fn ($return) => ['filesystem.visibility' => $return]
         );
     }
@@ -216,7 +212,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordSetVisibility($path, $visibility),
+            fn (FilesystemRecorder $recorder) => $recorder->recordSetVisibility($path, $visibility),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
@@ -235,7 +231,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordPrepend($path, $data),
+            fn (FilesystemRecorder $recorder) => $recorder->recordPrepend($path, $data),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
@@ -254,7 +250,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordAppend($path, $data),
+            fn (FilesystemRecorder $recorder) => $recorder->recordAppend($path, $data),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
@@ -271,7 +267,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordDelete($paths),
+            fn (FilesystemRecorder $recorder) => $recorder->recordDelete($paths),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
@@ -289,7 +285,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordCopy($from, $to),
+            fn (FilesystemRecorder $recorder) => $recorder->recordCopy($from, $to),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
@@ -307,7 +303,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordMove($from, $to),
+            fn (FilesystemRecorder $recorder) => $recorder->recordMove($from, $to),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
@@ -324,7 +320,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordSize($path),
+            fn (FilesystemRecorder $recorder) => $recorder->recordSize($path),
             fn ($return) => ['filesystem.contents.size' => Humanizer::contentSize($return)]
         );
     }
@@ -341,7 +337,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordLastModified($path),
+            fn (FilesystemRecorder $recorder) => $recorder->recordLastModified($path),
             fn ($return) => ['filesystem.last_modified' => Humanizer::unixTime($return)]
         );
     }
@@ -359,7 +355,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordFiles($directory  ?? '/', $recursive),
+            fn (FilesystemRecorder $recorder) => $recorder->recordFiles($directory ?? '/', $recursive),
             fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'files')]
         );
     }
@@ -376,7 +372,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordFiles($directory  ?? '/', true),
+            fn (FilesystemRecorder $recorder) => $recorder->recordFiles($directory ?? '/', true),
             fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'files')]
         );
     }
@@ -394,7 +390,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordDirectories($directory ?? '/', $recursive),
+            fn (FilesystemRecorder $recorder) => $recorder->recordDirectories($directory ?? '/', $recursive),
             fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'directories')]
         );
     }
@@ -411,7 +407,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordDirectories($directory  ?? '/', true),
+            fn (FilesystemRecorder $recorder) => $recorder->recordDirectories($directory ?? '/', true),
             fn ($return) => ['filesystem.found_paths' => Humanizer::filesystemPaths($return, 'directories')]
         );
     }
@@ -428,7 +424,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordMakeDirectory($path),
+            fn (FilesystemRecorder $recorder) => $recorder->recordMakeDirectory($path),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }
@@ -445,7 +441,7 @@ trait WrapsFileSystem
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordDeleteDirectory($directory),
+            fn (FilesystemRecorder $recorder) => $recorder->recordDeleteDirectory($directory),
             fn ($return) => ['filesystem.operation.success' => $return]
         );
     }

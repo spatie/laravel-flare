@@ -16,8 +16,8 @@ use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
-use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
+use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
@@ -26,7 +26,6 @@ use Spatie\LaravelFlare\Recorders\RedisCommandRecorder\RedisCommandRecorder;
 use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
-use StringBackedEnum;
 
 class CollectsResolver extends BaseCollectsResolver
 {
@@ -104,11 +103,11 @@ class CollectsResolver extends BaseCollectsResolver
     protected function livewireComponents(
         array $options
     ): void {
-        if($this->requestsMiddlewareClass === null){
+        if ($this->requestsMiddlewareClass === null) {
             return;
         }
 
-        $this->middlewares[$this->requestsMiddlewareClass]['include_livewire_components'] =  $options['include_livewire_components'] ?? false;
+        $this->middlewares[$this->requestsMiddlewareClass]['include_livewire_components'] = $options['include_livewire_components'] ?? false;
     }
 
     protected function views(array $options): void

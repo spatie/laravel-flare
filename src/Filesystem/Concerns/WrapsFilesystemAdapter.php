@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Filesystem\Concerns;
 
 use League\Flysystem\UnableToProvideChecksum;
-use Spatie\FlareClient\Enums\FilesystemOperation;
 use Spatie\FlareClient\Support\Humanizer;
 use Spatie\LaravelFlare\Enums\LaravelFilesystemOperation;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
@@ -25,7 +24,7 @@ trait WrapsFilesystemAdapter
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordOperationStart(
+            fn (FilesystemRecorder $recorder) => $recorder->recordOperationStart(
                 operation: LaravelFilesystemOperation::AssertExists->value,
                 attributes: [
                     'filesystem.path' => Humanizer::filesystemPaths($path),
@@ -47,7 +46,7 @@ trait WrapsFilesystemAdapter
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordOperationStart(
+            fn (FilesystemRecorder $recorder) => $recorder->recordOperationStart(
                 operation:LaravelFilesystemOperation::AssertMissing->value,
                 attributes:[
                     'filesystem.path' => Humanizer::filesystemPaths($path),
@@ -68,7 +67,7 @@ trait WrapsFilesystemAdapter
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordOperationStart(
+            fn (FilesystemRecorder $recorder) => $recorder->recordOperationStart(
                 operation:LaravelFilesystemOperation::AssertDirectoryEmpty->value,
                 attributes:[
                     'filesystem.path' => Humanizer::filesystemPaths($path),
@@ -89,7 +88,7 @@ trait WrapsFilesystemAdapter
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordChecksum($path),
+            fn (FilesystemRecorder $recorder) => $recorder->recordChecksum($path),
             fn ($return) => ['filesystem.checksum' => $return]
         );
     }
@@ -106,7 +105,7 @@ trait WrapsFilesystemAdapter
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordMimeType($path),
+            fn (FilesystemRecorder $recorder) => $recorder->recordMimeType($path),
             fn ($return) => ['filesystem.mime_type' => $return]
         );
     }
@@ -127,7 +126,7 @@ trait WrapsFilesystemAdapter
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordTemporaryUrl(
+            fn (FilesystemRecorder $recorder) => $recorder->recordTemporaryUrl(
                 $path,
                 $expiration,
             ),
@@ -151,7 +150,7 @@ trait WrapsFilesystemAdapter
         return $this->wrapCall(
             __FUNCTION__,
             func_get_args(),
-            fn(FilesystemRecorder $recorder) => $recorder->recordTemporaryUrl(
+            fn (FilesystemRecorder $recorder) => $recorder->recordTemporaryUrl(
                 $path,
                 $expiration,
             ),

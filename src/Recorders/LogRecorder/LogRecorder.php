@@ -5,7 +5,6 @@ namespace Spatie\LaravelFlare\Recorders\LogRecorder;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Log\Events\MessageLogged;
 use Spatie\FlareClient\Enums\MessageLevels;
-use Spatie\FlareClient\Recorders\LogRecorder\LogMessageSpanEvent;
 use Spatie\FlareClient\Recorders\LogRecorder\LogRecorder as BaseLogRecorder;
 use Spatie\FlareClient\Spans\SpanEvent;
 use Spatie\FlareClient\Support\BackTracer;

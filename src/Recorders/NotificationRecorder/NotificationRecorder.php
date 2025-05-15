@@ -46,7 +46,7 @@ class NotificationRecorder implements Recorder
     {
         return $this->startSpan(
             name: "Notification - {$event->notification->id}",
-            attributes: fn() => [
+            attributes: fn () => [
                 'flare.span_type' => 'notification.sending',
                 'notification.id' => $event->notification->id,
                 'notification.channel' => $event->channel,

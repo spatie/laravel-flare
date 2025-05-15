@@ -61,11 +61,11 @@ function setupFlare(
     $config->sender = FakeSender::class;
     $config->traceExporter = FakeTraceExporter::class;
 
-    if(FakeTime::isSetup()){
+    if (FakeTime::isSetup()) {
         $config->time = FakeTime::class;
     }
 
-    if(FakeIds::isSetup()){
+    if (FakeIds::isSetup()) {
         $config->ids = FakeIds::class;
     }
 
