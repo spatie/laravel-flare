@@ -26,6 +26,7 @@ class RoutingRecorder implements SpansRecorder
         protected Application $app,
         protected Dispatcher $dispatcher,
     ) {
+
     }
 
     public function boot(): void

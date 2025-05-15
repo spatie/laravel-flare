@@ -29,7 +29,7 @@
         "symfony/console": "^7.2.1",
         "symfony/var-dumper": "^7.2.3",
         "spatie/laravel-error-share": "^1.0.3",
-        "spatie/error-solutions": "v2.x-dev"
+        "spatie/error-solutions": "^2.0"
     },
     "require-dev" : {
         "livewire/livewire": "^3.6.0",

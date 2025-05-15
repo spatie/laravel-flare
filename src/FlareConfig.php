@@ -173,6 +173,7 @@ class FlareConfig extends BaseFlareConfig
                 'with_traces' => LogRecorder::DEFAULT_WITH_TRACES,
                 'with_errors' => LogRecorder::DEFAULT_WITH_ERRORS,
                 'max_items_with_errors' => LogRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+                'minimal_level' => LogRecorder::DEFAULT_MINIMAL_LEVEL,
             ],
             CollectType::Queries->value => [
                 'with_traces' => QueryRecorder::DEFAULT_WITH_TRACES,

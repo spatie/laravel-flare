@@ -6,7 +6,6 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Routing\Contracts\CallableDispatcher;
 use Illuminate\Routing\Contracts\ControllerDispatcher;
 use Illuminate\Support\Facades\Log;
@@ -42,6 +41,8 @@ class FlareServiceProvider extends ServiceProvider
     protected FlareProvider $provider;
 
     protected FlareConfig $config;
+
+    protected ?Flare $flare = null;
 
     public function register(): void
     {
@@ -203,13 +204,13 @@ class FlareServiceProvider extends ServiceProvider
 
         // Reset before executing a queue job to make sure the job's log/query/dump recorders are empty.
         // When using a sync queue this also reports the queued reports from previous exceptions.
-        $queue->before(function (JobProcessing $jobProcessing) {
-            $this->resetFlareReporting();
+        $queue->before(function () {
+            $this->getFlare()->reset(reports: true, traces: false);
         });
 
         // Send queued reports (and reset) after executing a queue job.
         $queue->after(function () {
-            $this->resetFlareReporting();
+            $this->getFlare()->reset(reports: true, traces: false);
         });
 
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
@@ -240,24 +241,29 @@ class FlareServiceProvider extends ServiceProvider
     protected function setupOctane(): void
     {
         $this->app['events']->listen(RequestReceived::class, function () {
-            $this->resetFlareReporting();
+            $this->getFlare()->reset(reports: true, traces: false);
         });
 
         $this->app['events']->listen(TaskReceived::class, function () {
-            $this->resetFlareReporting();
+            $this->getFlare()->reset(reports: true, traces: false);
         });
 
         $this->app['events']->listen(TickReceived::class, function () {
-            $this->resetFlareReporting();
+            $this->getFlare()->reset(reports: true, traces: false);
         });
 
         $this->app['events']->listen(RequestTerminated::class, function () {
-            $this->resetFlareReporting();
+            TracingKernel::appTerminated(
+                $this->app,
+                $this->app->make(Flare::class)
+            );
+
+            $this->getFlare()->reset();
         });
     }
 
-    protected function resetFlareReporting(): void
+    protected function getFlare(): Flare
     {
-        $this->app->get(Flare::class)->resetReporting();
+        return $this->flare ??= $this->app->make(Flare::class);
     }
 }

@@ -37,7 +37,7 @@ class TracingKernel
         });
 
         $app->terminating(function () use ($app, $flare) {
-            self::appTerminated($app, $flare, initialCall: true);
+            self::appTerminating($app, $flare);
         });
 
         self::startPotentialTrace($flare);
@@ -69,29 +69,23 @@ class TracingKernel
         $flare->application()->recordBooted();
     }
 
-    protected static function appTerminated(Application $app, Flare $flare, bool $initialCall): void
+    protected static function appTerminating(Application $app, Flare $flare): void
     {
-        if ($initialCall === true) {
-            $flare->application()->recordTerminating();
+        $flare->application()->recordTerminating();
 
-            self::registerTerminatingCallbackAsLast($app, $flare);
+        $app->terminating(function () use ($app, $flare) {
+            self::appTerminated($app, $flare);
+        });
+    }
 
-            return;
-        }
-
+    public static function appTerminated(Application $app, Flare $flare): void
+    {
         $flare->application()->recordTerminated();
         $flare->application()->recordEnd();
     }
 
-    protected static function registerTerminatingCallbackAsLast(Application $app, Flare $flare): void
-    {
-        $app->terminating(function () use ($app, $flare) {
-            self::appTerminated($app, $flare, initialCall: false);
-        });
-    }
-
     protected static function isCompositeProcess(Application $app): bool
     {
-        return $app->runningConsoleCommand(['octane:start', 'horizon:work', 'queue:work', 'serve']);
+        return $app->runningConsoleCommand(['horizon:work', 'queue:work', 'serve']);
     }
 }
