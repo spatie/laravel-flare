@@ -10,14 +10,11 @@ trait DispatchesRoutes
 {
     protected function wrapDispatcher(Closure $dispatch): mixed
     {
-        Flare::routing()->recordBeforeMiddlewareEnd();
+        Flare::routing()?->recordBeforeMiddlewareEnd();
 
         $dispatched = $dispatch();
 
-        $this->tracer->startSpan(
-            'Response',
-            attributes: ['flare.span_type' => SpanType::Response]
-        );
+        Flare::response()?->recordStart();
 
         return $dispatched;
     }

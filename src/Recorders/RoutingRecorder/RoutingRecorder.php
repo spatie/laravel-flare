@@ -12,7 +12,6 @@ use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Recorders\RoutingRecorder\RoutingRecorder as BaseRoutingRecorder;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Facades\Flare;
 
 class RoutingRecorder extends BaseRoutingRecorder
@@ -49,9 +48,7 @@ class RoutingRecorder extends BaseRoutingRecorder
                 return;
             }
 
-            if ($this->tracer->hasCurrentSpan(LaravelSpanType::Response)) {
-                $this->tracer->endSpan();
-            }
+            Flare::response()?->recordEnd();
 
             if ($this->tracer->hasCurrentSpan(SpanType::Request)) {
                 $this->tracer->endSpan();

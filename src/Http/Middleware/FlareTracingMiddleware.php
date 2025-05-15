@@ -61,7 +61,7 @@ class FlareTracingMiddleware
 
         $this->requestSpan = $requestSpan;
 
-        Flare::routing()->recordGlobalBeforeMiddlewareStart();
+        Flare::routing()?->recordGlobalBeforeMiddlewareStart();
     }
 
     public function terminate(Request $request, Response $response): void
