@@ -41,7 +41,11 @@ class CommandRecorder extends BaseCommandRecorder
             $event->command,
             $event->input ?? [],
             attributes: [
-                'process.command_line' => trim(str_replace("'{$event->command}'", $event->command, (string) $event->input), '"\''),
+                'process.command_line' => str_replace(
+                    ["'{$event->command}'", '"{$event->command}"'],
+                    [$event->command, $event->command],
+                    (string) $event->input
+                ),
             ]
         );
     }
