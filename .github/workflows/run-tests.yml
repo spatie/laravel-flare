@@ -11,7 +11,6 @@ jobs:
             matrix:
                 php: [8.2, 8.3, 8.4]
                 laravel: [11.*, 12.*]
-                livewire: [3.3.5]
                 stability: [prefer-lowest, prefer-stable]
                 os: [ubuntu-latest, windows-latest]
 
@@ -32,7 +31,7 @@ jobs:
             -  name: Install dependencies
                run: |
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer update --with="livewire/livewire:^${{ matrix.livewire }}" --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest
+                    composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest
 
             - name: Execute tests
               run: vendor/bin/pest
