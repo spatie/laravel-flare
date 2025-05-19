@@ -46,9 +46,8 @@ it('can report a command', function () {
 
 
     expect($report->toArray()['events'][0]['attributes'])
-        ->toHaveCount(4)
+        ->toHaveCount(3)
         ->toHaveKey('process.command', 'flare:test-command')
-        ->toHaveKey('process.command_line', 'flare:test-command')
         ->toHaveKey('process.command_args', ["flare:test-command", "with-default"])
         ->toHaveKey('process.exit_code', 0);
 });
@@ -69,9 +68,8 @@ it('can trace a command', function () {
                         ->hasName('Command - flare:test-command')
                         ->hasType(SpanType::Command)
                         ->isEnded()
-                        ->hasAttributeCount(5)
+                        ->hasAttributeCount(4)
                         ->hasAttribute('process.command', 'flare:test-command')
-                        ->hasAttribute('process.command_line', 'flare:test-command')
                         ->hasAttribute('process.command_args', ["flare:test-command", "with-default"])
                         ->hasAttribute('process.exit_code', 0)
                 )
@@ -94,9 +92,8 @@ it('can trace a command with options and arguments', function () {
                         ->hasName('Command - flare:test-command')
                         ->hasType(SpanType::Command)
                         ->isEnded()
-                        ->hasAttributeCount(5)
+                        ->hasAttributeCount(4)
                         ->hasAttribute('process.command', 'flare:test-command')
-                        ->hasAttribute('process.command_line', 'flare:test-command --option=something --boolean-option some-argument')
                         ->hasAttribute('process.command_args', ["flare:test-command", "some-argument", "--option=something", "--boolean-option"])
                         ->hasAttribute('process.exit_code', 0)
                 )
@@ -141,9 +138,8 @@ it('can trace a nested command which will be added to the same trace', function 
                         ->hasName('Command - flare:test-command')
                         ->hasType(SpanType::Command)
                         ->isEnded()
-                        ->hasAttributeCount(5)
+                        ->hasAttributeCount(4)
                         ->hasAttribute('process.command', 'flare:test-command')
-                        ->hasAttribute('process.command_line', 'flare:test-command --run-nested')
                         ->hasAttribute('process.command_args', ["flare:test-command", "with-default", "--run-nested"])
                         ->hasAttribute('process.exit_code', 0),
                     $parentSpan
@@ -153,10 +149,9 @@ it('can trace a nested command which will be added to the same trace', function 
                         ->hasName('Command - flare:test-command')
                         ->hasType(SpanType::Command)
                         ->isEnded()
-                        ->hasAttributeCount(5)
+                        ->hasAttributeCount(4)
                         ->hasParent($parentSpan)
                         ->hasAttribute('process.command', 'flare:test-command')
-                        ->hasAttribute('process.command_line', 'flare:test-command --option=nested --boolean-option=1 nested-argument')
                         ->hasAttribute('process.command_args', ['nested-argument', "flare:test-command", '--option=nested', '--boolean-option'])
                         ->hasAttribute('process.exit_code', 0)
                 )
