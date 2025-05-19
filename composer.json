@@ -31,7 +31,7 @@
         "livewire/livewire": "^3.6.0",
         "mockery/mockery": "^1.6.12",
         "openai-php/client": "^0.8.5",
-        "orchestra/testbench": "8.22.3|^9.0|^10.0",
+        "orchestra/testbench": "^9.14|^10.0",
         "pestphp/pest": "^2.34|^3.7.4",
         "pestphp/pest-plugin-laravel" : "^2.4|^3.0",
         "phpstan/extension-installer": "^1.4.3",
