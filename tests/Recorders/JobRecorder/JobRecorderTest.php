@@ -8,6 +8,7 @@ use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
+use Exception;
 
 uses(ConfigureFlare::class);
 

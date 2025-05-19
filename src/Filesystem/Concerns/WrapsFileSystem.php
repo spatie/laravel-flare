@@ -457,6 +457,10 @@ trait WrapsFileSystem
     ): mixed {
         $recorder = Flare::filesystem();
 
+        if($recorder === null){
+            return $this->filesystem->{$method}(...$arguments);
+        }
+
         $start($recorder);
 
         $returned = $this->filesystem->{$method}(...$arguments);

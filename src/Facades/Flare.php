@@ -21,11 +21,11 @@ use Throwable;
  * @method static FlareClient withApplicationVersion(string|Closure $version)
  * @method static FlareClient filterExceptionsUsing(Closure $filterExceptionsCallable)
  * @method static FlareClient filterReportsUsing(Closure $filterReportsCallable)
- * @method static GlowRecorder glow()
- * @method static FilesystemRecorder filesystem()
+ * @method static ?GlowRecorder glow()
+ * @method static ?FilesystemRecorder filesystem()
  * @method static ApplicationRecorder application()
- * @method static RoutingRecorder routing()
- * @method static ResponseRecorder response()
+ * @method static ?RoutingRecorder routing()
+ * @method static ?ResponseRecorder response()
  * @method static Tracer tracer()
  * @see \Spatie\FlareClient\Flare
  */
