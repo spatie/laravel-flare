@@ -1,5 +1,6 @@
 <?php
 
+use Exception;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
@@ -8,7 +9,6 @@ use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use Exception;
 
 uses(ConfigureFlare::class);
 
