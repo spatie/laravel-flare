@@ -2,20 +2,29 @@
 
 use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Collection;
-use Spatie\LaravelFlare\Facades\Flare;
+use Spatie\Backtrace\Arguments\ArgumentReducers;
+use Spatie\FlareClient\Flare;
+use Spatie\LaravelFlare\FlareConfig;
+use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeArgumentsReducer;
+
+uses(ConfigureFlare::class);
 
 beforeEach(function () {
     ini_set('zend.exception_ignore_args', 0); // Enabled on GH actions
+
+    app()->singleton(FlareConfig::class, fn () => FlareConfig::make('fake')->stackArguments(false));
 });
 
 it('can reduce a collection', function () {
+    $flare = setupFlare();
+
     function collectionException(Collection $collection)
     {
         return new Exception('Whoops');
     }
 
-    $report = Flare::createReport(collectionException(collect(['a', 'b', 'nested' => ['c', 'd']])));
+    $report = $flare->report(collectionException(collect(['a', 'b', 'nested' => ['c', 'd']])));
 
     expect($report->toArray()['stacktrace'][1]['arguments'][0])->toBe([
         'name' => 'collection',
@@ -28,6 +37,8 @@ it('can reduce a collection', function () {
 });
 
 it('can reduce a model', function () {
+    $flare = setupFlare();
+
     $user = new User();
     $user->id = 10;
 
@@ -36,7 +47,7 @@ it('can reduce a model', function () {
         return new Exception('Whoops');
     }
 
-    $report = Flare::createReport(userException($user));
+    $report = app(Flare::class)->report(userException($user));
 
     expect($report->toArray()['stacktrace'][1]['arguments'][0])->toBe([
         'name' => 'user',
@@ -49,29 +60,29 @@ it('can reduce a model', function () {
 });
 
 it('can disable the use of arguments', function () {
+    $flare = setupFlare(fn (FlareConfig $config) => $config->ignoreStackFrameArguments());
+
     function exceptionWithArgumentsDisabled(string $string)
     {
         return new Exception('Whoops');
     }
 
-    config()->set('flare.with_stack_frame_arguments', false);
-
-    $report = Flare::createReport(exceptionWithArgumentsDisabled('Hello World'));
+    $report = $flare->report(exceptionWithArgumentsDisabled('Hello World'));
 
     expect($report->toArray()['stacktrace'][1]['arguments'])->toBeNull();
 });
 
 it('can set a custom arguments reducer', function () {
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectStackFrameArguments(argumentReducers: ArgumentReducers::create([
+        FakeArgumentsReducer::class,
+    ])));
+
     function exceptionWithCustomArgumentReducer(string $string)
     {
         return new Exception('Whoops');
     }
 
-    config()->set('flare.argument_reducers', [
-        FakeArgumentsReducer::class,
-    ]);
-
-    $report = Flare::createReport(exceptionWithCustomArgumentReducer('Hello World'));
+    $report = $flare->report(exceptionWithCustomArgumentReducer('Hello World'));
 
     expect($report->toArray()['stacktrace'][1]['arguments'][0]['value'])->toBe('FAKE');
 });

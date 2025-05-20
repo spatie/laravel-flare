@@ -2,63 +2,42 @@
 
 namespace Spatie\LaravelFlare\Recorders\LogRecorder;
 
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Log\Events\MessageLogged;
+use Spatie\FlareClient\Enums\MessageLevels;
+use Spatie\FlareClient\Recorders\LogRecorder\LogRecorder as BaseLogRecorder;
+use Spatie\FlareClient\Spans\SpanEvent;
+use Spatie\FlareClient\Support\BackTracer;
+use Spatie\FlareClient\Tracer;
 use Throwable;
 
-class LogRecorder
+class LogRecorder extends BaseLogRecorder
 {
-    /** @var \Spatie\LaravelFlare\Recorders\LogRecorder\LogMessage[] */
-    protected array $logMessages = [];
-
-    protected Application $app;
-
-    protected ?int $maxLogs;
-
-    public function __construct(Application $app, ?int $maxLogs = null)
-    {
-        $this->app = $app;
-
-        $this->maxLogs = $maxLogs;
+    public function __construct(
+        Tracer $tracer,
+        BackTracer $backTracer,
+        protected Dispatcher $dispatcher,
+        array $config
+    ) {
+        parent::__construct($tracer, $backTracer, $config);
     }
 
-    public function start(): self
+    public function boot(): void
     {
-        /** @phpstan-ignore-next-line */
-        $this->app['events']->listen(MessageLogged::class, [$this, 'record']);
-
-        return $this;
+        $this->dispatcher->listen(MessageLogged::class, fn (MessageLogged $event) => $this->recordEvent($event));
     }
 
-    public function record(MessageLogged $event): void
+    public function recordEvent(MessageLogged $event): ?SpanEvent
     {
         if ($this->shouldIgnore($event)) {
-            return;
+            return null;
         }
 
-        $this->logMessages[] = LogMessage::fromMessageLoggedEvent($event);
-
-        if (is_int($this->maxLogs)) {
-            $this->logMessages = array_slice($this->logMessages, -$this->maxLogs);
-        }
-    }
-
-    /** @return array<array<int,string>> */
-    public function getLogMessages(): array
-    {
-        return $this->toArray();
-    }
-
-    /** @return array<int, mixed> */
-    public function toArray(): array
-    {
-        $logMessages = [];
-
-        foreach ($this->logMessages as $log) {
-            $logMessages[] = $log->toArray();
-        }
-
-        return $logMessages;
+        return $this->record(
+            $event->message,
+            MessageLevels::tryFrom($event->level) ?? MessageLevels::Info,
+            $event->context,
+        );
     }
 
     protected function shouldIgnore(mixed $event): bool
@@ -72,22 +51,5 @@ class LogRecorder
         }
 
         return true;
-    }
-
-    public function reset(): void
-    {
-        $this->logMessages = [];
-    }
-
-    public function getMaxLogs(): ?int
-    {
-        return $this->maxLogs;
-    }
-
-    public function setMaxLogs(?int $maxLogs): self
-    {
-        $this->maxLogs = $maxLogs;
-
-        return $this;
     }
 }

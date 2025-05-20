@@ -3,16 +3,21 @@
 namespace Spatie\LaravelFlare\FlareMiddleware;
 
 use Closure;
-use Spatie\Backtrace\Backtrace;
 use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
-use Spatie\FlareClient\Report;
+use Spatie\FlareClient\ReportFactory;
+use Spatie\FlareClient\Support\BackTracer;
 use Throwable;
 
 class AddExceptionHandledStatus implements FlareMiddleware
 {
-    public function handle(Report $report, Closure $next)
+    public function __construct(
+        protected BackTracer $backTracer
+    ) {
+    }
+
+    public function handle(ReportFactory $report, Closure $next): ReportFactory
     {
-        $frames = Backtrace::create()->limit(40)->frames();
+        $frames = $this->backTracer->frames(40);
         $frameCount = count($frames);
 
         try {

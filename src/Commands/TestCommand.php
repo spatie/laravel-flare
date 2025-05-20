@@ -9,13 +9,12 @@ use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
 use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Foundation\Exceptions\ReportableHandler;
-use Illuminate\Log\LogManager;
 use Laravel\SerializableClosure\Support\ReflectionClosure;
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionProperty;
 use Spatie\FlareClient\Flare;
-use Spatie\FlareClient\Http\Exceptions\BadResponseCode;
+use Spatie\FlareClient\Senders\Exceptions\BadResponseCode;
 
 class TestCommand extends Command
 {
@@ -29,37 +28,35 @@ class TestCommand extends Command
     {
         $this->config = $config;
 
-        $this->checkFlareKey();
+        $hasKey = $this->checkFlareKey();
 
         if ($this->checkFlareLogger() === false) {
             return Command::FAILURE;
         }
 
-        $this->sendTestException();
+        if ($hasKey) {
+            $this->sendTestException();
+        }
 
         return Command::SUCCESS;
     }
 
-    protected function checkFlareKey(): self
+    protected function checkFlareKey(): bool
     {
-        $message = empty($this->config->get('flare.key'))
-            ? '❌ Flare key not specified. Make sure you specify a value in the `key` key of the `flare` config file.'
-            : '✅ Flare key specified';
+        $hasKey = ! empty($this->config->get('flare.key'));
+
+        $message = $hasKey
+            ? '✅ Flare key specified'
+            : '❌ Flare key not specified. Make sure you specify a value in the `key` key of the `flare` config file.';
 
         $this->info($message);
 
-        return $this;
+        return $hasKey;
     }
 
     public function checkFlareLogger(): bool
     {
-        if (! app()->make('log') instanceof LogManager) {
-            return true;
-        }
-
-        $configuredCorrectly = $this->shouldUseReportableCallbackLogger()
-            ? $this->isValidReportableCallbackFlareLogger()
-            : $this->isValidConfigFlareLogger();
+        $configuredCorrectly = $this->isValidReportableCallbackFlareLogger();
 
         if ($configuredCorrectly === false) {
             return false;
@@ -74,65 +71,11 @@ class TestCommand extends Command
         return true;
     }
 
-    protected function shouldUseReportableCallbackLogger(): bool
-    {
-        return version_compare(app()->version(), '11.0.0', '>=');
-    }
-
-    protected function isValidConfigFlareLogger(): bool
-    {
-        $failures = $this->resolveConfigFlareLoggerFailures();
-
-        foreach ($failures as $failure) {
-            $this->info($failure);
-        }
-
-        return empty($failures);
-    }
-
-    /** @return string[] */
-    protected function resolveConfigFlareLoggerFailures(): array
-    {
-        $defaultLogChannel = $this->config->get('logging.default');
-
-        $activeStack = $this->config->get("logging.channels.{$defaultLogChannel}");
-
-        $failures = [];
-
-        if (is_null($activeStack)) {
-            $failures[] = "❌ The default logging channel `{$defaultLogChannel}` is not configured in the `logging` config file";
-        }
-
-        if (! isset($activeStack['channels']) || ! in_array('flare', $activeStack['channels'])) {
-            $failures[] = "❌ The logging channel `{$defaultLogChannel}` does not contain the 'flare' channel";
-        }
-
-        if (is_null($this->config->get('logging.channels.flare'))) {
-            $failures[] = '❌ There is no logging channel named `flare` in the `logging` config file';
-        }
-
-        if ($this->config->get('logging.channels.flare.driver') !== 'flare') {
-            $failures[] = '❌ The `flare` logging channel defined in the `logging` config file is not set to `flare`.';
-        }
-
-        return $failures;
-    }
-
     protected function isValidReportableCallbackFlareLogger(): bool
     {
-        $configLoggerFailures = $this->resolveConfigFlareLoggerFailures();
-
         $hasReportableCallbackFlareLogger = $this->hasReportableCallbackFlareLogger();
 
-        if (empty($configLoggerFailures) && $hasReportableCallbackFlareLogger) {
-            $this->info('❌ The Flare logger was defined in your Laravel `logging.php` config file and `bootstrap/app.php` file which can cause duplicate errors. Please remove the Flare logger from your `logging.php` config file.');
-        }
-
         if ($hasReportableCallbackFlareLogger) {
-            return true;
-        }
-
-        if (empty($configLoggerFailures)) {
             return true;
         }
 
@@ -197,13 +140,13 @@ class TestCommand extends Command
                 $this->info('');
                 $message = 'Unknown error';
 
-                $body = $exception->response->getBody();
+                $body = $exception->response->body;
 
                 if (is_array($body) && isset($body['message'])) {
                     $message = $body['message'];
                 }
 
-                $this->warn("{$exception->response->getHttpResponseCode()} - {$message}");
+                $this->warn("{$exception->response->code} - {$message}");
             } else {
                 $this->warn($exception->getMessage());
             }
@@ -222,9 +165,7 @@ class TestCommand extends Command
                 ['Laravel', app()->version()],
                 ['spatie/laravel-flare', InstalledVersions::getVersion('spatie/laravel-flare')],
                 ['spatie/flare-client-php', InstalledVersions::getVersion('spatie/flare-client-php')],
-                /** @phpstan-ignore-next-line */
                 ['Curl', curl_version()['version'] ?? 'Unknown'],
-                /** @phpstan-ignore-next-line */
                 ['SSL', curl_version()['ssl_version'] ?? 'Unknown'],
             ]);
 
