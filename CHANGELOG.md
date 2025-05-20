@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.0.1 - 2025-05-20
+
+- Use correct dependency
+
 ## 2.0.0 - 2025-05-20
 
 A complete new release!
