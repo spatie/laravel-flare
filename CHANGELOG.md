@@ -2,6 +2,13 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.0.0 - 2025-05-20
+
+A complete new release!
+
+- Please read the upgrade guide and use the new config file instead of the old one
+- We've also updated our docs with all the new features
+
 ## 1.1.2 - 2025-03-01
 
 ### What's Changed
