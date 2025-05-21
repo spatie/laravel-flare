@@ -23,6 +23,7 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMariadbCollationSolut
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
+use Spatie\FlareClient\Api;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
@@ -72,7 +73,7 @@ class FlareConfig extends BaseFlareConfig
 
         $config = new self(
             apiToken: config('flare.key'),
-            baseUrl: config('flare.base_url', 'https://flareapp.io/api'),
+            baseUrl: config('flare.base_url', Api::BASE_URL),
             collects: $collects,
             reportErrorLevels: config('flare.report_error_levels'),
             applicationPath: base_path(),

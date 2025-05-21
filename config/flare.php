@@ -1,5 +1,6 @@
 <?php
 
+use Spatie\FlareClient\Api;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\FlareConfig;
 
@@ -26,10 +27,8 @@ return [
     |
     | Which server should be used to send the reports/traces to.
     |
-    | Default: https://flareapp.io
-    |
     */
-    'base_url' => env('FLARE_BASE_URL', 'https://flareapp.io'),
+    'base_url' => env('FLARE_BASE_URL', Api::BASE_URL),
 
     /*
     |--------------------------------------------------------------------------
