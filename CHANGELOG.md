@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.0.3 - 2025-05-23
+
+- Fix an error with a route not being ended well
+
 ## 2.0.2 - 2025-05-21
 
 - Use correct base url
