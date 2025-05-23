@@ -48,6 +48,11 @@ class RoutingRecorder extends BaseRoutingRecorder
                 return;
             }
 
+            // In some cases when an error happens in one of these stages (or an abort is thrown) the only event to catch this is the RequestHandled event.
+            Flare::routing()?->recordGlobalBeforeMiddlewareEnd();
+            Flare::routing()?->recordBeforeMiddlewareEnd();
+            Flare::routing()?->recordRoutingEnd();
+
             Flare::response()?->recordEnd();
 
             if ($this->tracer->hasCurrentSpan(SpanType::Request)) {
