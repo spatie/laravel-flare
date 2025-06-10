@@ -41,8 +41,10 @@ class Flare extends Facade
      *
      * @return void
      */
-    public static function handles(Exceptions $exceptions): void
+    public static function handles(?Exceptions $exceptions = null): void
     {
+        $exceptions ??= app(Exceptions::class);
+
         $exceptions->reportable(static function (Throwable $exception): ?FlareClient {
             $config = app(FlareConfig::class);
 
