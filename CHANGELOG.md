@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.0.4 - 2025-06-10
+
+- Support old Laravel skeletons
+
 ## 2.0.3 - 2025-05-23
 
 - Fix an error with a route not being ended well
