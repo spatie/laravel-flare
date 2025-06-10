@@ -60,6 +60,8 @@ class Flare extends Facade
 
         if ($exceptions) {
             $exceptions->reportable($reportable);
+
+            return;
         }
 
         $handler = app(ExceptionHandler::class);
