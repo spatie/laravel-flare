@@ -7,7 +7,7 @@ use Composer\InstalledVersions;
 use Exception;
 use Illuminate\Config\Repository;
 use Illuminate\Console\Command;
-use Illuminate\Foundation\Exceptions\Handler;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\ReportableHandler;
 use Laravel\SerializableClosure\Support\ReflectionClosure;
 use ReflectionException;
@@ -93,7 +93,12 @@ class TestCommand extends Command
     protected function hasReportableCallbackFlareLogger(): bool
     {
         try {
-            $handler = app(Handler::class);
+            $handler = app(ExceptionHandler::class);
+
+            if ($handler instanceof \NunoMaduro\Collision\Adapters\Laravel\ExceptionHandler) {
+                $reflection = new ReflectionProperty($handler, 'appExceptionHandler');
+                $handler = $reflection->getValue($handler);
+            }
 
             $reflection = new ReflectionProperty($handler, 'reportCallbacks');
             $reportCallbacks = $reflection->getValue($handler);

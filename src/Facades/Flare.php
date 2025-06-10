@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare\Facades;
 
 use Closure;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
@@ -21,11 +22,11 @@ use Throwable;
  * @method static FlareClient withApplicationVersion(string|Closure $version)
  * @method static FlareClient filterExceptionsUsing(Closure $filterExceptionsCallable)
  * @method static FlareClient filterReportsUsing(Closure $filterReportsCallable)
- * @method static ?GlowRecorder glow()
- * @method static ?FilesystemRecorder filesystem()
+ * @method static GlowRecorder|null glow()
+ * @method static FilesystemRecorder|null filesystem()
  * @method static ApplicationRecorder application()
- * @method static ?RoutingRecorder routing()
- * @method static ?ResponseRecorder response()
+ * @method static RoutingRecorder|null routing()
+ * @method static ResponseRecorder|null response()
  * @method static Tracer tracer()
  * @see \Spatie\FlareClient\Flare
  */
@@ -43,9 +44,7 @@ class Flare extends Facade
      */
     public static function handles(?Exceptions $exceptions = null): void
     {
-        $exceptions ??= app(Exceptions::class);
-
-        $exceptions->reportable(static function (Throwable $exception): ?FlareClient {
+        $reportable = static function (Throwable $exception): ?FlareClient {
             $config = app(FlareConfig::class);
 
             if ($config->apiToken === null) {
@@ -57,6 +56,16 @@ class Flare extends Facade
             $flare->report($exception);
 
             return $flare;
-        });
+        };
+
+        if ($exceptions) {
+            $exceptions->reportable($reportable);
+        }
+
+        $handler = app(ExceptionHandler::class);
+
+        if (method_exists($handler, 'reportable')) {
+            $handler->reportable($reportable);
+        }
     }
 }
