@@ -51,4 +51,6 @@ error page. This package can only be installed on Laravel 11.10 and up.
 When upgrading, please merge the contents of the `ignition.php` config file into the `flare.php` config file. And check
 if new config options are available in the `flare.php` config file.
 
+Don't forget to remove the `spatie/laravel-ingition` dependency since it cannot work together with `spatie/laravel-flare`.
+
 That's it!
