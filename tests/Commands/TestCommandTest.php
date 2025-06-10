@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler;
 use Spatie\LaravelFlare\Facades\Flare;
@@ -7,7 +8,7 @@ use Spatie\LaravelFlare\Facades\Flare;
 it('can execute the test command when a flare key is present with a Laravel handler configuration', function () {
     withFlareKey();
 
-    app()->extend(Handler::class, function (Handler $handler) {
+    app()->extend(ExceptionHandler::class, function (Handler $handler) {
         Flare::handles(new Exceptions($handler));
 
         return $handler;
