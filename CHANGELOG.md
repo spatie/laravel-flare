@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.0.5 - 2025-06-16
+
+### What's Changed
+
+* Allow enabling trace by .env variable by @mbardelmeijer in https://github.com/spatie/laravel-flare/pull/9
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.0.4...2.0.5
+
 ## 2.0.4 - 2025-06-10
 
 - Support old Laravel skeletons
