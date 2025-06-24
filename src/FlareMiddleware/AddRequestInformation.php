@@ -31,6 +31,10 @@ class AddRequestInformation extends BaseAddRequestInformation
     {
         $request = app(LaravelRequest::class);
 
-        return $this->attributesProvider->toArray($request, $this->includeLivewireComponents);
+        return $this->attributesProvider->toArray(
+            $request,
+            includeContents: true,
+            includeLivewireComponents: $this->includeLivewireComponents
+        );
     }
 }
