@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\View;
 use Spatie\FlareClient\Disabled\DisabledFlare;
@@ -56,7 +55,7 @@ it('will register a version of the disabled Flare client if no API key is set', 
     expect($flare->tracer())->toBeInstanceOf(DisabledTracer::class);
 });
 
-it('will allow handling reports with disabled Flare (yet nothing will be sent or recorder)', function (){
+it('will allow handling reports with disabled Flare (yet nothing will be sent or recorder)', function () {
     bootupDisabledFlare();
 
     FlareFacade::handles();

@@ -57,8 +57,8 @@ class FlareServiceProvider extends ServiceProvider
             $this->config = $this->app->make(FlareConfig::class);
         }
 
-        if(empty($this->config->apiToken)){
-            $this->app->singleton(Flare::class, fn() => new DisabledFlare());
+        if (empty($this->config->apiToken)) {
+            $this->app->singleton(Flare::class, fn () => new DisabledFlare());
 
             return;
         }
