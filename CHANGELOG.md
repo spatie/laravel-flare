@@ -2,6 +2,11 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.0.6 - 2025-06-24
+
+- Fix an issue where bodies of requests were missing when an error was reported
+- Add support for completely disabling Flare when no key is set
+
 ## 2.0.5 - 2025-06-16
 
 ### What's Changed
