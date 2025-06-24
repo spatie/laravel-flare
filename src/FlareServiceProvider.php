@@ -16,6 +16,7 @@ use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
 use Monolog\Logger;
+use Spatie\FlareClient\Disabled\DisabledFlare;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
 use Spatie\FlareClient\Resources\Resource;
@@ -54,6 +55,12 @@ class FlareServiceProvider extends ServiceProvider
             $this->app->singleton(FlareConfig::class, fn () => $this->config);
         } else {
             $this->config = $this->app->make(FlareConfig::class);
+        }
+
+        if(empty($this->config->apiToken)){
+            $this->app->singleton(Flare::class, fn() => new DisabledFlare());
+
+            return;
         }
 
         $this->registerLogHandler();
@@ -120,7 +127,7 @@ class FlareServiceProvider extends ServiceProvider
             ], 'flare-config');
         }
 
-        if ($this->config->apiToken === null) {
+        if (empty($this->config->apiToken)) {
             return;
         }
 
