@@ -47,6 +47,8 @@ class FlareServiceProvider extends ServiceProvider
 
     public function register(): void
     {
+        Log::info('Registering Flare Service Provider');
+
         if (! $this->app->has(FlareConfig::class)) {
             $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/flare.php', 'flare');
 
@@ -117,6 +119,8 @@ class FlareServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Log::info('Booting Flare Service Provider');
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 TestCommand::class,

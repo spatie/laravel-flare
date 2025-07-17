@@ -58,6 +58,8 @@ class CommandRecorder extends BaseCommandRecorder
             'list',
             'queue:work',
             'horizon:work',
+            'octane:start',
+            'serve'
         ]);
     }
 }

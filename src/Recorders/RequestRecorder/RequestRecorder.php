@@ -1,0 +1,43 @@
+<?php
+
+namespace Spatie\LaravelFlare\Recorders\RequestRecorder;
+
+use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider;
+use Spatie\FlareClient\Enums\SpanType;
+use Spatie\FlareClient\Recorders\RequestRecorder\RequestRecorder as BaseRequestRecorder;
+use Spatie\FlareClient\Spans\Span;
+use Spatie\FlareClient\Support\BackTracer;
+use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
+use Symfony\Component\HttpFoundation\Request;
+
+class RequestRecorder extends BaseRequestRecorder
+{
+    protected function canStartTraces(): bool
+    {
+        return true;
+    }
+
+    public function __construct(
+        Tracer $tracer,
+        BackTracer $backTracer,
+        array $config,
+        LaravelRequestAttributesProvider $requestAttributesProvider
+    ) {
+        parent::__construct($tracer, $backTracer, $config, $requestAttributesProvider);
+    }
+
+    public function recordStart(?Request $request = null, ?string $route = null, ?string $entryPointClass = null, array $attributes = []): ?Span
+    {
+        return $this->startSpan(nameAndAttributes: function () use ($entryPointClass, $route, $request, $attributes) {
+            return [
+                'name' => "Request - {$request->url()}",
+                'attributes' => [
+                    'flare.span_type' => SpanType::Request,
+                    'http.request.method' => strtoupper($request->getMethod()),
+                    ...$attributes,
+                ],
+            ];
+        });
+    }
+}
