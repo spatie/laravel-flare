@@ -2,7 +2,6 @@
 
 namespace Spatie\LaravelFlare\Recorders\RequestRecorder;
 
-use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Recorders\RequestRecorder\RequestRecorder as BaseRequestRecorder;
 use Spatie\FlareClient\Spans\Span;
