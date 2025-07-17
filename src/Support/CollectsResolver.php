@@ -23,6 +23,7 @@ use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
 use Spatie\LaravelFlare\Recorders\RedisCommandRecorder\RedisCommandRecorder;
+use Spatie\LaravelFlare\Recorders\RequestRecorder\RequestRecorder;
 use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
@@ -51,6 +52,7 @@ class CollectsResolver extends BaseCollectsResolver
         $this->requestsMiddlewareClass = $middleware;
         $this->addMiddleware($middleware);
 
+        $this->addRecorder(RequestRecorder::class);
         $this->addRecorder(RoutingRecorder::class);
     }
 

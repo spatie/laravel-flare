@@ -1,6 +1,5 @@
 <?php
 
-use Exception;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
@@ -19,7 +18,7 @@ it('can trace jobs executions', function () {
         dispatch(function () {
             return 'ok';
         })->onConnection('sync');
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         $this->assertNotNull($e);
     }
 
@@ -42,9 +41,9 @@ it('can trace jobs failures', function () {
 
     try {
         dispatch(function () {
-            throw new Exception('Failed');
+            throw new \Exception('Failed');
         })->onConnection('sync');
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         $this->assertNotNull($e);
     }
 
@@ -70,9 +69,9 @@ it('will not try to add an exception to a never started span', function () {
 
     try {
         dispatch(function () {
-            throw new Exception('Failed');
+            throw new \Exception('Failed');
         })->onConnection('sync');
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         $this->assertNotNull($e);
     }
 

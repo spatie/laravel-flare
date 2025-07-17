@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
 use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
@@ -70,11 +69,7 @@ class QueueRecorder implements SpansRecorder
             return $payload;
         });
 
-        //        $this->dispatcher->listen(JobQueueing::class, fn ($e) => ray($e));
-        //        $this->dispatcher->listen(JobQueued::class, fn ($e) => ray($e));
-        //        $this->dispatcher->listen(JobProcessing::class, fn ($e) => ray($e));
-        //
-        //        $this->dispatcher->listen(JobProcessed::class, fn ($e) => ray($e));
+
         $this->dispatcher->listen(JobQueued::class, [$this, 'recordQueued']);
     }
 

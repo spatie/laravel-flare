@@ -86,6 +86,6 @@ class TracingKernel
 
     protected static function isCompositeProcess(Application $app): bool
     {
-        return $app->runningConsoleCommand(['horizon:work', 'queue:work', 'serve']);
+        return $app->runningConsoleCommand(['horizon:work', 'queue:work', 'serve', 'octane:start']);
     }
 }
