@@ -13,6 +13,7 @@ use Spatie\FlareClient\Recorders\ResponseRecorder\ResponseRecorder;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
+use Spatie\LaravelFlare\Recorders\RequestRecorder\RequestRecorder;
 use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
 use Throwable;
 
@@ -27,6 +28,7 @@ use Throwable;
  * @method static ApplicationRecorder application()
  * @method static RoutingRecorder|null routing()
  * @method static ResponseRecorder|null response()
+ * @method static RequestRecorder|null request()
  * @method static Tracer tracer()
  * @see \Spatie\FlareClient\Flare
  */
