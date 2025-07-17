@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
 use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
