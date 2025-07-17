@@ -32,6 +32,7 @@
         "mockery/mockery": "^1.6.12",
         "openai-php/client": "^0.8.5",
         "orchestra/testbench": "^9.14|^10.0",
+        "laravel/serializable-closure" : "^2.0",
         "pestphp/pest": "^2.34|^3.7.4",
         "pestphp/pest-plugin-laravel" : "^2.4|^3.0",
         "phpstan/extension-installer": "^1.4.3",
