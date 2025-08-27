@@ -57,6 +57,8 @@ class FlareServiceProvider extends ServiceProvider
             $this->config = $this->app->make(FlareConfig::class);
         }
 
+        $this->registerShareButton();
+
         if (empty($this->config->apiToken)) {
             $this->app->singleton(Flare::class, fn () => new DisabledFlare());
 
@@ -88,8 +90,6 @@ class FlareServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(ViewFrameMapper::class);
-
-        $this->registerShareButton();
 
         if ($this->config->trace === false) {
             return;
