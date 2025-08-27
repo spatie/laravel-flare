@@ -48,7 +48,7 @@ class FlareServiceProvider extends ServiceProvider
     public function register(): void
     {
         if (! $this->app->has(FlareConfig::class)) {
-            $this->replaceConfigRecursivelyFrom(__DIR__.'/../config/flare.php', 'flare');
+            $this->mergeConfigFrom(__DIR__.'/../config/flare.php', 'flare');
 
             $this->config = FlareConfig::fromLaravelConfig();
 

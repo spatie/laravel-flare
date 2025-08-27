@@ -215,7 +215,7 @@ class FlareConfig extends BaseFlareConfig
         }
 
         if (count($extra) > 0) {
-            return array_merge($collects, $extra);
+            return array_merge_recursive($collects, $extra);
         }
 
         return $collects;
