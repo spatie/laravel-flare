@@ -52,7 +52,7 @@ class JobRecorder extends Recorder implements SpansRecorder
 
         $this->ignore = self::INTERNAL_IGNORED_JOBS;
 
-        if(array_key_exists('ignore', $config)){
+        if (array_key_exists('ignore', $config)) {
             array_push($this->ignore, ...$config['ignore']);
         }
     }
@@ -71,7 +71,7 @@ class JobRecorder extends Recorder implements SpansRecorder
 
     public function recordProcessing(JobProcessing $event): ?Span
     {
-        if($this->shouldIgnore($event->job)) {
+        if ($this->shouldIgnore($event->job)) {
             return null;
         }
 
@@ -96,7 +96,7 @@ class JobRecorder extends Recorder implements SpansRecorder
 
     public function recordProcessed(JobProcessed $event): void
     {
-        if($this->shouldIgnore($event->job)) {
+        if ($this->shouldIgnore($event->job)) {
             return;
         }
 
@@ -109,7 +109,7 @@ class JobRecorder extends Recorder implements SpansRecorder
 
     public function recordExceptionOccurred(JobExceptionOccurred $event): void
     {
-        if($this->shouldIgnore($event->job)) {
+        if ($this->shouldIgnore($event->job)) {
             return;
         }
 

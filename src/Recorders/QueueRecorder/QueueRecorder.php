@@ -35,7 +35,7 @@ class QueueRecorder implements SpansRecorder
 
         $this->ignore = JobRecorder::INTERNAL_IGNORED_JOBS;
 
-        if(array_key_exists('ignore', $config)){
+        if (array_key_exists('ignore', $config)) {
             array_push($this->ignore, ...$config['ignore']);
         }
     }
@@ -56,7 +56,7 @@ class QueueRecorder implements SpansRecorder
                 return $payload;
             }
 
-            if($this->isIgnored($payload)){
+            if ($this->isIgnored($payload)) {
                 return $payload;
             }
 
@@ -90,7 +90,7 @@ class QueueRecorder implements SpansRecorder
     public function recordQueued(
         JobQueued $event,
     ): ?Span {
-        if($this->isIgnored($event->payload())){
+        if ($this->isIgnored($event->payload())) {
             return null;
         }
 
@@ -110,7 +110,7 @@ class QueueRecorder implements SpansRecorder
     {
         $class = $payload['displayName'] ?? null;
 
-        if($class === null) {
+        if ($class === null) {
             return false;
         }
 

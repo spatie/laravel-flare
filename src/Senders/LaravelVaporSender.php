@@ -43,7 +43,7 @@ class LaravelVaporSender implements Sender
             FlarePayloadType::Traces => $this->queueTraces
         };
 
-        if(app()->runningInConsole()){
+        if (app()->runningInConsole()) {
             $shouldQueue = false;
         }
 

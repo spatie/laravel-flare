@@ -14,7 +14,10 @@ use Spatie\FlareClient\Senders\Support\Response;
 
 class SendFlarePayload implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
 
     /**
      * @param class-string<Sender> $sender

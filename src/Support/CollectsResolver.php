@@ -86,7 +86,7 @@ class CollectsResolver extends BaseCollectsResolver
 
     protected function jobs(array $options): void
     {
-        if(array_key_exists('ignore', $options) && is_string($options['ignore'])){
+        if (array_key_exists('ignore', $options) && is_string($options['ignore'])) {
             $options['ignore'] = [$options['ignore']];
         }
 
@@ -95,7 +95,7 @@ class CollectsResolver extends BaseCollectsResolver
             'with_errors',
             'max_items_with_errors',
             'max_chained_job_reporting_depth',
-            'ignore'
+            'ignore',
         ]));
 
         $this->addRecorder($options['queue_recorder'] ?? QueueRecorder::class, $this->only($options, [
