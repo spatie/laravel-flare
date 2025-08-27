@@ -2,6 +2,11 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.1.0 - 2025-08-27
+
+- Fix vapor issues
+- Allow logs to have stack traces
+
 ## 2.0.7 - 2025-07-17
 
 - Fix issues with performance monitoring on Octane
