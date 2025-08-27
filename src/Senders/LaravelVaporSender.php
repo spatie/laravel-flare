@@ -12,6 +12,7 @@ class LaravelVaporSender implements Sender
 {
     protected static Sender $senderInstance;
 
+    /** @var class-string<Sender> */
     protected string $sender;
 
     protected array $senderConfig;
@@ -31,7 +32,7 @@ class LaravelVaporSender implements Sender
         $this->senderConfig = $this->config['sender_config'] ?? [];
         $this->queueTraces = $this->config['queue_traces'] ?? true;
         $this->queueErrors = $this->config['queue_errors'] ?? false;
-        $this->queue = $this->config['queue'] ?? false;
+        $this->queue = $this->config['queue'] ?? null;
         $this->connection = $this->config['connection'] ?? null;
     }
 
