@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare\Recorders\JobRecorder;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
@@ -20,6 +21,7 @@ use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
+use Spatie\LaravelFlare\Jobs\SendFlarePayload;
 
 class JobRecorder extends Recorder implements SpansRecorder
 {
@@ -29,6 +31,13 @@ class JobRecorder extends Recorder implements SpansRecorder
     protected int $maxChainedJobReportingDepth = 0;
 
     public const DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH = 2;
+
+    public const INTERNAL_IGNORED_JOBS = [
+        SendFlarePayload::class,
+    ];
+
+    /** @var array<class-string> */
+    protected array $ignore = [];
 
     public function __construct(
         protected Tracer $tracer,
@@ -40,6 +49,12 @@ class JobRecorder extends Recorder implements SpansRecorder
         $this->configure($config);
 
         $this->maxChainedJobReportingDepth = $config['maxChainedJobReportingDepth'] ?? 2;
+
+        $this->ignore = self::INTERNAL_IGNORED_JOBS;
+
+        if(array_key_exists('ignore', $config)){
+            array_push($this->ignore, ...$config['ignore']);
+        }
     }
 
     public static function type(): string|RecorderType
@@ -56,6 +71,10 @@ class JobRecorder extends Recorder implements SpansRecorder
 
     public function recordProcessing(JobProcessing $event): ?Span
     {
+        if($this->shouldIgnore($event->job)) {
+            return null;
+        }
+
         $attributes = $this->laravelJobAttributesProvider->toArray(
             $event->job,
             $event->connectionName,
@@ -77,6 +96,10 @@ class JobRecorder extends Recorder implements SpansRecorder
 
     public function recordProcessed(JobProcessed $event): void
     {
+        if($this->shouldIgnore($event->job)) {
+            return;
+        }
+
         $this->endSpan(additionalAttributes: [
             'laravel.job.success' => true,
         ]);
@@ -86,6 +109,10 @@ class JobRecorder extends Recorder implements SpansRecorder
 
     public function recordExceptionOccurred(JobExceptionOccurred $event): void
     {
+        if($this->shouldIgnore($event->job)) {
+            return;
+        }
+
         $this->endSpan(additionalAttributes: [
             'laravel.job.success' => false,
         ], spanCallback: fn (Span $span) => $span
@@ -116,5 +143,12 @@ class JobRecorder extends Recorder implements SpansRecorder
     protected function canStartTraces(): bool
     {
         return true;
+    }
+
+    protected function shouldIgnore(Job $job): bool
+    {
+        $class = $job->payload()['data']['commandName'] ?? null;
+
+        return in_array($class, $this->ignore);
     }
 }

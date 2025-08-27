@@ -159,6 +159,7 @@ class FlareServiceProvider extends ServiceProvider
             $handler = new FlareLogHandler(
                 $app->make(Flare::class),
                 $this->config->minimumReportLogLevel,
+                $this->config->logStackTraces,
             );
 
             return (new Logger('Flare'))->pushHandler($handler);
