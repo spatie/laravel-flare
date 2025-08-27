@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.1.1 - 2025-08-27
+
+### What's Changed
+
+* Move registerShareButton call in FlareServiceProvider by @marventhieme in https://github.com/spatie/laravel-flare/pull/14
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.1.0...2.1.1
+
 ## 2.1.0 - 2025-08-27
 
 - Fix vapor issues
