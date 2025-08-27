@@ -48,18 +48,6 @@ class FlareLogHandler extends AbstractProcessingHandler
             $record->level->name,
             function (ReportFactory $flareReport) use ($record) {
                 $flareReport->context($record->context);
-
-                if ($this->traceOrigins === false) {
-                    return;
-                }
-
-                $frame = $this->flare->backTracer->firstApplicationFrame(20);
-
-                $flareReport->addAttributes(
-                    $this->flare->backTracer->frameToAttributes(
-                        $frame
-                    )
-                );
             }
         );
     }

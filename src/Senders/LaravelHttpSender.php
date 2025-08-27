@@ -5,6 +5,7 @@ namespace Spatie\LaravelFlare\Senders;
 use Closure;
 use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Support\Facades\Http;
+use Spatie\FlareClient\Enums\FlarePayloadType;
 use Spatie\FlareClient\Senders\Sender;
 use Spatie\FlareClient\Senders\Support\Response;
 
@@ -20,7 +21,7 @@ class LaravelHttpSender implements Sender
         $this->timeout = $this->config['timeout'] ?? 10;
     }
 
-    public function post(string $endpoint, string $apiToken, array $payload, Closure $callback): void
+    public function post(string $endpoint, string $apiToken, array $payload, FlarePayloadType $type, Closure $callback): void
     {
         $response = Http::withHeader('x-api-token', $apiToken)
             ->timeout($this->timeout)

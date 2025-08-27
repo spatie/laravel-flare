@@ -52,6 +52,8 @@ class FlareConfig extends BaseFlareConfig
 
     public Level $minimumReportLogLevel = Level::Error;
 
+    public bool $logStackTraces = false;
+
     public bool $enableShareButton = true;
 
     public static function fromLaravelConfig(): self
@@ -96,14 +98,15 @@ class FlareConfig extends BaseFlareConfig
             userAttributesProvider: config('flare.attribute_providers.user'),
             collectsResolver: CollectsResolver::class,
             overriddenGroupings: config('flare.overridden_groupings'),
+            includeStackTraceWithMessages: config()->get('logging.channels.flare.stack_trace', false)
         );
 
         $config->sendLogsAsEvents = config('flare.send_logs_as_events', true);
         $config->minimumReportLogLevel = config()->has('logging.channels.flare.level')
             ? FlareLogHandler::logLevelFromName(config('logging.channels.flare.level'))
             : Level::Error;
-        $config->enableShareButton = config('flare.enable_share_button', true);
 
+        $config->enableShareButton = config('flare.enable_share_button', true);
 
         return $config;
     }
@@ -148,6 +151,7 @@ class FlareConfig extends BaseFlareConfig
                 'with_errors' => JobRecorder::DEFAULT_WITH_ERRORS,
                 'max_items_with_errors' => JobRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
                 'max_chained_job_reporting_depth' => JobRecorder::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH,
+                'ignore' => [],
             ],
             CollectType::Cache->value => [
                 'with_traces' => CacheRecorder::DEFAULT_WITH_TRACES,

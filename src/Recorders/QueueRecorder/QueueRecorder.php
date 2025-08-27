@@ -14,11 +14,15 @@ use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 
 class QueueRecorder implements SpansRecorder
 {
     /** @use RecordsSpans<Span> */
     use RecordsSpans;
+
+    /** @var array<class-string> */
+    protected array $ignore;
 
     public function __construct(
         protected Tracer $tracer,
@@ -28,6 +32,12 @@ class QueueRecorder implements SpansRecorder
         array $config
     ) {
         $this->configure($config);
+
+        $this->ignore = JobRecorder::INTERNAL_IGNORED_JOBS;
+
+        if (array_key_exists('ignore', $config)) {
+            array_push($this->ignore, ...$config['ignore']);
+        }
     }
 
     public static function type(): string|RecorderType
@@ -43,6 +53,10 @@ class QueueRecorder implements SpansRecorder
             }
 
             if ($payload === null) {
+                return $payload;
+            }
+
+            if ($this->isIgnored($payload)) {
                 return $payload;
             }
 
@@ -76,6 +90,10 @@ class QueueRecorder implements SpansRecorder
     public function recordQueued(
         JobQueued $event,
     ): ?Span {
+        if ($this->isIgnored($event->payload())) {
+            return null;
+        }
+
         return $this->endSpan();
     }
 
@@ -86,5 +104,16 @@ class QueueRecorder implements SpansRecorder
         }
 
         return config()->get("queue.connections.{$connection}.driver") === 'sync';
+    }
+
+    protected function isIgnored(array $payload): bool
+    {
+        $class = $payload['displayName'] ?? null;
+
+        if ($class === null) {
+            return false;
+        }
+
+        return in_array($class, $this->ignore);
     }
 }
