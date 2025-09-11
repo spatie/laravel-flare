@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.2.0 - 2025-09-11
+
+- Don't reset Flare context when using sync queues
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.1.2...2.2.0
+
 ## 2.1.1 - 2025-08-27
 
 ### What's Changed
