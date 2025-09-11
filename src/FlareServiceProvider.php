@@ -219,14 +219,14 @@ class FlareServiceProvider extends ServiceProvider
         $queue->before(function (JobProcessing $event) use ($queue) {
             $isSyncQueue = $queue->connection($event->connectionName) instanceof SyncQueue;
 
-            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: !$isSyncQueue);
+            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: ! $isSyncQueue);
         });
 
         // Send queued reports (and reset) after executing a queue job.
         $queue->after(function (JobProcessed $event) use ($queue) {
             $isSyncQueue = $queue->connection($event->connectionName) instanceof SyncQueue;
 
-            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: !$isSyncQueue);
+            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: ! $isSyncQueue);
         });
 
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
