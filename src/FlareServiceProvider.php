@@ -6,6 +6,9 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\SyncQueue;
 use Illuminate\Routing\Contracts\CallableDispatcher;
 use Illuminate\Routing\Contracts\ControllerDispatcher;
 use Illuminate\Support\Facades\Log;
@@ -211,14 +214,19 @@ class FlareServiceProvider extends ServiceProvider
         $queue = $this->app->get('queue');
 
         // Reset before executing a queue job to make sure the job's log/query/dump recorders are empty.
-        // When using a sync queue this also reports the queued reports from previous exceptions.
-        $queue->before(function () {
-            $this->getFlare()->reset(reports: true, traces: false);
+        // When using a sync queue this also reports the queued reports from previous exceptions but
+        // does not clear the custom context as that would remove any context set in the current request.
+        $queue->before(function (JobProcessing $event) use ($queue) {
+            $isSyncQueue = $queue->connection($event->connectionName) instanceof SyncQueue;
+
+            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: !$isSyncQueue);
         });
 
         // Send queued reports (and reset) after executing a queue job.
-        $queue->after(function () {
-            $this->getFlare()->reset(reports: true, traces: false);
+        $queue->after(function (JobProcessed $event) use ($queue) {
+            $isSyncQueue = $queue->connection($event->connectionName) instanceof SyncQueue;
+
+            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: !$isSyncQueue);
         });
 
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
