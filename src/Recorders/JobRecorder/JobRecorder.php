@@ -85,8 +85,10 @@ class JobRecorder extends Recorder implements SpansRecorder
 
         $this->tryToResumeTrace($event);
 
+        $jobName = $attributes['laravel.job.name'] ?? $attributes['laravel.job.class'] ?? 'Unknown';
+
         return $this->startSpan(
-            name: "Job - {$attributes['laravel.job.name']}",
+            name: "Job - {$jobName}",
             attributes: [
                 'flare.span_type' => SpanType::Job,
                 ...$attributes,

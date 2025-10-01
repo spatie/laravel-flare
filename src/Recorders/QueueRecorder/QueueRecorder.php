@@ -72,8 +72,10 @@ class QueueRecorder implements SpansRecorder
                     ...$this->laravelJobAttributesProvider->getJobPropertiesFromPayload($payload),
                 ];
 
+                $jobName = $attributes['laravel.job.name'] ?? $attributes['laravel.job.class'] ?? 'Unknown';
+
                 return [
-                    'name' => "Queueing - {$attributes['laravel.job.name']}",
+                    'name' => "Queueing - {$jobName}",
                     'attributes' => $attributes,
                 ];
             });
