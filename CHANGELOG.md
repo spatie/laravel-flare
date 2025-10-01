@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.2.2 - 2025-10-01
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.2.1...2.2.2
+
 ## 2.2.1 - 2025-10-01
 
 ### What's Changed
