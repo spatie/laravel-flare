@@ -16,7 +16,7 @@ class AddJobInformation implements FlareMiddleware
         if (static::$currentJob) {
             $report->addAttributes([
                 'flare.entry_point.type' => EntryPointType::Queue,
-                'flare.entry_point.value' => static::$currentJob['laravel.job.name'],
+                'flare.entry_point.value' => static::$currentJob['laravel.job.name'] ?? null,
                 'flare.entry_point.class' => static::$currentJob['laravel.job.class'] ?? null,
             ]);
 
