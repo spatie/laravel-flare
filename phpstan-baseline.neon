@@ -91,6 +91,12 @@ parameters:
 			path: src/FlareServiceProvider.php
 
 		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: src/Recorders/LogRecorder/LogRecorder.php
+
+		-
 			message: '#^Property Spatie\\FlareClient\\Support\\CollectsResolver\:\:\$middlewares \(array\<class\-string\<Spatie\\FlareClient\\FlareMiddleware\\FlareMiddleware\>, array\<string, mixed\>\>\) does not accept array\<string, array\<string, mixed\>\>\.$#'
 			identifier: assign.propertyType
 			count: 1
