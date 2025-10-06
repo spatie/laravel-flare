@@ -203,7 +203,7 @@ class LaravelJobAttributesProvider
             'failureCallbacks',
             'deleteWhenMissingModels',
             'messageGroup',
-            'deduplicator'
+            'deduplicator',
         ];
 
         $properties = $jobProperties
