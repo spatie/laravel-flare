@@ -219,14 +219,14 @@ class FlareServiceProvider extends ServiceProvider
         $queue->before(function (JobProcessing $event) use ($queue) {
             $isSyncQueue = $queue->connection($event->connectionName) instanceof SyncQueue;
 
-            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: ! $isSyncQueue);
+            $this->getFlare()->reset(clearCustomContext: ! $isSyncQueue);
         });
 
         // Send queued reports (and reset) after executing a queue job.
         $queue->after(function (JobProcessed $event) use ($queue) {
             $isSyncQueue = $queue->connection($event->connectionName) instanceof SyncQueue;
 
-            $this->getFlare()->reset(reports: true, traces: false, clearCustomContext: ! $isSyncQueue);
+            $this->getFlare()->reset(clearCustomContext: ! $isSyncQueue);
         });
 
         // Note: the $queue->looping() event can't be used because it's not triggered on Vapor
@@ -257,15 +257,15 @@ class FlareServiceProvider extends ServiceProvider
     protected function setupOctane(): void
     {
         $this->app['events']->listen(RequestReceived::class, function () {
-            $this->getFlare()->reset(reports: true, traces: false);
+            $this->getFlare()->reset();
         });
 
         $this->app['events']->listen(TaskReceived::class, function () {
-            $this->getFlare()->reset(reports: true, traces: false);
+            $this->getFlare()->reset();
         });
 
         $this->app['events']->listen(TickReceived::class, function () {
-            $this->getFlare()->reset(reports: true, traces: false);
+            $this->getFlare()->reset();
         });
 
         $this->app['events']->listen(RequestTerminated::class, function () {
