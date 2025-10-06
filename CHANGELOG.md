@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.2.4 - 2025-10-06
+
+- Fix an issue where jobs on vapor were sampled but not sent to Flare
+
 ## 2.2.3 - 2025-10-06
 
 Fixed: streamed responses in external HTTP calls are no longer read to determine response size. This solves compatibility issues with PrismPHP and other libraries that use Laravel's HTTP client to stream responses.
