@@ -2,6 +2,12 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.2.3 - 2025-10-06
+
+Fixed: streamed responses in external HTTP calls are no longer read to determine response size. This solves compatibility issues with PrismPHP and other libraries that use Laravel's HTTP client to stream responses.
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.2.2...2.2.3
+
 ## 2.2.2 - 2025-10-01
 
 **Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.2.1...2.2.2
