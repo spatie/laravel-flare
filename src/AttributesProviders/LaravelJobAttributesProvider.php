@@ -202,6 +202,8 @@ class LaravelJobAttributesProvider
             'batchId',
             'failureCallbacks',
             'deleteWhenMissingModels',
+            'messageGroup',
+            'deduplicator'
         ];
 
         $properties = $jobProperties
