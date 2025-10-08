@@ -8,7 +8,6 @@ use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Spatie\FlareClient\Enums\RecorderType;
-use Spatie\FlareClient\Enums\SamplingType;
 use Spatie\FlareClient\Enums\SpanStatusCode;
 use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorSpanEvent;
 use Spatie\FlareClient\Recorders\SpansRecorder;

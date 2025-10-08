@@ -27,8 +27,7 @@ class RequestRecorder extends BaseRequestRecorder
         ?string $route = null,
         ?string $entryPointClass = null,
         array $attributes = []
-    ): ?Span
-    {
+    ): ?Span {
         if (! $request instanceof LaravelRequest) {
             return null;
         }
