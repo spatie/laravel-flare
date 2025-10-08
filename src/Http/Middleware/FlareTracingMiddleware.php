@@ -34,15 +34,10 @@ class FlareTracingMiddleware
             return $next($request);
         }
 
-        $this->startTrace($request);
-
-        return $next($request);
-    }
-
-    protected function startTrace(Request $request): void
-    {
         Flare::request()?->recordStart($request);
         Flare::routing()?->recordGlobalBeforeMiddlewareStart();
+
+        return $next($request);
     }
 
     public function terminate(Request $request, Response $response): void

@@ -187,9 +187,25 @@ class FlareServiceProvider extends ServiceProvider
 
     protected function configureOctane(): void
     {
-        if (app()->bound('octane')) {
-            $this->setupOctane();
+        if (app()->bound('octane') === false) {
+            return;
         }
+
+        app('events')->listen(RequestReceived::class, function () {
+            $this->getFlare()->reset();
+        });
+
+        app('events')->listen(RequestTerminated::class, function () {
+            $this->getFlare()->reset();
+        });
+
+        app('events')->listen(TaskReceived::class, function () {
+            $this->getFlare()->reset();
+        });
+
+        app('events')->listen(TickReceived::class, function () {
+            $this->getFlare()->reset();
+        });
     }
 
     protected function registerViewExceptionMapper(): void
@@ -252,30 +268,6 @@ class FlareServiceProvider extends ServiceProvider
         if ($kernel instanceof HttpKernel) {
             $kernel->prependMiddleware(FlareTracingMiddleware::class);
         }
-    }
-
-    protected function setupOctane(): void
-    {
-        $this->app['events']->listen(RequestReceived::class, function () {
-            $this->getFlare()->reset();
-        });
-
-        $this->app['events']->listen(TaskReceived::class, function () {
-            $this->getFlare()->reset();
-        });
-
-        $this->app['events']->listen(TickReceived::class, function () {
-            $this->getFlare()->reset();
-        });
-
-        $this->app['events']->listen(RequestTerminated::class, function () {
-            TracingKernel::appTerminated(
-                $this->app,
-                $this->app->make(Flare::class)
-            );
-
-            $this->getFlare()->reset();
-        });
     }
 
     protected function getFlare(): Flare

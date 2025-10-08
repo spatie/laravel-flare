@@ -13,11 +13,6 @@ use Symfony\Component\HttpFoundation\Request;
 
 class RequestRecorder extends BaseRequestRecorder
 {
-    protected function canStartTraces(): bool
-    {
-        return true;
-    }
-
     public function __construct(
         Tracer $tracer,
         BackTracer $backTracer,
@@ -27,7 +22,12 @@ class RequestRecorder extends BaseRequestRecorder
         parent::__construct($tracer, $backTracer, $config, $requestAttributesProvider);
     }
 
-    public function recordStart(?Request $request = null, ?string $route = null, ?string $entryPointClass = null, array $attributes = []): ?Span
+    public function recordStart(
+        ?Request $request = null,
+        ?string $route = null,
+        ?string $entryPointClass = null,
+        array $attributes = []
+    ): ?Span
     {
         if (! $request instanceof LaravelRequest) {
             return null;
@@ -40,6 +40,6 @@ class RequestRecorder extends BaseRequestRecorder
                 'http.request.method' => strtoupper($request->getMethod()),
                 ...$attributes,
             ],
-        ]);
+        ], canStartTrace: true);
     }
 }

@@ -49,11 +49,6 @@ class FilesystemRecorder extends BaseFilesystemRecorder
         }
     }
 
-    public function boot(): void
-    {
-        // Registration of the FlareFilesystemManager is done in the registered method
-    }
-
     public function recordGetVisibility(string|array $path, array $attributes = []): ?Span
     {
         return $this->recordOperationStart(

@@ -18,8 +18,8 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
     protected array $resolvedConnections = [];
 
     public function __construct(
-        protected Tracer $tracer,
-        protected BackTracer $backTracer,
+        Tracer $tracer,
+        BackTracer $backTracer,
         protected Dispatcher $dispatcher,
         protected RedisManager $redisManager,
         array $config
