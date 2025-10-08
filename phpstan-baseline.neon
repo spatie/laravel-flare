@@ -55,12 +55,6 @@ parameters:
 			path: src/FlareConfig.php
 
 		-
-			message: '#^Cannot access offset ''events'' on Illuminate\\Contracts\\Foundation\\Application\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
-			path: src/FlareServiceProvider.php
-
-		-
 			message: '#^Class Laravel\\Octane\\Events\\RequestReceived not found\.$#'
 			identifier: class.notFound
 			count: 1
