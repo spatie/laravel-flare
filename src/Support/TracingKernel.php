@@ -15,7 +15,7 @@ class TracingKernel
 
     public static function registerCallbacks(Application $app): void
     {
-        if (self::$run === false || self::isCompositeProcess($app)) {
+        if (self::$run === false || self::isCompositeProcess($app) || self::isOctaneWorker()) {
             return;
         }
 
@@ -26,7 +26,7 @@ class TracingKernel
 
     public static function bootCallbacks(Application $app): void
     {
-        if (self::$run === false || self::isCompositeProcess($app)) {
+        if (self::$run === false || self::isCompositeProcess($app) || self::isOctaneWorker()) {
             return;
         }
 
@@ -86,6 +86,11 @@ class TracingKernel
 
     protected static function isCompositeProcess(Application $app): bool
     {
-        return $app->runningConsoleCommand(['horizon:work', 'queue:work', 'serve', 'octane:start']);
+        return $app->runningConsoleCommand(['horizon:work', 'queue:work', 'serve', 'vapor:work', 'octane:start', 'octane:reload']);
+    }
+
+    protected static function isOctaneWorker(): bool
+    {
+        return (bool) env('LARAVEL_OCTANE', false) !== false;
     }
 }

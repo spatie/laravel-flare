@@ -26,11 +26,6 @@ class CommandRecorder extends BaseCommandRecorder
         $this->dispatcher->listen(CommandFinished::class, [$this, 'recordCommandFinished']);
     }
 
-    protected function canStartTraces(): bool
-    {
-        return true;
-    }
-
     public function recordCommandStarting(CommandStarting $event): void
     {
         if ($this->shouldIgnoreCommand($event->command)) {
@@ -59,6 +54,8 @@ class CommandRecorder extends BaseCommandRecorder
             'queue:work',
             'horizon:work',
             'octane:start',
+            'octane:reload',
+            'vapor:work',
             'serve',
         ]);
     }

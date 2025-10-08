@@ -5,9 +5,9 @@ namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
-use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
-use Spatie\FlareClient\Contracts\Recorders\SpansRecorder;
 use Spatie\FlareClient\Enums\RecorderType;
+use Spatie\FlareClient\Enums\SamplingType;
+use Spatie\FlareClient\Recorders\SpansRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Ids;
@@ -16,23 +16,23 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 
-class QueueRecorder implements SpansRecorder
+class QueueRecorder extends SpansRecorder
 {
-    /** @use RecordsSpans<Span> */
-    use RecordsSpans;
-
     /** @var array<class-string> */
     protected array $ignore;
 
     public function __construct(
-        protected Tracer $tracer,
-        protected BackTracer $backTracer,
+        Tracer $tracer,
+        BackTracer $backTracer,
         protected Dispatcher $dispatcher,
         protected LaravelJobAttributesProvider $laravelJobAttributesProvider,
         array $config
     ) {
-        $this->configure($config);
+        parent::__construct($tracer, $backTracer, $config);
+    }
 
+    protected function configure(array $config): void
+    {
         $this->ignore = JobRecorder::INTERNAL_IGNORED_JOBS;
 
         if (array_key_exists('ignore', $config)) {
@@ -48,11 +48,17 @@ class QueueRecorder implements SpansRecorder
     public function boot(): void
     {
         Queue::createPayloadUsing(function (?string $connection, ?string $queue, ?array $payload): ?array {
-            if ($this->tracer->isSampling() === false) {
+            if ($payload === null
+                || $this->withTraces === false
+                || $this->tracer->samplingType === SamplingType::Disabled
+                || $this->tracer->samplingType === SamplingType::Waiting
+            ) {
                 return $payload;
             }
 
-            if ($payload === null) {
+            if ($this->tracer->isSampling() === false) {
+                $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
+
                 return $payload;
             }
 

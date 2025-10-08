@@ -8,26 +8,23 @@ use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
 use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
-use Spatie\FlareClient\Concerns\Recorders\RecordsSpans;
-use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\RecorderType;
+use Spatie\FlareClient\Recorders\SpansRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
 
-class NotificationRecorder implements Recorder
+class NotificationRecorder extends SpansRecorder
 {
-    /** @use RecordsSpans<Span> */
-    use RecordsSpans;
 
     public function __construct(
-        protected Tracer $tracer,
+        Tracer $tracer,
         protected Dispatcher $dispatcher,
-        protected BackTracer $backTracer,
+        BackTracer $backTracer,
         protected UserAttributesProvider $userAttributesProvider,
         array $config
     ) {
-        $this->configure($config);
+        parent::__construct($tracer, $backTracer, $config);
     }
 
     public static function type(): string|RecorderType
