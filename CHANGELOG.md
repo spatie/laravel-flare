@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.3.0 - 2025-10-08
+
+- Refactor the recorders
+
 ## 2.2.4 - 2025-10-06
 
 - Fix an issue where jobs on vapor were sampled but not sent to Flare
