@@ -123,7 +123,7 @@ class CollectsResolver extends BaseCollectsResolver
             $this->addRecorder($options['middleware'] ?? LivewireRecorder::class, $this->only($options, [
                 'with_traces',
                 'ignore',
-                'split_by_phase'
+                'split_by_phase',
             ]));
         }
     }
