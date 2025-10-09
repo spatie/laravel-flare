@@ -2,6 +2,7 @@
 
 namespace Spatie\LaravelFlare\Support;
 
+use Livewire\Livewire;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\Support\CollectsResolver as BaseCollectsResolver;
@@ -19,6 +20,7 @@ use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
+use Spatie\LaravelFlare\Recorders\LivewireRecorder\LivewireRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\QueueRecorder\QueueRecorder;
@@ -116,6 +118,14 @@ class CollectsResolver extends BaseCollectsResolver
         }
 
         $this->middlewares[$this->requestsMiddlewareClass]['include_livewire_components'] = $options['include_livewire_components'] ?? false;
+
+        if (class_exists(Livewire::class)) {
+            $this->addRecorder($options['middleware'] ?? LivewireRecorder::class, $this->only($options, [
+                'with_traces',
+                'ignore',
+                'split_by_phase'
+            ]));
+        }
     }
 
     protected function views(array $options): void
