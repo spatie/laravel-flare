@@ -241,6 +241,8 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
+        $params = array_map(fn ($param) => $this->reduceArgumentPayloadAction->reduce($param), $params);
+
         $this->componentStates[$component->id()]->callingSpans[] = $this->startSpan(
             name: "Livewire - {$component->getName()} - call",
             attributes: [
@@ -248,7 +250,7 @@ class LivewireRecorder extends SpansRecorder
                 'livewire.component.name' => $component->getName(),
                 'livewire.component.phase' => LivewireComponentPhase::Calling,
                 'livewire.component.call.method' => $method,
-                'livewire.component.call.params' => $this->reduceArgumentPayloadAction->reduce($params),
+                'livewire.component.call.params' => $params,
             ],
         );
     }
