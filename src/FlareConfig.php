@@ -215,7 +215,12 @@ class FlareConfig extends BaseFlareConfig
         }
 
         if (count($extra) > 0) {
-            return array_merge_recursive($collects, $extra);
+            foreach ($extra as $collect => $options) {
+                $collects[$collect] = array_merge(
+                    $collects[$collect] ?? [],
+                    $options
+                );
+            }
         }
 
         return $collects;
