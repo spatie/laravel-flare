@@ -35,9 +35,9 @@ class ViewRecorder extends BaseViewRecorder
         $this->app->resolved('view.engine.resolver')
             ? $this->wrapEnginesInEngineResolver($this->app->make('view.engine.resolver'))
             : $this->app->afterResolving(
-                'view.engine.resolver',
-                fn (EngineResolver $resolver) => $this->wrapEnginesInEngineResolver($resolver)
-            );
+            'view.engine.resolver',
+            fn (EngineResolver $resolver) => $this->wrapEnginesInEngineResolver($resolver)
+        );
     }
 
     public function recordRendering(
@@ -46,9 +46,19 @@ class ViewRecorder extends BaseViewRecorder
         ?string $file = null,
         array $attributes = []
     ): ?Span {
-        return parent::recordRendering($viewName, [], $file, [
+        $attributes = [
             'view.loop' => $this->resolveLoop($data),
-        ]);
+        ];
+
+        $isComponent = array_key_exists('componentName', $data)
+            && array_key_exists('__laravel_slots', $data);
+
+        if ($isComponent) {
+            $attributes['view.component.name'] = $data['componentName'];
+            $attributes['view.component.inline'] = str_starts_with($viewName, '__components::');
+        }
+
+        return parent::recordRendering($viewName, [], $file, $attributes);
     }
 
     protected function wrapEnginesInEngineResolver(EngineResolver $engineResolver): void
@@ -59,7 +69,7 @@ class ViewRecorder extends BaseViewRecorder
         $engines = array_values(array_unique($viewFactory->getExtensions()));
 
         $viewFactory->composer('*', function (View $view) {
-            WrappedViewEngine::$currentView = $view->name();
+            WrappedViewEngine::$currentView = $view->getName();
 
             return $view;
         });

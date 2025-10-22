@@ -16,15 +16,23 @@ class WrappedViewEngine implements Engine
 
     public function get($path, array $data = []): string
     {
-        $this->recorder->recordRendering(
-            static::$currentView,
-            $data,
-            $path
-        );
+        $isInlineLivewireComponentView = str_starts_with(static::$currentView, '__components::')
+            && array_key_exists('componentName', $data) === false
+            && array_key_exists('__laravel_slots', $data) === false;
+
+        if (! $isInlineLivewireComponentView) {
+            $this->recorder->recordRendering(
+                static::$currentView,
+                $data,
+                $path
+            );
+        }
 
         $rendered = $this->engine->get($path, $data);
 
-        $this->recorder->recordRendered();
+        if (! $isInlineLivewireComponentView) {
+            $this->recorder->recordRendered();
+        }
 
         return $rendered;
     }
