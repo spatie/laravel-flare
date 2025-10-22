@@ -39,6 +39,7 @@ use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
+use Spatie\LaravelFlare\Recorders\LivewireRecorder\LivewireRecorder;
 use Spatie\LaravelFlare\Recorders\LogRecorder\LogRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
@@ -124,7 +125,13 @@ class FlareConfig extends BaseFlareConfig
             CollectType::ErrorsWithTraces->value => [
                 'with_traces' => ErrorRecorder::DEFAULT_WITH_TRACES,
             ],
-            LaravelCollectType::LivewireComponents->value => [],
+            LaravelCollectType::LivewireComponents->value => [
+                'with_traces' => LivewireRecorder::DEFAULT_WITH_TRACES,
+                'with_errors' => LivewireRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => LivewireRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+                'ignored' => LivewireRecorder::DEFAULT_IGNORED,
+                'split_by_phase' => LivewireRecorder::DEFAULT_SPLIT_BY_PHASE,
+            ],
             CollectType::ServerInfo->value => [
                 'host' => true,
                 'php' => true,
@@ -286,10 +293,20 @@ class FlareConfig extends BaseFlareConfig
     }
 
 
-    public function collectLivewireComponents(array $extra = []): static
-    {
+    public function collectLivewireComponents(
+        bool $withTraces = LivewireRecorder::DEFAULT_WITH_TRACES,
+        bool $withErrors = LivewireRecorder::DEFAULT_WITH_ERRORS,
+        ?int $maxItemsWithErrors = LivewireRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
+        array $ignored = LivewireRecorder::DEFAULT_IGNORED,
+        bool $splitByPhase = LivewireRecorder::DEFAULT_SPLIT_BY_PHASE,
+        array $extra = []
+    ): static {
         return $this->addCollect(LaravelCollectType::LivewireComponents, [
-            'include_livewire_components' => true,
+            'with_traces' => $withTraces,
+            'with_errors' => $withErrors,
+            'max_items_with_errors' => $maxItemsWithErrors,
+            'ignored' => $ignored,
+            'split_by_phase' => $splitByPhase,
             ...$extra,
         ]);
     }
