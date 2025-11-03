@@ -15,6 +15,8 @@ use Spatie\FlareClient\Tracer;
 
 class ViewRecorder extends BaseViewRecorder
 {
+    protected ComponentFinder $componentFinder;
+
     public function __construct(
         Tracer $tracer,
         protected Application $app,
@@ -53,9 +55,15 @@ class ViewRecorder extends BaseViewRecorder
         $isComponent = array_key_exists('componentName', $data)
             && array_key_exists('__laravel_slots', $data);
 
+        $isInlineComponent = str_starts_with($viewName, '__components::');
+
         if ($isComponent) {
             $attributes['view.component.name'] = $data['componentName'];
-            $attributes['view.component.inline'] = str_starts_with($viewName, '__components::');
+            $attributes['view.component.inline'] = $isInlineComponent;
+        }
+
+        if ($isComponent && $isInlineComponent && ($componentClass = $this->resolveComponentClass($data['componentName']))) {
+            $attributes['view.component.class'] = $componentClass;
         }
 
         return parent::recordRendering($viewName, [], $file, $attributes);
@@ -82,6 +90,15 @@ class ViewRecorder extends BaseViewRecorder
                 $originalEngine,
             ));
         }
+    }
+
+    protected function resolveComponentClass(string $componentName): ?string
+    {
+        if (! isset($this->componentFinder)) {
+            $this->componentFinder = new ComponentFinder();
+        }
+
+        return $this->componentFinder->resolveClassForComponent($componentName);
     }
 
     private function resolveLoop(array $data): ?string
