@@ -118,6 +118,7 @@ class CollectsResolver extends BaseCollectsResolver
         }
 
         $this->middlewares[$this->requestsMiddlewareClass]['include_livewire_components'] = $options['include_livewire_components'] ?? false;
+        $this->middlewares[$this->requestsMiddlewareClass]['ignore_livewire_components'] = $options['ignore'] ?? [];
 
         if (class_exists(Livewire::class)) {
             $this->addRecorder($options['middleware'] ?? LivewireRecorder::class, $this->only($options, [

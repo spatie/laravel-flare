@@ -10,9 +10,13 @@ use Livewire\Mechanisms\ComponentRegistry;
 
 class LivewireAttributesProvider
 {
+    /**
+     * @param array<string> $ignore
+     */
     public function toArray(
         Request $request,
         LivewireManager $livewire,
+        array $ignore = [],
     ): array {
         return [
             'http.request.method' => $livewire->originalMethod(),
@@ -21,11 +25,14 @@ class LivewireAttributesProvider
             'url.path' => parse_url($livewire->originalUrl(), PHP_URL_PATH),
             'url.query' => parse_url($livewire->originalUrl(), PHP_URL_QUERY),
             'flare.entry_point.value' => $livewire->originalUrl(),
-            'livewire.components' => $this->getLivewire($request, $livewire),
+            'livewire.components' => $this->getLivewire($request, $livewire, $ignore),
         ];
     }
 
-    protected function getLivewire(Request $request, LivewireManager $livewireManager): array
+    /**
+     * @param array<string> $ignore
+     */
+    protected function getLivewire(Request $request, LivewireManager $livewireManager, array $ignore): array
     {
         if ($request->has('components')) {
             $data = [];
@@ -34,6 +41,10 @@ class LivewireAttributesProvider
                 $snapshot = json_decode($component['snapshot'], true);
 
                 $class = app(ComponentRegistry::class)->getClass($snapshot['memo']['name']);
+
+                if (in_array($class, $ignore)) {
+                    continue;
+                }
 
                 $data[] = [
                     'component_class' => $class ?? null,

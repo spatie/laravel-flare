@@ -150,6 +150,7 @@ it('combines data into one payload', function () {
     ], $livewire[0]['data']);
 });
 
+
 // Helpers
 function createRequestPayload(array $fingerprint, array $updates = [], array $serverMemo = []): array
 {

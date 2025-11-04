@@ -33,6 +33,7 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
             return;
         }
 
+
         $this->resolveConnections(config('database.redis'));
 
         // Probably this is disabled by default because it's not a good idea to enable it by default
@@ -40,6 +41,7 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
 
         $this->dispatcher->listen(CommandExecuted::class, function (CommandExecuted $event) {
             $connection = $this->resolvedConnections[$event->connectionName] ?? null;
+
 
             $this->record(
                 command: $event->command,

@@ -2,10 +2,10 @@
 
 namespace Spatie\LaravelFlare\Support;
 
-class Telemetry
-{
-    // TODO: we want to update the version of the SDK using GitHub Actions
+use Composer\InstalledVersions;
+use Spatie\FlareClient\Support\Telemetry as BaseTelemetry;
 
-    public const NAME = 'laravel-flare';
-    public const VERSION = '1.0.0';
+class Telemetry extends BaseTelemetry
+{
+    public const NAME = 'spatie/laravel-flare';
 }

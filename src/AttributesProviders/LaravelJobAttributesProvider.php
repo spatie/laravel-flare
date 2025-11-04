@@ -204,6 +204,7 @@ class LaravelJobAttributesProvider
             'deleteWhenMissingModels',
             'messageGroup',
             'deduplicator',
+            'tries',
         ];
 
         $properties = $jobProperties
