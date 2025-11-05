@@ -2,6 +2,11 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.4.0 - 2025-11-05
+
+- Add support for livewire tracing
+- Add support for better telemetry versions
+
 ## 2.3.1 - 2025-10-13
 
 - Fix issue where merging extra config did not work with non array options
