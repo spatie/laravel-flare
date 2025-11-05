@@ -37,9 +37,9 @@ class ViewRecorder extends BaseViewRecorder
         $this->app->resolved('view.engine.resolver')
             ? $this->wrapEnginesInEngineResolver($this->app->make('view.engine.resolver'))
             : $this->app->afterResolving(
-            'view.engine.resolver',
-            fn (EngineResolver $resolver) => $this->wrapEnginesInEngineResolver($resolver)
-        );
+                'view.engine.resolver',
+                fn (EngineResolver $resolver) => $this->wrapEnginesInEngineResolver($resolver)
+            );
     }
 
     public function recordRendering(

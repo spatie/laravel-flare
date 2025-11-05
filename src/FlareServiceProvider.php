@@ -2,7 +2,6 @@
 
 namespace Spatie\LaravelFlare;
 
-use Composer\InstalledVersions;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
