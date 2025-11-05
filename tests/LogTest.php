@@ -138,14 +138,19 @@ it('can disable sending logs as a report but keep them as span events in an exce
     expect($arguments['exceptionClass'])->toBe('Error');
     expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
 
-    expect($arguments['events'])
+    $loggedEvents = array_values(array_filter(
+        $arguments['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Log && $event['attributes']['log.message'] === 'log',
+    )); // Remove all logs from other packages
+
+    expect($loggedEvents)
         ->toHaveCount(1)
         ->each
         ->toHaveKey('startTimeUnixNano', 1546346096000000000)
         ->toHaveKey('endTimeUnixNano', null)
         ->toHaveKey('type', SpanEventType::Log);
 
-    expect($arguments['events'][0]['attributes'])
+    expect($loggedEvents[0]['attributes'])
         ->toHaveKey('log.level', $logLevel)
         ->toHaveKey('log.message', 'log')
         ->toHaveKey('log.context', []);
