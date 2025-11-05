@@ -226,7 +226,7 @@ class FlareConfig extends BaseFlareConfig
         }
 
         foreach ($ignore as $ignored) {
-            if(! array_key_exists($ignored->value, $collects)) {
+            if (! array_key_exists($ignored->value, $collects)) {
                 continue;
             }
 
