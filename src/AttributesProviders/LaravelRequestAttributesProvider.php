@@ -120,7 +120,7 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
             $type = LaravelRouteActionType::View;
         }
 
-        if($actionName === '\\'.RedirectController::class && $route->hasParameter('destination')) {
+        if ($actionName === '\\'.RedirectController::class && $route->hasParameter('destination')) {
             $actionName = "redirect: {$route->parameter('destination')}";
             $type = LaravelRouteActionType::Redirect;
         }
