@@ -33,9 +33,14 @@ it('records cache operations', function (
 
     $spanEvents = $fakeSender->getLastPayload()['events'];
 
-    expect($spanEvents)->toHaveCount(1);
+    $cacheSpanEvents = array_values(array_filter(
+        $spanEvents,
+        fn (array $event) => $event['type'] === SpanEventType::Cache,
+    )); // Remove all logs from other packages
 
-    $assert($spanEvents[0]);
+    expect($cacheSpanEvents)->toHaveCount(1);
+
+    $assert($cacheSpanEvents[0]);
 })->with('cache recorder');
 
 dataset('cache recorder', function () {

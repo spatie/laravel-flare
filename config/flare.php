@@ -186,7 +186,7 @@ return [
     'sampler' => [
         'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
         'config' => [
-            'rate' => 0.1,
+            'rate' => env('FLARE_SAMPLER_RATE', 0.1),
         ],
     ],
 

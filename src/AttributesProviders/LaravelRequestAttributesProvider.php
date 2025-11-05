@@ -2,18 +2,30 @@
 
 namespace Spatie\LaravelFlare\AttributesProviders;
 
+use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Routing\RedirectController;
 use Illuminate\Routing\Route;
+use Illuminate\Routing\ViewController;
 use Livewire\LivewireManager;
+use ReflectionFunction;
 use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider as BaseRequestAttributesProvider;
+use Spatie\LaravelFlare\Enums\LaravelRouteActionType;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
 
 class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
 {
-    public function toArray(Request $request, bool $includeContents = true, bool $includeLivewireComponents = false): array
-    {
+    /**
+     * @param array<string> $ignoreLivewireComponents
+     */
+    public function toArray(
+        Request $request,
+        bool $includeContents = true,
+        bool $includeLivewireComponents = false,
+        array $ignoreLivewireComponents = []
+    ): array {
         if (! $request instanceof LaravelRequest) {
             return parent::toArray($request, $includeContents);
         }
@@ -34,7 +46,7 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
 
             return array_merge(
                 $attributes,
-                $provider->toArray($request, $livewireManager)
+                $provider->toArray($request, $livewireManager, $ignoreLivewireComponents),
             );
         } catch (Throwable) {
             return $attributes;
@@ -72,10 +84,8 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
             'http.route' => $route->uri(),
             'laravel.route.name' => $route->getName(),
             'laravel.route.parameters' => $this->getRouteParameters($route),
-            'laravel.route.action' => $route->getActionName(),
             'laravel.route.middleware' => array_values($route->gatherMiddleware()),
-
-            'flare.entry_point.class' => $route->getActionName(),
+            ...$this->getActionAttributes($route),
         ];
     }
 
@@ -98,5 +108,51 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
     protected function isRunningLiveWire(LaravelRequest $request): bool
     {
         return $request->hasHeader('x-livewire') && $request->hasHeader('referer');
+    }
+
+    protected function getActionAttributes(Route $route): array
+    {
+        $actionName = $route->getActionName();
+        $type = LaravelRouteActionType::Controller;
+
+        if ($actionName === '\\'.ViewController::class
+            && ($view = $route->parameter('view'))
+            && is_string($view)
+        ) {
+            $actionName = "view: {$view}";
+            $type = LaravelRouteActionType::View;
+        }
+
+        if ($actionName === '\\'.RedirectController::class
+            && ($destination = $route->parameter('destination'))
+            && is_string($destination)
+        ) {
+            $actionName = "redirect: {$destination}";
+            $type = LaravelRouteActionType::Redirect;
+        }
+
+        if ($actionName === 'Closure' && $route->getAction('uses') instanceof Closure) {
+            try {
+                $closure = $route->getAction('uses');
+
+                $reflection = new ReflectionFunction($closure);
+
+                $filename = str_replace(
+                    rtrim(base_path(), '/').'/',
+                    '',
+                    $reflection->getFileName() ?: 'unknown file',
+                );
+
+                $actionName = "closure: {$filename}";
+                $type = LaravelRouteActionType::Closure;
+            } catch (Throwable) {
+            }
+        }
+
+        return [
+            'laravel.route.action' => $actionName,
+            'laravel.route.action_type' => $type,
+            'flare.entry_point.class' => $actionName,
+        ];
     }
 }

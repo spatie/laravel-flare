@@ -13,11 +13,14 @@ class AddRequestInformation extends BaseAddRequestInformation
 {
     protected bool $includeLivewireComponents = false;
 
+    protected array $ignoreLivewireComponents = [];
+
     public function __construct(
         LaravelRequestAttributesProvider $attributesProvider,
         array $config
     ) {
         $this->includeLivewireComponents = $config['include_livewire_components'] ?? false;
+        $this->ignoreLivewireComponents = $config['ignore_livewire_components'] ?? true;
 
         parent::__construct($attributesProvider);
     }
@@ -34,7 +37,8 @@ class AddRequestInformation extends BaseAddRequestInformation
         return $this->attributesProvider->toArray(
             $request,
             includeContents: true,
-            includeLivewireComponents: $this->includeLivewireComponents
+            includeLivewireComponents: $this->includeLivewireComponents,
+            ignoreLivewireComponents: $this->ignoreLivewireComponents
         );
     }
 }

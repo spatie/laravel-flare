@@ -101,16 +101,16 @@ class FlareServiceProvider extends ServiceProvider
         $this->app->extend(
             Resource::class,
             fn (Resource $resource) => $resource
-                ->telemetrySdkName(Telemetry::NAME)
-                ->telemetrySdkVersion(Telemetry::VERSION)
+                ->telemetrySdkName(Telemetry::getName())
+                ->telemetrySdkVersion(Telemetry::getVersion())
                 ->addAttributes((new LaravelAttributesProvider())->toArray())
         );
 
         $this->app->extend(
             Scope::class,
             fn (Scope $scope) => $scope
-                ->name(Telemetry::NAME)
-                ->version(Telemetry::VERSION)
+                ->name(Telemetry::getName())
+                ->version(Telemetry::getVersion())
         );
 
         $this->app->singleton(FlareTracingMiddleware::class);
