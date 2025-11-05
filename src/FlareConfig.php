@@ -2,7 +2,6 @@
 
 namespace Spatie\LaravelFlare;
 
-use Illuminate\Support\Arr;
 use Monolog\Level;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\DefaultDbNameSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\GenericLaravelExceptionSolutionProvider;
@@ -138,7 +137,9 @@ class FlareConfig extends BaseFlareConfig
                 'os' => true,
                 'composer' => true,
             ],
-            CollectType::GitInfo->value => [],
+            CollectType::GitInfo->value => [
+                'use_process' => false,
+            ],
             CollectType::Solutions->value => [
                 'solution_providers' => [
                     ...FlareConfig::defaultSolutionProviders(),
@@ -217,17 +218,19 @@ class FlareConfig extends BaseFlareConfig
             ],
         ];
 
-        if (count($ignore) > 0) {
-            $collects = Arr::except($collects, array_map(fn (FlareCollectType $type) => $type->value, $ignore));
+        foreach ($extra as $collect => $options) {
+            $collects[$collect] = array_merge(
+                $collects[$collect] ?? [],
+                $options
+            );
         }
 
-        if (count($extra) > 0) {
-            foreach ($extra as $collect => $options) {
-                $collects[$collect] = array_merge(
-                    $collects[$collect] ?? [],
-                    $options
-                );
+        foreach ($ignore as $ignored) {
+            if(! array_key_exists($ignored->value, $collects)) {
+                continue;
             }
+
+            unset($collects[$ignored->value]);
         }
 
         return $collects;
