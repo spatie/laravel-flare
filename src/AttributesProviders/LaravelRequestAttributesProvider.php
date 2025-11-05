@@ -115,13 +115,19 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
         $actionName = $route->getActionName();
         $type = LaravelRouteActionType::Controller;
 
-        if ($actionName === '\\'.ViewController::class && $route->hasParameter('view')) {
-            $actionName = "view: {$route->parameter('view')}";
+        if ($actionName === '\\'.ViewController::class
+            && ($view = $route->parameter('view'))
+            && is_string($view)
+        ) {
+            $actionName = "view: {$view}";
             $type = LaravelRouteActionType::View;
         }
 
-        if($actionName === '\\'.RedirectController::class && $route->hasParameter('destination')) {
-            $actionName = "redirect: {$route->parameter('destination')}";
+        if ($actionName === '\\'.RedirectController::class
+            && ($destination = $route->parameter('destination'))
+            && is_string($destination)
+        ) {
+            $actionName = "redirect: {$destination}";
             $type = LaravelRouteActionType::Redirect;
         }
 
@@ -134,7 +140,7 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
                 $filename = str_replace(
                     rtrim(base_path(), '/').'/',
                     '',
-                    $reflection->getFileName(),
+                    $reflection->getFileName() ?: 'unknown file',
                 );
 
                 $actionName = "closure: {$filename}";
