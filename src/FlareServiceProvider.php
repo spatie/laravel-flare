@@ -20,7 +20,6 @@ use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
 use Monolog\Logger;
 use Spatie\FlareClient\Disabled\DisabledFlare;
-use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
 use Spatie\FlareClient\Recorders\ContextRecorder\ContextRecorder as BaseContextRecorder;
@@ -98,7 +97,7 @@ class FlareServiceProvider extends ServiceProvider
 
         $this->app->singleton(ViewFrameMapper::class);
 
-        $this->app->singleton(BaseContextRecorder::class, fn() => new ContextRecorder(
+        $this->app->singleton(BaseContextRecorder::class, fn () => new ContextRecorder(
             array_key_exists(LaravelCollectType::LaravelContext->value, $this->config->collects)
         ));
 

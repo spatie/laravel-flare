@@ -1,9 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Context;
-use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use function Symfony\Component\String\s;
 
 uses(ConfigureFlare::class);
 

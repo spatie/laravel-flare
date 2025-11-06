@@ -11,7 +11,6 @@ use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionContextInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation;
