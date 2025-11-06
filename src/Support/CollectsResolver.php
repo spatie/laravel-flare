@@ -39,7 +39,6 @@ class CollectsResolver extends BaseCollectsResolver
         match ($type) {
             LaravelCollectType::LivewireComponents => $this->livewireComponents($options),
             LaravelCollectType::LaravelInfo => $this->laravelInfo($options),
-            LaravelCollectType::LaravelContext => $this->laravelContext($options),
             LaravelCollectType::ExceptionContext => $this->exceptionContext($options),
             LaravelCollectType::HandledExceptions => $this->handledExceptions($options),
             CollectType::Jobs => $this->jobs($options),
@@ -69,11 +68,6 @@ class CollectsResolver extends BaseCollectsResolver
     protected function laravelInfo(array $options): void
     {
         $this->addMiddleware(AddLaravelInformation::class, $options);
-    }
-
-    protected function laravelContext(array $options): void
-    {
-        $this->addMiddleware(AddLaravelContext::class, $options);
     }
 
     protected function exceptionContext(array $options): void
