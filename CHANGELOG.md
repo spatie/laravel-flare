@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.4.1 - 2025-11-06
+
+- Allow using the legacy git integration
+
 ## 2.4.0 - 2025-11-05
 
 - Add support for livewire tracing
