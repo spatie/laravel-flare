@@ -20,7 +20,7 @@ class AddRequestInformation extends BaseAddRequestInformation
         array $config
     ) {
         $this->includeLivewireComponents = $config['include_livewire_components'] ?? false;
-        $this->ignoreLivewireComponents = $config['ignore_livewire_components'] ?? true;
+        $this->ignoreLivewireComponents = $config['ignore_livewire_components'] ?? [];
 
         parent::__construct($attributesProvider);
     }
