@@ -30,7 +30,7 @@ class LivewireComponentState
             LivewireComponentPhase::Hydrating => $this->hydratingSpan,
             LivewireComponentPhase::Rendering => $this->renderingSpan,
             LivewireComponentPhase::Dehydrating => $this->dehydratingSpan,
-            LivewireComponentPhase::Calling => end($this->callingSpans),
+            LivewireComponentPhase::Calling => end($this->callingSpans) ?: null,
             LivewireComponentPhase::Destroyed => throw new \RuntimeException('No span available for destroyed phase'),
         };
     }
