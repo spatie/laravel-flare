@@ -19,6 +19,7 @@ class LivewireComponentState
         public ?Span $dehydratingSpan = null,
         public array $callingSpans = [],
         public ?string $stubbedId = null,
+        public ?int $currentPhaseStartTime = null,
     ) {
     }
 
@@ -29,7 +30,8 @@ class LivewireComponentState
             LivewireComponentPhase::Hydrating => $this->hydratingSpan,
             LivewireComponentPhase::Rendering => $this->renderingSpan,
             LivewireComponentPhase::Dehydrating => $this->dehydratingSpan,
-            default => null,
+            LivewireComponentPhase::Calling => end($this->callingSpans) ?: null,
+            LivewireComponentPhase::Destroyed => throw new \RuntimeException('No span available for destroyed phase'),
         };
     }
 }
