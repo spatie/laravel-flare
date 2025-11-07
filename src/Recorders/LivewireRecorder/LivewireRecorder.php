@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Recorders\LivewireRecorder;
 
 use Exception;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\EventBus;
@@ -11,9 +10,7 @@ use Livewire\Mechanisms\ComponentRegistry;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Recorders\SpansRecorder;
-use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
-use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Enums\LivewireComponentPhase;
 use Spatie\LaravelFlare\Enums\SpanType;
@@ -74,7 +71,6 @@ class LivewireRecorder extends SpansRecorder
             $this->eventBus->before('dehydrate', fn ($component) => $this->handleDehydrate($component));
             $this->eventBus->before('destroy', fn ($component) => $this->handleDestruction($component));
             $this->eventBus->before('exception', fn ($component) => $this->handleDestruction($component));
-            $this->eventBus->before('profile', fn ($phase, $componentId, $timing) => $this->profile($phase, $componentId, $timing));
         } catch (Exception $exception) {
         }
     }
@@ -108,6 +104,7 @@ class LivewireRecorder extends SpansRecorder
             span: $span,
             phase: LivewireComponentPhase::Mounting,
             stubbedId: $stubbedId,
+            currentPhaseStartTime: $this->tracer->time->getCurrentTime(),
         );
 
         if ($this->splitByPhase === false) {
@@ -176,11 +173,8 @@ class LivewireRecorder extends SpansRecorder
 
         $this->endSpan();
 
-        if ($this->viewRecorder) {
-            // This view does not enter the rendered phase, so we need to end it here.
-
-            $this->viewRecorder->recordRendered();
-        }
+        // This view does not enter the rendered phase, so we need to end it here.
+        $this->viewRecorder?->recordRendered();
     }
 
     protected function handleHydration(Component $component): void
@@ -209,6 +203,7 @@ class LivewireRecorder extends SpansRecorder
         $this->componentStates[$component->id()] = new LivewireComponentState(
             span: $span,
             phase: LivewireComponentPhase::Hydrating,
+            currentPhaseStartTime: $this->tracer->time->getCurrentTime(),
         );
 
         if ($this->splitByPhase === false) {
@@ -235,7 +230,11 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $componentState->phase = LivewireComponentPhase::Calling;
+        $this->moveState(
+            $componentState,
+            from: [LivewireComponentPhase::Mounting, LivewireComponentPhase::Hydrating, LivewireComponentPhase::Calling],
+            to: LivewireComponentPhase::Calling
+        );
 
         if ($this->splitByPhase === false) {
             return;
@@ -265,7 +264,11 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $componentState->phase = LivewireComponentPhase::Rendering;
+        $this->moveState(
+            $componentState,
+            from: [LivewireComponentPhase::Mounting, LivewireComponentPhase::Hydrating, LivewireComponentPhase::Calling],
+            to: LivewireComponentPhase::Rendering,
+        );
 
         $componentState->span->addAttributes([
             'view.name' => $view->getName(),
@@ -294,7 +297,11 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $componentState->phase = LivewireComponentPhase::Dehydrating;
+        $this->moveState(
+            $componentState,
+            from: [LivewireComponentPhase::Rendering],
+            to: LivewireComponentPhase::Dehydrating,
+        );
 
         if ($this->splitByPhase === false) {
             return;
@@ -318,76 +325,56 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
+        $this->moveState(
+            $componentState,
+            from: [
+                LivewireComponentPhase::Mounting,
+                LivewireComponentPhase::Hydrating,
+                LivewireComponentPhase::Calling,
+                LivewireComponentPhase::Rendering,
+                LivewireComponentPhase::Dehydrating,
+            ],
+            to: LivewireComponentPhase::Destroyed,
+        );
+
         $this->endSpan();
 
         unset($this->componentStates[$component->id()]);
     }
 
-    protected function profile(
-        string $phase,
-        string $componentId,
-        array $timing,
+    protected function moveState(
+        LivewireComponentState $state,
+        array $from,
+        LivewireComponentPhase $to,
     ): void {
-        $componentState = $this->componentStates[$componentId] ?? null;
-
-        if ($componentState === null) {
+        if (! in_array($state->phase, $from)) {
             return;
         }
 
-        $start = TimeHelper::phpMicroTime($timing[0]);
-        $end = TimeHelper::phpMicroTime($timing[1]);
+        $endTime = null;
 
-        $componentPhase = LivewireComponentPhase::fromLivewireProfileEvent($phase);
+        if ($this->splitByPhase
+            && ($phaseSpan = $state->getSpanForCurrentPhase())
+            && $this->tracer->currentSpanId() === $phaseSpan->spanId
+            && $phaseSpan->end === null
+        ) {
+            $endedSpan = $this->endSpan();
 
-        if ($componentPhase === null) {
-            return;
+            $endTime = $endedSpan?->end;
         }
 
-        if ($phaseSpan = $this->resolvePhaseSpan($componentState, $phase)) {
-            $this->handlePhaseSpanUpdate($phaseSpan, $start, $end);
+        $endTime ??= $this->tracer->time->getCurrentTime();
+
+        if ($state->currentPhaseStartTime !== null) {
+            $duration = $endTime - $state->currentPhaseStartTime;
+
+            $state->span->addAttribute(
+                "livewire.component.phase.{$state->phase->value}",
+                $duration,
+            );
         }
 
-        $componentState->span->start = min($componentState->span->start, $start);
-        $componentState->span->end = max($componentState->span->end ?? 0, $end);
-
-        $componentState->span->addAttribute(
-            "livewire.component.phase.{$componentPhase->value}",
-            $end - $start,
-        );
-    }
-
-    protected function resolvePhaseSpan(
-        LivewireComponentState $componentState,
-        string $phase
-    ): ?Span {
-        if ($componentState->phase !== LivewireComponentPhase::Calling) {
-            return $componentState->getSpanForCurrentPhase();
-        }
-
-        $index = (int) Str::after($phase, 'call');
-
-        return $componentState->callingSpans[$index] ?? null;
-    }
-
-    protected function handlePhaseSpanUpdate(
-        ?Span $phaseSpan,
-        int $start,
-        int $end,
-    ): void {
-        if ($this->tracer->currentSpan() === null) {
-            return;
-        }
-
-        if ($phaseSpan === null) {
-            return;
-        }
-
-        if ($this->tracer->currentSpanId() !== $phaseSpan->spanId) {
-            return;
-        }
-
-        $phaseSpan->start = $start;
-
-        $this->endSpan($end);
+        $state->currentPhaseStartTime = $endTime;
+        $state->phase = $to;
     }
 }
