@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.5.0 - 2025-11-07
+
+- Add better context support in traces
+
 ## 2.4.2 - 2025-11-07
 
 - Fix issues with the Livewire collector not working when app_debug was false
