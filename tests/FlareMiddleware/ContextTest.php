@@ -1,7 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Context;
-use Spatie\LaravelFlare\Facades\Flare;
+use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
+
+uses(ConfigureFlare::class);
 
 beforeEach(function () {
     // We need to duplicate the class check here because this runs before the skip check
@@ -12,10 +14,12 @@ beforeEach(function () {
 );
 
 it('will add context information with an exception', function () {
+    $flare = setupFlare();
+
     Context::add('foo', 'bar');
     Context::addHidden('hidden', 'value');
 
-    $report = Flare::report(new Exception);
+    $report = $flare->report(new Exception);
 
     $context = $report->toArray()['attributes'];
 
@@ -26,7 +30,7 @@ it('will add context information with an exception', function () {
 });
 
 it('will not add context information with an exception if no context was set', function () {
-    $report = Flare::report(new Exception);
+    $report = setupFlare()->report(new Exception);
 
     $context = $report->toArray()['attributes'];
 
@@ -36,7 +40,7 @@ it('will not add context information with an exception if no context was set', f
 it('will not add context information with an exception if only hidden context was set', function () {
     Context::addHidden('hidden', 'value');
 
-    $report = Flare::report(new Exception);
+    $report = setupFlare()->report(new Exception);
 
     $context = $report->toArray()['attributes'];
 

@@ -11,7 +11,6 @@ use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionContextInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
 use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
-use Spatie\LaravelFlare\FlareMiddleware\AddLaravelContext;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation;
@@ -39,7 +38,6 @@ class CollectsResolver extends BaseCollectsResolver
         match ($type) {
             LaravelCollectType::LivewireComponents => $this->livewireComponents($options),
             LaravelCollectType::LaravelInfo => $this->laravelInfo($options),
-            LaravelCollectType::LaravelContext => $this->laravelContext($options),
             LaravelCollectType::ExceptionContext => $this->exceptionContext($options),
             LaravelCollectType::HandledExceptions => $this->handledExceptions($options),
             CollectType::Jobs => $this->jobs($options),
@@ -69,11 +67,6 @@ class CollectsResolver extends BaseCollectsResolver
     protected function laravelInfo(array $options): void
     {
         $this->addMiddleware(AddLaravelInformation::class, $options);
-    }
-
-    protected function laravelContext(array $options): void
-    {
-        $this->addMiddleware(AddLaravelContext::class, $options);
     }
 
     protected function exceptionContext(array $options): void

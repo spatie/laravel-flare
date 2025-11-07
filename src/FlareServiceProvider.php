@@ -22,6 +22,7 @@ use Monolog\Logger;
 use Spatie\FlareClient\Disabled\DisabledFlare;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
+use Spatie\FlareClient\Recorders\ContextRecorder\ContextRecorder as BaseContextRecorder;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
@@ -29,9 +30,11 @@ use Spatie\FlareClient\Support\GracefulSpanEnder;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
+use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
 use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
+use Spatie\LaravelFlare\Recorders\ContextRecorder\ContextRecorder;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 use Spatie\LaravelFlare\Support\GracefulSpanEnder as LaravelGracefulSpanEnder;
@@ -93,6 +96,10 @@ class FlareServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(ViewFrameMapper::class);
+
+        $this->app->singleton(BaseContextRecorder::class, fn () => new ContextRecorder(
+            array_key_exists(LaravelCollectType::LaravelContext->value, $this->config->collects)
+        ));
 
         if ($this->config->trace === false) {
             return;
