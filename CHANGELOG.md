@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.5.1 - 2025-11-13
+
+### What's Changed
+
+* Guard custom flare.collects entries to prevent configuration crashes by @imhayatunnabi in https://github.com/spatie/laravel-flare/pull/24
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.5.0...2.5.1
+
 ## 2.5.0 - 2025-11-07
 
 - Add better context support in traces
