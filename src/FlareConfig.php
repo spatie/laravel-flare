@@ -2,6 +2,7 @@
 
 namespace Spatie\LaravelFlare;
 
+use BackedEnum;
 use Monolog\Level;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\DefaultDbNameSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\GenericLaravelExceptionSolutionProvider;
@@ -63,7 +64,7 @@ class FlareConfig extends BaseFlareConfig
         foreach (config('flare.collects') as $type => $options) {
             $collectType = CollectType::tryFrom($type) ?? LaravelCollectType::tryFrom($type) ?? null;
 
-            if ($type === null) {
+            if ($collectType === null || ! is_array($options)) {
                 continue;
             }
 
@@ -226,6 +227,10 @@ class FlareConfig extends BaseFlareConfig
         }
 
         foreach ($ignore as $ignored) {
+            if (! $ignored instanceof BackedEnum) {
+                continue;
+            }
+
             if (! array_key_exists($ignored->value, $collects)) {
                 continue;
             }
