@@ -64,17 +64,12 @@ class FlareConfig extends BaseFlareConfig
         foreach (config('flare.collects') as $type => $options) {
             $collectType = CollectType::tryFrom($type) ?? LaravelCollectType::tryFrom($type) ?? null;
 
-            if ($collectType === null) {
-                continue;
-            }
-
-            if (! is_array($options)) {
+            if ($collectType === null || ! is_array($options)) {
                 continue;
             }
 
             $collects[$collectType->value] = [
                 'type' => $collectType,
-                'ignored' => $options['ignored'] ?? null,
                 'options' => $options,
             ];
         }
