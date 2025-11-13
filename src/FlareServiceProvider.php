@@ -19,9 +19,12 @@ use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
 use Monolog\Logger;
+use Spatie\FlareClient\Disabled\DisabledApplicationRecorder;
 use Spatie\FlareClient\Disabled\DisabledFlare;
+use Spatie\FlareClient\Disabled\DisabledTracer;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
+use Spatie\FlareClient\Recorders\ApplicationRecorder\ApplicationRecorder;
 use Spatie\FlareClient\Recorders\ContextRecorder\ContextRecorder as BaseContextRecorder;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
@@ -66,7 +69,9 @@ class FlareServiceProvider extends ServiceProvider
         $this->registerShareButton();
 
         if (empty($this->config->apiToken)) {
-            $this->app->singleton(Flare::class, fn () => new DisabledFlare());
+            $this->app->singleton(ApplicationRecorder::class, DisabledApplicationRecorder::class);
+            $this->app->singleton(Tracer::class, DisabledTracer::class);
+            $this->app->singleton(Flare::class, DisabledFlare::class);
 
             return;
         }
