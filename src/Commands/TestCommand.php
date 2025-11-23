@@ -15,6 +15,7 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Senders\Exceptions\BadResponseCode;
+
 class TestCommand extends Command
 {
     protected $signature = 'flare:test';
@@ -202,6 +203,7 @@ class TestCommand extends Command
         }
         if ($traceEnabled) {
             $this->info('We tried to send an exception and performance monitoring data to Flare. Please check if it arrived!');
+
             return;
         }
         $this->info('We tried to send an exception to Flare. Please check if it arrived!');
