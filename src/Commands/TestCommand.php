@@ -15,7 +15,6 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Senders\Exceptions\BadResponseCode;
-
 class TestCommand extends Command
 {
     protected $signature = 'flare:test';
@@ -30,12 +29,14 @@ class TestCommand extends Command
 
         $hasKey = $this->checkFlareKey();
 
+        $traceEnabled = $this->checkTrace();
+
         if ($this->checkFlareLogger() === false) {
             return Command::FAILURE;
         }
 
         if ($hasKey) {
-            $this->sendTestException();
+            $this->sendTestException($traceEnabled);
         }
 
         return Command::SUCCESS;
@@ -52,6 +53,19 @@ class TestCommand extends Command
         $this->info($message);
 
         return $hasKey;
+    }
+
+    protected function checkTrace(): bool
+    {
+        $trace = ! empty($this->config->get('flare.trace'));
+
+        $message = $trace
+            ? '✅ Performance monitoring enabled'
+            : '⚠️ To enable performance monitoring, you need to set the trace option to true in the flare.php config file';
+
+        $this->info($message);
+
+        return $trace;
     }
 
     public function checkFlareLogger(): bool
@@ -131,12 +145,18 @@ class TestCommand extends Command
         return false;
     }
 
-    protected function sendTestException(): void
+    protected function sendTestException(bool $traceEnabled): void
     {
         $testException = new Exception('This is an exception to test if the integration with Flare works.');
 
         try {
             app(Flare::class)->sendTestReport($testException);
+
+            if ($traceEnabled) {
+                $testTrace = require __DIR__ . '/../../resources/test-trace-payload.php';
+                app(Flare::class)->sendTestTrace($testTrace);
+            }
+
             $this->info('');
         } catch (Exception $exception) {
             $this->warn('❌ We were unable to send an exception to Flare. ');
@@ -180,7 +200,10 @@ class TestCommand extends Command
 
             return;
         }
-
+        if ($traceEnabled) {
+            $this->info('We tried to send an exception and performance monitoring data to Flare. Please check if it arrived!');
+            return;
+        }
         $this->info('We tried to send an exception to Flare. Please check if it arrived!');
     }
 }
