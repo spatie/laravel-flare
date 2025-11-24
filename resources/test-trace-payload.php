@@ -1,5 +1,5 @@
 <?php
-//This payload will be dynamically changed when executing php artisan flare:test command to users own resource data
+
 return [
     'resourceSpans' => [
         [
