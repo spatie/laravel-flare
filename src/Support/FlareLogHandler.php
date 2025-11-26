@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Support;
 
 use Exception;
-use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
 use Spatie\FlareClient\Flare;
