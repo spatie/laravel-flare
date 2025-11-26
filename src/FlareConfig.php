@@ -29,6 +29,7 @@ use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
 use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
+use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
@@ -133,13 +134,15 @@ class FlareConfig extends BaseFlareConfig
                 'split_by_phase' => LivewireRecorder::DEFAULT_SPLIT_BY_PHASE,
             ],
             CollectType::ServerInfo->value => [
-                'host' => true,
-                'php' => true,
-                'os' => true,
-                'composer' => true,
+                'host' => Resource::DEFAULT_HOST_ENTITY_TYPES,
+                'php' => Resource::DEFAULT_PHP_ENTITY_TYPES,
+                'os' => Resource::DEFAULT_OS_ENTITY_TYPES,
+                'composer' => false,
+                'composer_packages' => Resource::DEFAULT_COMPOSER_PACKAGES_ENTITY_TYPES,
             ],
             CollectType::GitInfo->value => [
-                'use_process' => false,
+                'use_process' => Resource::DEFAULT_GIT_USE_PROCESS,
+                'entity_types' => Resource::DEFAULT_GIT_ENTITY_TYPES,
             ],
             CollectType::Solutions->value => [
                 'solution_providers' => [

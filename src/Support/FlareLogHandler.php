@@ -10,7 +10,7 @@ use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\ReportFactory;
 use Spatie\LaravelFlare\Exceptions\InvalidConfig;
 
-class FlareLogHandler extends AbstractProcessingHandler
+class FlareLogHandler extends Hand
 {
     public static function logLevelFromName(?string $logLevelString): Level
     {

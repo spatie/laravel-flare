@@ -19,6 +19,8 @@ class LaravelVaporSender implements Sender
 
     protected bool $queueTraces;
 
+    protected bool $queueLogs;
+
     protected bool $queueErrors;
 
     private ?string $queue;
@@ -31,6 +33,7 @@ class LaravelVaporSender implements Sender
         $this->sender = $this->config['sender'] ?? LaravelHttpSender::class;
         $this->senderConfig = $this->config['sender_config'] ?? [];
         $this->queueTraces = $this->config['queue_traces'] ?? true;
+        $this->queueLogs = $this->config['queue_logs'] ?? true;
         $this->queueErrors = $this->config['queue_errors'] ?? false;
         $this->queue = $this->config['queue'] ?? null;
         $this->connection = $this->config['connection'] ?? null;
@@ -41,7 +44,8 @@ class LaravelVaporSender implements Sender
         $shouldQueue = match ($type) {
             FlarePayloadType::TestError => true,
             FlarePayloadType::Error => $this->queueErrors,
-            FlarePayloadType::Traces => $this->queueTraces
+            FlarePayloadType::Traces => $this->queueTraces,
+            FlarePayloadType::Logs => $this->queueLogs,
         };
 
         if (app()->runningInConsole()) {
