@@ -37,7 +37,7 @@ class LivewireAttributesProvider
         if ($request->has('components')) {
             $data = [];
 
-            foreach ($request->get('components') as $component) {
+            foreach ($request->input('components') as $component) {
                 $snapshot = json_decode($component['snapshot'], true);
 
                 $class = app(ComponentRegistry::class)->getClass($snapshot['memo']['name']);
