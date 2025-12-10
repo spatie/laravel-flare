@@ -2,7 +2,6 @@
 
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
-use Spatie\LaravelFlare\Tests\TestClasses\WorkbenchServer;
 
 it('can get a simple welcome page trace', function () {
     $workspace = ExpectSentPayloads::get('/');

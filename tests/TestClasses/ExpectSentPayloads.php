@@ -7,7 +7,6 @@ use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use InvalidArgumentException;
 use Spatie\FlareClient\Enums\FlareEntityType;
 use Spatie\FlareClient\Tests\Shared\ExpectLogData;
 use Spatie\FlareClient\Tests\Shared\ExpectReport;
@@ -129,7 +128,7 @@ class ExpectSentPayloads
                 'post' => $client->post($this->endpoint, $this->params),
                 default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
             };
-        }catch (ConnectException|ConnectionException $e){
+        } catch (ConnectException|ConnectionException $e) {
             throw new Exception('Workbench server is not running. Please start it by running `composer run serve`');
         }
 
