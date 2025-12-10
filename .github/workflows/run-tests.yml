@@ -40,9 +40,21 @@ jobs:
               run: |
                     nohup vendor/bin/testbench serve > server.log 2>&1 &
                     nohup vendor/bin/testbench queue:work > queue.log 2>&1 &
-                    sleep 5
+
+                    # Wait for workbench/storage symlink to be created (max 30 seconds)
+                    timeout=30
+                    elapsed=0
+                    while [ ! -L "workbench/storage" ] && [ $elapsed -lt $timeout ]; do
+                      sleep 1
+                      elapsed=$((elapsed + 1))
+                    done
+
+                    if [ ! -L "workbench/storage" ]; then
+                      echo "Timeout: workbench/storage symlink was not created after ${timeout} seconds"
+                      exit 1
+                    fi
+
+                    echo "workbench/storage symlink detected after ${elapsed} seconds"
 
             - name: Execute tests
               run: vendor/bin/pest
-
-            - uses: valeriangalliat/action-sshd-cloudflared@v1
