@@ -20,6 +20,8 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v6
 
+            - uses: valeriangalliat/action-sshd-cloudflared@v1
+
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
