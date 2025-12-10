@@ -33,9 +33,9 @@ it('traces queries', function () {
         ->expectEnded()
         ->expectType(SpanType::Query)
         ->expectAttribute('db.system', 'sqlite')
-        ->expectAttribute('db.name', ':memory:')
+        ->expectAttribute('db.name', DB::connection()->getDatabaseName())
         ->expectAttribute('db.statement', 'SELECT * FROM users WHERE id = ?')
-        ->expectAttribute('laravel.db.connection', 'testing')
+        ->expectAttribute('laravel.db.connection', DB::connection()->getName())
         ->expectAttribute('db.sql.bindings', [42]);
 });
 
@@ -52,9 +52,9 @@ it('can report queries', function () {
         ->toHaveKey('type', SpanType::Query)
         ->toHaveKey('attributes', [
             'db.system' => 'sqlite',
-            'db.name' => ':memory:',
+            'db.name' => DB::connection()->getDatabaseName(),
             'db.statement' => 'SELECT * FROM users WHERE id = ?',
-            'laravel.db.connection' => 'testing',
+            'laravel.db.connection' => DB::connection()->getName(),
             'db.sql.bindings' => ['42'],
         ]);
 });
