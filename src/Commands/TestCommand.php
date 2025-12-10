@@ -13,8 +13,10 @@ use Laravel\SerializableClosure\Support\ReflectionClosure;
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionProperty;
+use Spatie\FlareClient\Enums\FlareEntityType;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Senders\Exceptions\BadResponseCode;
+use Spatie\FlareClient\Support\Tester;
 
 class TestCommand extends Command
 {
@@ -34,11 +36,35 @@ class TestCommand extends Command
             return Command::FAILURE;
         }
 
-        if ($hasKey) {
-            $this->sendTestException();
+        if (! $hasKey) {
+            return Command::FAILURE;
         }
 
-        return Command::SUCCESS;
+        $this->newLine();
+
+        $tester = app(Tester::class);
+
+        $success = true;
+
+        if ($config['flare.report'] === false) {
+            $this->info('❌ Error reporting is disabled. Please enable it by setting the `flare.report` config value to `true` if you want to test it.');
+        } else {
+            $success = $this->sendTestPayload($tester, FlareEntityType::Errors);
+        }
+
+        if($config['flare.trace'] === false) {
+            $this->info('❌ Tracing is disabled. Please enable it by setting the `flare.trace` config value to `true` if you want to test it.');
+        } else {
+            $success = $success && $this->sendTestPayload($tester, FlareEntityType::Traces);
+        }
+
+        if ($config['flare.log'] === false) {
+            $this->info('❌ Logging is disabled. Please enable it by setting the `flare.log` config value to `true` if you want to test it.');
+        } else {
+            $success = $success && $this->sendTestPayload($tester, FlareEntityType::Logs);
+        }
+
+        return $success ? Command::SUCCESS : Command::FAILURE;
     }
 
     protected function checkFlareKey(): bool
@@ -131,21 +157,30 @@ class TestCommand extends Command
         return false;
     }
 
-    protected function sendTestException(bool $traceEnabled): void
-    {
-        $testException = new Exception('This is an exception to test if the integration with Flare works.');
-
+    protected function sendTestPayload(
+        Tester $tester,
+        FlareEntityType $entityType
+    ): bool {
         try {
-            app(Flare::class)->reporter->sendTestReport($testException);
+            match ($entityType) {
+                FlareEntityType::Errors => $tester->report(),
+                FlareEntityType::Logs => $tester->log(),
+                FlareEntityType::Traces => $tester->trace(),
+            };
 
-            if ($traceEnabled) {
-                $testTrace = require __DIR__ . '/../../resources/test-trace-payload.php';
-                app(Flare::class)->sendTestTrace($testTrace);
-            }
+            $emoji = match ($entityType){
+                FlareEntityType::Errors => '⚠️',
+                FlareEntityType::Logs => '📝',
+                FlareEntityType::Traces => '🔍',
+            };
 
-            $this->info('');
+            $entityName = ucfirst($entityType->singleName());
+
+            $this->info("{$emoji} {$entityName} sent to Flare");
+
+            return true;
         } catch (Exception $exception) {
-            $this->warn('❌ We were unable to send an exception to Flare. ');
+            $this->warn("❌ We were unable to send a {$entityType->singleName()} to Flare. ");
 
             if ($exception instanceof BadResponseCode) {
                 $this->info('');
@@ -184,13 +219,7 @@ class TestCommand extends Command
                 throw $exception;
             }
 
-            return;
+            return false;
         }
-        if ($traceEnabled) {
-            $this->info('We tried to send an exception and performance monitoring data to Flare. Please check if it arrived!');
-
-            return;
-        }
-        $this->info('We tried to send an exception to Flare. Please check if it arrived!');
     }
 }

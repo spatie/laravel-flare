@@ -97,7 +97,7 @@ class FlareConfig extends BaseFlareConfig
             samplerConfig: config('flare.sampler.config'),
             userAttributesProvider: config('flare.attribute_providers.user'),
         );
-
+        
         $config->enableShareButton = config('flare.enable_share_button', true);
 
         return $config;
