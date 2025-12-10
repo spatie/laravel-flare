@@ -37,6 +37,7 @@ jobs:
               run : composer run build
 
             - name: Start workbench server & queue
+              if: runner.os == 'Linux'
               run: |
                     nohup vendor/bin/testbench serve > server.log 2>&1 &
                     nohup vendor/bin/testbench queue:work > queue.log 2>&1 &
