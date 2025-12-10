@@ -1,97 +1,115 @@
 {
-    "name" : "spatie/laravel-flare",
-    "description" : "Send Laravel errors to Flare",
-    "keywords" : [
+    "name": "spatie/laravel-flare",
+    "description": "Send Laravel errors to Flare",
+    "keywords": [
         "error",
         "laravel",
         "flare"
     ],
-    "authors" : [
+    "authors": [
         {
-            "name" : "Spatie",
-            "email" : "info@spatie.be",
-            "role" : "Developer"
+            "name": "Spatie",
+            "email": "info@spatie.be",
+            "role": "Developer"
         }
     ],
-    "repositories" : [
+    "repositories": [
         {
-            "type" : "path",
-            "url" : "../flare-client-php"
+            "type": "path",
+            "url": "../flare-client-php"
         }
     ],
-    "homepage" : "https://flareapp.io/",
-    "license" : "MIT",
-    "require" : {
-        "php" : "^8.2",
-        "ext-curl" : "*",
-        "ext-json" : "*",
-        "ext-mbstring" : "*",
-        "illuminate/support" : "^11.46|^12.0",
-        "spatie/error-solutions" : "^2.0",
-        "spatie/flare-client-php" : "@dev",
-        "spatie/laravel-error-share" : "^1.0.3",
-        "symfony/console" : "^7.2.1",
-        "symfony/var-dumper" : "^7.2.3"
+    "homepage": "https://flareapp.io/",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "illuminate/support": "^11.46|^12.0",
+        "spatie/error-solutions": "^2.0",
+        "spatie/flare-client-php": "@dev",
+        "spatie/laravel-error-share": "^1.0.3",
+        "symfony/console": "^7.2.1",
+        "symfony/var-dumper": "^7.2.3"
     },
-    "require-dev" : {
-        "livewire/livewire" : "^3.6.0",
-        "mockery/mockery" : "^1.6.12",
-        "openai-php/client" : "^0.8.5",
-        "orchestra/testbench" : "^9.14|^10.0",
-        "laravel/serializable-closure" : "^2.0",
-        "pestphp/pest" : "^2.34|^3.7.4|^4.0",
-        "pestphp/pest-plugin-laravel" : "^2.4|^3.0",
-        "phpstan/extension-installer" : "^1.4.3",
-        "phpstan/phpstan-deprecation-rules" : "^1.1.1|^2.0.1",
-        "phpstan/phpstan-phpunit" : "^1.3.16|^2.0.4",
-        "vlucas/phpdotenv" : "^5.6.1"
+    "require-dev": {
+        "livewire/livewire": "^3.6.0",
+        "mockery/mockery": "^1.6.12",
+        "openai-php/client": "^0.8.5",
+        "orchestra/testbench": "^9.14|^10.0",
+        "laravel/serializable-closure": "^2.0",
+        "pestphp/pest": "^2.34|^3.7.4|^4.0",
+        "pestphp/pest-plugin-laravel": "^2.4|^3.0",
+        "phpstan/extension-installer": "^1.4.3",
+        "phpstan/phpstan-deprecation-rules": "^1.1.1|^2.0.1",
+        "phpstan/phpstan-phpunit": "^1.3.16|^2.0.4",
+        "vlucas/phpdotenv": "^5.6.1"
     },
-    "suggest" : {
-        "openai-php/client" : "Required to get solutions from OpenAI",
-        "psr/simple-cache-implementation" : "Used to cache solutions from OpenAI"
+    "suggest": {
+        "openai-php/client": "Required to get solutions from OpenAI",
+        "psr/simple-cache-implementation": "Used to cache solutions from OpenAI"
     },
-    "config" : {
-        "sort-packages" : true,
-        "allow-plugins" : {
-            "phpstan/extension-installer" : true,
-            "pestphp/pest-plugin" : true,
-            "php-http/discovery" : false
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "phpstan/extension-installer": true,
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": false
         }
     },
-    "extra" : {
-        "laravel" : {
-            "providers" : [
+    "extra": {
+        "laravel": {
+            "providers": [
                 "Spatie\\LaravelFlare\\FlareServiceProvider"
             ],
-            "aliases" : {
-                "Flare" : "Spatie\\LaravelFlare\\Facades\\Flare"
+            "aliases": {
+                "Flare": "Spatie\\LaravelFlare\\Facades\\Flare"
             }
         }
     },
-    "autoload" : {
-        "psr-4" : {
-            "Spatie\\LaravelFlare\\" : "src"
+    "autoload": {
+        "psr-4": {
+            "Spatie\\LaravelFlare\\": "src"
         }
     },
-    "autoload-dev" : {
-        "psr-4" : {
-            "Spatie\\LaravelFlare\\Tests\\" : "tests",
-            "Spatie\\FlareClient\\Tests\\Shared\\" : "vendor/spatie/flare-client-php/shared"
+    "autoload-dev": {
+        "psr-4": {
+            "Spatie\\LaravelFlare\\Tests\\": "tests",
+            "Spatie\\FlareClient\\Tests\\Shared\\": "vendor/spatie/flare-client-php/shared",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
-    "minimum-stability" : "dev",
-    "prefer-stable" : true,
-    "scripts" : {
-        "analyse" : "vendor/bin/phpstan analyse",
-        "baseline" : "vendor/bin/phpstan --generate-baseline",
-        "format" : "vendor/bin/php-cs-fixer fix --allow-risky=yes",
-        "test" : "vendor/bin/pest",
-        "test-coverage" : "vendor/bin/phpunit --coverage-html coverage"
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "scripts": {
+        "analyse": "vendor/bin/phpstan analyse",
+        "baseline": "vendor/bin/phpstan --generate-baseline",
+        "format": "vendor/bin/php-cs-fixer fix --allow-risky=yes",
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage",
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ],
+        "lint": [
+            "@php vendor/bin/phpstan analyse --verbose --ansi"
+        ]
     },
-    "support" : {
-        "issues" : "https://github.com/spatie/laravel-flare/issues",
-        "forum" : "https://twitter.com/flareappio",
-        "source" : "https://github.com/spatie/laravel-flare",
-        "docs" : "https://flareapp.io/docs/integration/laravel-customizations/introduction"
+    "support": {
+        "issues": "https://github.com/spatie/laravel-flare/issues",
+        "forum": "https://twitter.com/flareappio",
+        "source": "https://github.com/spatie/laravel-flare",
+        "docs": "https://flareapp.io/docs/integration/laravel-customizations/introduction"
     }
 }

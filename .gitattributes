@@ -7,6 +7,7 @@
 /resources/css      export-ignore
 /resources/js       export-ignore
 /tests              export-ignore
+/workbench          export-ignore
 /.babelrc           export-ignore
 /.editorconfig      export-ignore
 /.gitattributes     export-ignore

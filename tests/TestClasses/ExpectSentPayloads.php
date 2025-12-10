@@ -1,0 +1,158 @@
+<?php
+
+namespace Spatie\LaravelFlare\Tests\TestClasses;
+
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Spatie\FlareClient\Enums\FlareEntityType;
+use Spatie\FlareClient\Tests\Shared\ExpectLogData;
+use Spatie\FlareClient\Tests\Shared\ExpectReport;
+use Spatie\FlareClient\Tests\Shared\ExpectTrace;
+use SplFileInfo;
+
+class ExpectSentPayloads
+{
+    public static function get(string $endpoint): self
+    {
+        return new self($endpoint, 'get');
+    }
+
+    public static function post(string $endpoint, array $parameters): self
+    {
+        return new self($endpoint, 'post', $parameters);
+    }
+
+    private string $workSpacePath;
+
+    /**
+     * @param string $endpoint
+     * @param array<int, ExpectReport> $reports
+     * @param array<int, ExpectTrace> $traces
+     * @param array<int, ExpectLogData> $logs
+     */
+    public function __construct(
+        public string $endpoint,
+        public string $method,
+        public array $params = [],
+        public array $reports = [],
+        public array $traces = [],
+        public array $logs = [],
+    ) {
+        $this->workSpacePath = __DIR__.'/../../workbench/storage';
+
+        $this->cleanupWorkspace();
+        $this->initializeWorkspace();
+    }
+
+    public function assertSent(?int $reports = 0, ?int $traces = 0, ?int $logs = 0): void
+    {
+        if ($reports !== null) {
+            $this->assertReportsSent($reports);
+        }
+
+        if ($traces !== null) {
+            $this->assertTracesSent($traces);
+        }
+
+        if ($logs !== null) {
+            $this->assertLogsSent($logs);
+        }
+    }
+
+    public function assertReportsSent(int $expectedCount): void
+    {
+        expect(count($this->reports))->toBe($expectedCount);
+    }
+
+    public function assertTracesSent(int $expectedCount): void
+    {
+        expect(count($this->traces))->toBe($expectedCount);
+    }
+
+    public function assertLogsSent(int $expectedCount): void
+    {
+        expect(count($this->logs))->toBe($expectedCount);
+    }
+
+    public function assertNothingSent(): void
+    {
+        $this->assertSent(
+            reports: 0,
+            traces: 0,
+            logs: 0,
+        );
+    }
+
+    public function lastReport(): ExpectReport
+    {
+        return $this->reports[array_key_last($this->reports)];
+    }
+
+    public function lastTrace(): ExpectTrace
+    {
+        return $this->traces[array_key_last($this->traces)];
+    }
+
+    public function lastLog(): ExpectLogData
+    {
+        return $this->logs[array_key_last($this->logs)];
+    }
+
+
+    public function __destruct()
+    {
+        $this->cleanupWorkspace();
+    }
+
+    protected function cleanupWorkspace(): void
+    {
+        File::delete(array_map(
+            fn (SplFileInfo $file) => $file->getRealPath(),
+            File::files($this->workSpacePath),
+        ));
+    }
+
+    protected function initializeWorkspace(
+        int $waitAtLeastMicroseconds = 500,
+    ): void
+    {
+        $client = Http::timeout(2);
+
+        $response = match ($this->method) {
+            'get' => $client->get($this->endpoint),
+            'post' => $client->post($this->endpoint, $this->params),
+            default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
+        };
+
+        usleep($waitAtLeastMicroseconds);
+
+        foreach (File::files($this->workSpacePath) as $file) {
+            $entityType = match (true) {
+                str_starts_with($file->getFilename(), FlareEntityType::Errors->value) => FlareEntityType::Errors,
+                str_starts_with($file->getFilename(), FlareEntityType::Traces->value) => FlareEntityType::Traces,
+                str_starts_with($file->getFilename(), FlareEntityType::Logs->value) => FlareEntityType::Logs,
+                default => null,
+            };
+
+            if ($entityType === null) {
+                continue;
+            }
+
+            if (array_key_exists($file->getInode(), match ($entityType) {
+                FlareEntityType::Errors => $this->reports,
+                FlareEntityType::Traces => $this->traces,
+                FlareEntityType::Logs => $this->logs,
+            })) {
+                continue;
+            }
+
+            $content = json_decode(File::get($file->getRealPath()), true);
+
+            match ($entityType) {
+                FlareEntityType::Errors => $this->reports[$file->getInode()] = new ExpectReport($content),
+                FlareEntityType::Traces => $this->traces[$file->getInode()] = new ExpectTrace($content),
+                FlareEntityType::Logs => $this->logs[$file->getInode()] = new ExpectLogData($content),
+            };
+        }
+    }
+}
