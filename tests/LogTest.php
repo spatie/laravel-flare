@@ -4,22 +4,26 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Monolog\Level;
 use Spatie\FlareClient\Enums\SpanEventType;
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
+use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-
-uses(ConfigureFlare::class);
+use function Pest\Laravel\freezeTime;
+use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
     config()->set('logging.channels.flare.driver', 'flare');
     config()->set('logging.default', 'flare');
 
-    FakeTime::setup('2019-01-01 12:34:56');
+    $datetime = new DateTimeImmutable('2019-01-01 12:34:56');
+
+    FakeTime::setup($datetime);
 });
 
 it('it does not report exceptions using the flare api via logger', function () {
-    setupFlare(handleErrorsWithFlare: false);
+    setupFlare(fn(FlareConfig $config) => $config->report(false));
 
     Route::get('exception', fn () => nonExistingFunction());
 
@@ -27,49 +31,66 @@ it('it does not report exceptions using the flare api via logger', function () {
         ->get('/exception')
         ->assertStatus(500);
 
-    FakeSender::instance()->assertRequestsSent(0);
+    FakeApi::assertNothingSent();
 });
 
-it('does not report normal log messages', function () {
-    setupFlare();
+it('does report log messages', function () {
+    $flare = setupFlare();
 
-    Log::info('this is a log message');
     Log::debug('this is a log message');
+    Log::info('this is a log message');
+    Log::notice('this is a log message');
+    Log::warning('this is a log message');
+    Log::error('this is a log message');
+    Log::critical('this is a log message');
+    Log::alert('this is a log message');
+    Log::emergency('this is a log message');
 
-    FakeSender::instance()->assertRequestsSent(0);
+    $flare->logger->flush();
+
+    FakeApi::assertSent(logs: 1);
+
+    $lastLog = FakeApi::lastLog()->expectLogCount(8);
+
+    $lastLog->expectLog(0)->expectSeverityText('debug');
+    $lastLog->expectLog(1)->expectSeverityText('info');
+    $lastLog->expectLog(2)->expectSeverityText('notice');
+    $lastLog->expectLog(3)->expectSeverityText('warning');
+    $lastLog->expectLog(4)->expectSeverityText('error');
+    $lastLog->expectLog(5)->expectSeverityText('critical');
+    $lastLog->expectLog(6)->expectSeverityText('alert');
+    $lastLog->expectLog(7)->expectSeverityText('emergency');
+
 });
 
 it('reports log messages above the specified minimum level', function () {
-    setupFlare();
+    $flare = setupFlare(fn(FlareConfig $config) => $config->log(minimalLevel: Level::Critical));
 
     Log::error('this is a log message');
     Log::emergency('this is a log message');
     Log::critical('this is a log message');
 
-    FakeSender::instance()->assertRequestsSent(3);
-});
+    $flare->logger->flush();
 
-it('reports different log levels when configured', function () {
-    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(minimumReportLogLevel: Level::Debug));
+    FakeApi::assertSent(logs: 1);
 
-    Log::debug('this is a log message');
-    Log::error('this is a log message');
-    Log::emergency('this is a log message');
-    Log::critical('this is a log message');
+    $lastLog = FakeApi::lastLog()->expectLogCount(2);
 
-    FakeSender::instance()->assertRequestsSent(4);
+    $lastLog->expectLog(0)->expectSeverityText('emergency');
+    $lastLog->expectLog(1)->expectSeverityText('critical');
 });
 
 it('can log null values', function () {
-    setupFlare();
+    $flare = setupFlare();
 
     Log::info(null);
-    Log::debug(null);
-    Log::error(null);
-    Log::emergency(null);
-    Log::critical(null);
 
-    FakeSender::instance()->assertRequestsSent(3);
+    $flare->logger->flush();
+
+    FakeApi::lastLog()
+        ->expectLogCount(1)
+        ->expectLog(0)
+        ->expectBody('');
 });
 
 it('adds log messages to the report', function () {
@@ -77,115 +98,114 @@ it('adds log messages to the report', function () {
 
     Route::get('exception', function () {
         Log::info('info log');
+        Log::debug('debug log'); // Minimal level for error logs is info
+        Log::notice('notice log', ['some' => 'context']);
+
+        nonExistingFunction();
+    });
+
+    $this->get('/exception');
+
+    $lastReport = FakeApi::lastReport()->expectEventCount(2);
+
+    $lastReport->expectEvent(0)
+        ->expectMissingEnd()
+        ->expectType(SpanEventType::Log)
+        ->expectAttribute('log.message', 'info log')
+        ->expectAttribute('log.level', 'info')
+        ->expectAttribute('log.context', []);
+
+    $lastReport->expectEvent(1)
+        ->expectMissingEnd()
+        ->expectType(SpanEventType::Log)
+        ->expectAttribute('log.message', 'notice log')
+        ->expectAttribute('log.level', 'notice')
+        ->expectAttribute('log.context', ['some' => 'context']);
+});
+
+it('it can raise the minimal level of logs added to reports', function () {
+    setupFlare(fn(FlareConfig $config) => $config->collectLogsWithErrors(minimalLevel: Level::Notice) );
+
+    Route::get('exception', function () {
+        Log::info('info log');
         Log::debug('debug log');
-        Log::notice('notice log');
+        Log::notice('notice log', ['some' => 'context']);
 
         nonExistingFunction();
     });
 
     $this->get('/exception');
 
-    FakeSender::instance()->assertRequestsSent(1);
+    $lastReport = FakeApi::lastReport()->expectEventCount(1);
 
-    $arguments = FakeSender::instance()->getLastPayload();
-
-    $loggedEvents = array_values(array_filter(
-        $arguments['events'],
-        fn (array $event) => $event['type'] === SpanEventType::Log && in_array(
-            $event['attributes']['log.message'],
-            ['info log', 'debug log', 'notice log']
-        ),
-    )); // Remove all logs from other packages
-
-    expect($loggedEvents)
-        ->toHaveCount(3)
-        ->each
-        ->toHaveKey('startTimeUnixNano', 1546346096000000000)
-        ->toHaveKey('endTimeUnixNano', null)
-        ->toHaveKey('type', SpanEventType::Log);
-
-    expect($loggedEvents[0]['attributes'])
-        ->toHaveKey('log.level', 'info')
-        ->toHaveKey('log.message', 'info log')
-        ->toHaveKey('log.context', []);
-
-    expect($loggedEvents[1]['attributes'])
-        ->toHaveKey('log.level', 'debug')
-        ->toHaveKey('log.message', 'debug log')
-        ->toHaveKey('log.context', []);
-
-    expect($loggedEvents[2]['attributes'])
-        ->toHaveKey('log.level', 'notice')
-        ->toHaveKey('log.message', 'notice log')
-        ->toHaveKey('log.context', []);
+    $lastReport->expectEvent(0)
+        ->expectMissingEnd()
+        ->expectType(SpanEventType::Log)
+        ->expectAttribute('log.message', 'notice log')
+        ->expectAttribute('log.level', 'notice')
+        ->expectAttribute('log.context', ['some' => 'context']);
 });
 
-it('can disable sending logs as a report but keep them as span events in an exception report', function ($logLevel) {
-    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(false));
-
-    Log::log($logLevel, 'log');
+it('it can raise the minimal level of logs added to reports but the logger minimal level is king', function () {
+    setupFlare(fn(FlareConfig $config) => $config->collectLogsWithErrors(minimalLevel: Level::Info)->log(minimalLevel: Level::Notice));
 
     Route::get('exception', function () {
+        Log::info('info log'); // This will not be logged because the logger minimal level is notice
+        Log::debug('debug log');
+        Log::notice('notice log', ['some' => 'context']);
+
         nonExistingFunction();
     });
 
     $this->get('/exception');
 
-    FakeSender::instance()->assertRequestsSent(1);
+    $lastReport = FakeApi::lastReport()->expectEventCount(1);
 
-    $arguments = FakeSender::instance()->getLastPayload();
-
-    expect($arguments['exceptionClass'])->toBe('Error');
-    expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
-
-    $loggedEvents = array_values(array_filter(
-        $arguments['events'],
-        fn (array $event) => $event['type'] === SpanEventType::Log && $event['attributes']['log.message'] === 'log',
-    )); // Remove all logs from other packages
-
-    expect($loggedEvents)
-        ->toHaveCount(1)
-        ->each
-        ->toHaveKey('startTimeUnixNano', 1546346096000000000)
-        ->toHaveKey('endTimeUnixNano', null)
-        ->toHaveKey('type', SpanEventType::Log);
-
-    expect($loggedEvents[0]['attributes'])
-        ->toHaveKey('log.level', $logLevel)
-        ->toHaveKey('log.message', 'log')
-        ->toHaveKey('log.context', []);
-})->with('provideMessageLevels');
-
-it('it will report an exception with log span events with metadata', function () {
-    setupFlare(fn (FlareConfig $config) => $config->sendLogsAsEvents(false));
-
-    Log::info('log', [
-        'meta' => 'data',
-    ]);
-
-    Route::get('exception', function () {
-        nonExistingFunction();
-    });
-
-    $this->get('/exception');
-
-    FakeSender::instance()->assertRequestsSent(1);
-
-    $arguments = FakeSender::instance()->getLastPayload();
-
-    expect($arguments['exceptionClass'])->toBe('Error');
-    expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
-
-    expect($arguments['events'][0]['attributes'])->toHaveKey('log.context', ['meta' => 'data']);
+    $lastReport->expectEvent(0)
+        ->expectMissingEnd()
+        ->expectType(SpanEventType::Log)
+        ->expectAttribute('log.message', 'notice log')
+        ->expectAttribute('log.level', 'notice')
+        ->expectAttribute('log.context', ['some' => 'context']);
 });
 
-// Datasets
-dataset('provideMessageLevels', [
-    ['info'],
-    ['notice'],
-    ['debug'],
-    ['warning'],
-    ['error'],
-    ['critical'],
-    ['emergency'],
-]);
+it('can set a max amount of log items added to reports and always keeps the latest ones', function () {
+    setupFlare(fn(FlareConfig $config) => $config->collectLogsWithErrors(maxItems: 3));
+
+    Route::get('exception', function () {
+        Log::info('info log 1');
+        Log::info('info log 2');
+        Log::info('info log 3');
+        Log::info('info log 4');
+        Log::info('info log 5');
+
+        nonExistingFunction();
+    });
+
+    $this->get('/exception');
+
+    $lastReport = FakeApi::lastReport()->expectEventCount(3);
+
+    $lastReport->expectEvent(0)->expectAttribute('log.message', 'info log 3');
+    $lastReport->expectEvent(1)->expectAttribute('log.message', 'info log 4');
+    $lastReport->expectEvent(2)->expectAttribute('log.message', 'info log 5');
+});
+
+it('will never store logs as trace events', function (){
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
+    $flare->tracer->startSpan('Test Span');
+
+    Log::info('info log');
+
+    $flare->tracer->endSpan();
+    $flare->tracer->endTrace();
+
+    FakeApi::assertSent(traces: 1);
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectSpanEventCount(0);
+});

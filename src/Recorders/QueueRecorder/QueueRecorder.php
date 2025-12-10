@@ -50,19 +50,15 @@ class QueueRecorder extends SpansRecorder
         Queue::createPayloadUsing(function (?string $connection, ?string $queue, ?array $payload): ?array {
             if ($payload === null
                 || $this->withTraces === false
-                || $this->tracer->samplingType === SamplingType::Disabled
-                || $this->tracer->samplingType === SamplingType::Waiting
+                || $this->tracer->disabled === true
+                || $this->tracer->sampling === false
             ) {
                 return $payload;
             }
 
-            if ($this->tracer->isSampling() === false) {
+            if ($this->tracer->isSampling() === false || $this->isIgnored($payload)) {
                 $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
 
-                return $payload;
-            }
-
-            if ($this->isIgnored($payload)) {
                 return $payload;
             }
 

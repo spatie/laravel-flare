@@ -1,14 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 use function Pest\Laravel\get;
 use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\Enums\CacheResult;
 use Spatie\FlareClient\Enums\SpanEventType;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-
-uses(ConfigureFlare::class);
 
 it('records cache operations', function (
     Closure $preRecording,
@@ -27,11 +25,7 @@ it('records cache operations', function (
 
     get('exception')->assertStatus(500);
 
-    $fakeSender = FakeSender::instance();
-
-    $fakeSender->assertRequestsSent(1);
-
-    $spanEvents = $fakeSender->getLastPayload()['events'];
+    $spanEvents = FakeApi::lastReport()->toArray()['events'];
 
     $cacheSpanEvents = array_values(array_filter(
         $spanEvents,

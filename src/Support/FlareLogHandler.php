@@ -2,53 +2,27 @@
 
 namespace Spatie\LaravelFlare\Support;
 
-use Exception;
-use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
 use Monolog\LogRecord;
-use Spatie\FlareClient\Flare;
-use Spatie\FlareClient\ReportFactory;
-use Spatie\LaravelFlare\Exceptions\InvalidConfig;
+use Spatie\FlareClient\Logger;
+use Spatie\FlareClient\Support\FlareLogHandler as BaseFlareLogHandler;
 
-class FlareLogHandler extends Hand
+class FlareLogHandler extends BaseFlareLogHandler
 {
-    public static function logLevelFromName(?string $logLevelString): Level
-    {
-        try {
-            $logLevel = Level::fromName($logLevelString);
-        } catch (Exception) {
-            throw InvalidConfig::invalidLogLevel($logLevelString);
-        }
-
-        return $logLevel;
-    }
-
     public function __construct(
-        protected Flare $flare,
-        protected Level $minimumReportLogLevel,
-        protected bool $traceOrigins = false,
-        Level $handlingLevel = Level::Debug,
+        protected Logger $logger,
+        Level $level = self::DEFAULT_MONOLOG_LEVEL,
         bool $bubble = true
     ) {
-        parent::__construct($handlingLevel, $bubble);
+        parent::__construct($this->logger, $level, $bubble);
     }
 
     protected function write(LogRecord $record): void
     {
-        if ($record->level->isLowerThan($this->minimumReportLogLevel)) {
-            return;
-        }
-
         if (array_key_exists('exception', $record->context)) {
             return;
         }
 
-        $this->flare->reportMessage(
-            $record->message,
-            $record->level->name,
-            function (ReportFactory $flareReport) use ($record) {
-                $flareReport->context($record->context);
-            }
-        );
+        parent::write($record);
     }
 }

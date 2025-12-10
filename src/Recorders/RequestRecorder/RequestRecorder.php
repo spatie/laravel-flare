@@ -39,6 +39,6 @@ class RequestRecorder extends BaseRequestRecorder
                 'http.request.method' => strtoupper($request->getMethod()),
                 ...$attributes,
             ],
-        ], canStartTrace: true);
+        ]);
     }
 }

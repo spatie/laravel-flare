@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare\Senders;
 
 use Closure;
+use Spatie\FlareClient\Enums\FlareEntityType;
 use Spatie\FlareClient\Enums\FlarePayloadType;
 use Spatie\FlareClient\Senders\Sender;
 use Spatie\FlareClient\Senders\Support\Response;
@@ -39,13 +40,13 @@ class LaravelVaporSender implements Sender
         $this->connection = $this->config['connection'] ?? null;
     }
 
-    public function post(string $endpoint, string $apiToken, array $payload, FlarePayloadType $type, Closure $callback): void
+    public function post(string $endpoint, string $apiToken, array $payload, FlareEntityType $type, bool $test, Closure $callback): void
     {
-        $shouldQueue = match ($type) {
-            FlarePayloadType::TestError => true,
-            FlarePayloadType::Error => $this->queueErrors,
-            FlarePayloadType::Traces => $this->queueTraces,
-            FlarePayloadType::Logs => $this->queueLogs,
+        $shouldQueue = match (true) {
+            $test => false,
+            $type === FlareEntityType::Errors => $this->queueErrors,
+            $type === FlareEntityType::Traces => $this->queueTraces,
+            $type === FlareEntityType::Logs => $this->queueLogs,
         };
 
         if (app()->runningInConsole()) {
@@ -58,6 +59,7 @@ class LaravelVaporSender implements Sender
                 $apiToken,
                 $payload,
                 $type,
+                $test,
                 $callback
             );
 

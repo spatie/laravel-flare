@@ -27,8 +27,11 @@ use Spatie\FlareClient\Api;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
+use Spatie\FlareClient\FlareMiddleware\AddLogs;
+use Spatie\FlareClient\Logger;
 use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
+use Spatie\FlareClient\Reporter;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
@@ -37,6 +40,7 @@ use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
+use Spatie\LaravelFlare\Recorders\ContextRecorder\ContextRecorder;
 use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
@@ -50,12 +54,6 @@ use Spatie\LaravelFlare\Support\FlareLogHandler;
 
 class FlareConfig extends BaseFlareConfig
 {
-    public bool $sendLogsAsEvents = true;
-
-    public Level $minimumReportLogLevel = Level::Error;
-
-    public bool $logStackTraces = false;
-
     public bool $enableShareButton = true;
 
     public static function fromLaravelConfig(): self
@@ -79,34 +77,25 @@ class FlareConfig extends BaseFlareConfig
             apiToken: config('flare.key'),
             baseUrl: config('flare.base_url', Api::BASE_URL),
             collects: $collects,
-            reportErrorLevels: config('flare.report_error_levels'),
             applicationPath: base_path(),
             applicationName: config('app.name'),
             applicationStage: app()->environment(),
-            sender: config('flare.sender.class'),
-            senderConfig: config('flare.sender.config', []),
-            trace: config('flare.trace'),
-            sampler: config('flare.sampler.class'),
-            samplerConfig: config('flare.sampler.config'),
-            traceLimits: new TraceLimits(
-                maxSpans: config('flare.trace_limits.max_spans'),
-                maxAttributesPerSpan: config('flare.trace_limits.max_attributes_per_span'),
-                maxSpanEventsPerSpan: config('flare.trace_limits.max_span_events_per_span'),
-                maxAttributesPerSpanEvent: config('flare.trace_limits.max_attributes_per_span_event')
-            ),
             censorClientIps: config('flare.censor.client_ips'),
             censorHeaders: config('flare.censor.headers'),
             censorBodyFields: config('flare.censor.body_fields'),
-            userAttributesProvider: config('flare.attribute_providers.user'),
-            collectsResolver: CollectsResolver::class,
+            report: config('flare.report'),
+            reportErrorLevels: config('flare.report_error_levels'),
             overriddenGroupings: config('flare.overridden_groupings'),
-            includeStackTraceWithMessages: config()->get('logging.channels.flare.stack_trace', false)
+            trace: config('flare.trace'),
+            traceLimits: config('flare.trace_limits'),
+            log: config('flare.log'),
+            minimalLogLevel: config('flare.minimal_log_level'),
+            sender: config('flare.sender.class'),
+            senderConfig: config('flare.sender.config', []),
+            sampler: config('flare.sampler.class'),
+            samplerConfig: config('flare.sampler.config'),
+            userAttributesProvider: config('flare.attribute_providers.user'),
         );
-
-        $config->sendLogsAsEvents = config('flare.send_logs_as_events', true);
-        $config->minimumReportLogLevel = config()->has('logging.channels.flare.level')
-            ? FlareLogHandler::logLevelFromName(config('logging.channels.flare.level'))
-            : Level::Error;
 
         $config->enableShareButton = config('flare.enable_share_button', true);
 
@@ -149,8 +138,11 @@ class FlareConfig extends BaseFlareConfig
                     ...FlareConfig::defaultSolutionProviders(),
                 ],
             ],
+            CollectType::Context->value => [],
             LaravelCollectType::LaravelInfo->value => [],
-            LaravelCollectType::LaravelContext->value => [],
+            LaravelCollectType::LaravelContext->value => [
+                'include_laravel_context' => ContextRecorder::DEFAULT_INCLUDE_LARAVEL_CONTEXT,
+            ],
             LaravelCollectType::ExceptionContext->value => [],
             LaravelCollectType::HandledExceptions->value => [],
             CollectType::Commands->value => [
@@ -171,11 +163,9 @@ class FlareConfig extends BaseFlareConfig
                 'max_items_with_errors' => CacheRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
                 'operations' => CacheRecorder::DEFAULT_OPERATIONS,
             ],
-            CollectType::Logs->value => [
-                'with_traces' => LogRecorder::DEFAULT_WITH_TRACES,
-                'with_errors' => LogRecorder::DEFAULT_WITH_ERRORS,
-                'max_items_with_errors' => LogRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
-                'minimal_level' => LogRecorder::DEFAULT_MINIMAL_LEVEL,
+            CollectType::LogsWithErrors->value => [
+                'max_items' => AddLogs::DEFAULT_MAX_LOGS_WITH_ERRORS,
+                'minimal_level' => AddLogs::DEFAULT_MINIMAL_LOG_LEVEL_WITH_ERRORS,
             ],
             CollectType::Queries->value => [
                 'with_traces' => QueryRecorder::DEFAULT_WITH_TRACES,
@@ -284,7 +274,6 @@ class FlareConfig extends BaseFlareConfig
     public function useDefaults(): static
     {
         return parent::useDefaults()
-            ->sendLogsAsEvents()
             ->collectLivewireComponents()
             ->collectLaravelInfo()
             ->collectLaravelContext()
@@ -292,17 +281,6 @@ class FlareConfig extends BaseFlareConfig
             ->collectJobs()
             ->collectHandledExceptions();
     }
-
-    public function sendLogsAsEvents(
-        bool $sendLogsAsEvents = true,
-        Level $minimumReportLogLevel = Level::Error
-    ): static {
-        $this->sendLogsAsEvents = $sendLogsAsEvents;
-        $this->minimumReportLogLevel = $minimumReportLogLevel;
-
-        return $this;
-    }
-
 
     public function collectLivewireComponents(
         bool $withTraces = LivewireRecorder::DEFAULT_WITH_TRACES,

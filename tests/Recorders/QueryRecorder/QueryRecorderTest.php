@@ -6,11 +6,10 @@ use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectTrace;
 use Spatie\FlareClient\Tests\Shared\ExpectTracer;
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-
-uses(ConfigureFlare::class);
 
 beforeEach(function () {
     Schema::dropIfExists('users');
@@ -23,28 +22,25 @@ beforeEach(function () {
 });
 
 it('traces queries', function () {
-    $flare = setupFlareForTracing();
+    $flare = setupFlare(alwaysSampleTraces: true);
 
     $flare->tracer->startTrace();
 
     DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
-    ExpectTracer::create($flare)
-        ->hasTraceCount(1)
-        ->isSampling()
-        ->trace(fn (ExpectTrace $trace) => $trace
-            ->hasSpanCount(1)
-            ->span(
-                fn (ExpectSpan $span) => $span
-                    ->isEnded()
-                    ->hasName('Query - SELECT * FROM users WHERE id = ?')
-                    ->hasType(SpanType::Query)
-                    ->hasAttribute('db.system', 'sqlite')
-                    ->hasAttribute('db.name', ':memory:')
-                    ->hasAttribute('db.statement', 'SELECT * FROM users WHERE id = ?')
-                    ->hasAttribute('laravel.db.connection', 'testing')
-                    ->hasAttribute('db.sql.bindings', ['42'])
-            ));
+    $flare->tracer->endTrace();
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectName('Query - SELECT * FROM users WHERE id = ?')
+        ->expectEnded()
+        ->expectType(SpanType::Query)
+        ->expectAttribute('db.system', 'sqlite')
+        ->expectAttribute('db.name', ':memory:')
+        ->expectAttribute('db.statement', 'SELECT * FROM users WHERE id = ?')
+        ->expectAttribute('laravel.db.connection', 'testing')
+        ->expectAttribute('db.sql.bindings', [42]);
 });
 
 it('can report queries', function () {
@@ -52,11 +48,11 @@ it('can report queries', function () {
 
     DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
-    $report = $flare->report(new Exception('Report this'));
+    $report = $flare->report(new Exception('Report this'))->toArray();
 
-    expect($report->toArray()['events'])->toHaveCount(1);
+    expect($report['events'])->toHaveCount(1);
 
-    expect($report->toArray()['events'][0])
+    expect($report['events'][0])
         ->toHaveKey('type', SpanType::Query)
         ->toHaveKey('attributes', [
             'db.system' => 'sqlite',
@@ -72,21 +68,21 @@ it('can stop recording bindings', function () {
 
     DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
-    $report = $flare->report(new Exception('Report this'));
+    $report = $flare->report(new Exception('Report this'))->toArray();
 
-    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKey('db.sql.bindings');
+    expect($report['events'][0]['attributes'])->not()->toHaveKey('db.sql.bindings');
 });
 
 it('will add origin attributes when a threshold is met and tracing', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)), alwaysSampleTraces: true);
 
     $flare->tracer->startTrace();
 
     $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 
-    $report = $flare->report(new Exception('Report this'));
+    $report = $flare->report(new Exception('Report this'))->toArray();
 
-    expect($report->toArray()['events'][0]['attributes'])->toHaveKeys([
+    expect($report['events'][0]['attributes'])->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -98,9 +94,9 @@ it('will not add origin attributes when a threshold is met and only reporting', 
 
     $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 
-    $report = $flare->report(new Exception('Report this'));
+    $report = $flare->report(new Exception('Report this'))->toArray();
 
-    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKeys([
+    expect($report['events'][0]['attributes'])->not()->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -108,15 +104,15 @@ it('will not add origin attributes when a threshold is met and only reporting', 
 });
 
 it('will not add origin attributes when a threshold is not met', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)), alwaysSampleTraces: true);
 
     $flare->tracer->startTrace();
 
     $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(200));
 
-    $report = $flare->report(new Exception('Report this'));
+    $report = $flare->report(new Exception('Report this'))->toArray();
 
-    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKeys([
+    expect($report['events'][0]['attributes'])->not()->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -124,15 +120,15 @@ it('will not add origin attributes when a threshold is not met', function () {
 });
 
 it('will not add origin attributes when the trace origin feature is disabled', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOrigin: false, findOriginThreshold: TimeHelper::milliseconds(300)));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(findOrigin: false, findOriginThreshold: TimeHelper::milliseconds(300)), alwaysSampleTraces: true);
 
     $flare->tracer->startTrace();
 
     $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 
-    $report = $flare->report(new Exception('Report this'));
+    $report = $flare->report(new Exception('Report this'))->toArray();
 
-    expect($report->toArray()['events'][0]['attributes'])->not()->toHaveKeys([
+    expect($report['events'][0]['attributes'])->not()->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',
@@ -141,15 +137,15 @@ it('will not add origin attributes when the trace origin feature is disabled', f
 
 
 it('will always add origin attributes when no threshold is set', function () {
-    $flare = setupFlareForTracing(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: null));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: null), alwaysSampleTraces: true);
 
     $flare->tracer->startTrace();
 
     $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(200));
 
-    $report = $flare->report(new Exception('Report this'));
+    $report = $flare->report(new Exception('Report this'))->toArray();
 
-    expect($report->toArray()['events'][0]['attributes'])->toHaveKeys([
+    expect($report['events'][0]['attributes'])->toHaveKeys([
         'code.filepath',
         'code.lineno',
         'code.function',

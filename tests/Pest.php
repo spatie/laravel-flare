@@ -4,8 +4,8 @@ use Dotenv\Dotenv;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
 use Spatie\FlareClient\Tests\Shared\FakeTraceExporter;
 use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
@@ -17,8 +17,8 @@ use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\TestCase;
 
 uses(TestCase::class)->beforeEach(function () {
-    FakeSender::instance()->reset();
     FakeIds::reset();
+    FakeApi::reset();
 })->in(__DIR__);
 
 if (file_exists(__DIR__.'/../.env')) {
@@ -41,25 +41,26 @@ function canRunOpenAiTest(): bool
  */
 function setupFlare(
     ?Closure $closure = null,
-    bool $sendReportsImmediately = true,
-    bool $handleErrorsWithFlare = true,
+    bool $withoutApiKey = false,
+    bool $alwaysSampleTraces = false,
+    bool $isUsingSubtasks = false,
 ): Flare {
-    if (! in_array(ConfigureFlare::class, trait_uses_recursive(test()->target))) {
-        throw new Exception('Make sure the test uses the `ConfigureFlare` trait');
-    }
-
     $config = new FlareConfig(
-        apiToken: 'fake-api-key',
-        sendReportsImmediately: $sendReportsImmediately,
+        apiToken: $withoutApiKey ? null : 'fake-api-key',
         collectsResolver: CollectsResolver::class,
     );
 
     $config->useDefaults();
 
     $config->trace(false);
+    $config->log(true);
 
-    $config->sender = FakeSender::class;
-    $config->traceExporter = FakeTraceExporter::class;
+    if ($alwaysSampleTraces) {
+        $config->trace(true);
+        $config->alwaysSampleTraces();
+    }
+
+    $config->api = FakeApi::class;
 
     if (FakeTime::isSetup()) {
         $config->time = FakeTime::class;
@@ -79,31 +80,7 @@ function setupFlare(
 
     $flare = app()->make(Flare::class);
 
-    if ($handleErrorsWithFlare) {
-        FlareFacade::handles(new Exceptions(app(ExceptionHandler::class)));
-    }
+    FlareFacade::handles(new Exceptions(app(ExceptionHandler::class)));
 
     return $flare;
-}
-
-/**
- * @param ?Closure(FlareConfig):void $closure
- */
-function setupFlareForTracing(
-    ?Closure $closure = null,
-    bool $sendReportsImmediately = true,
-    bool $runKernelCallbacks = false,
-): Flare {
-    return setupFlare(function (FlareConfig $config) use ($runKernelCallbacks, $closure) {
-        if ($runKernelCallbacks === false) {
-            TracingKernel::$run = false;
-        }
-
-        $config->trace(true);
-        $config->alwaysSampleTraces();
-
-        if ($closure) {
-            $closure($config);
-        }
-    }, $sendReportsImmediately);
 }

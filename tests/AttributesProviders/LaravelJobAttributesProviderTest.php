@@ -13,6 +13,8 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
 
 it('can provide attributes for a job', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
@@ -30,6 +32,8 @@ it('can provide attributes for a job', function () {
 });
 
 it('can set the connection name from the outside', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
@@ -43,6 +47,8 @@ it('can set the connection name from the outside', function () {
 });
 
 it('can provide attributes for a job with properties', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
@@ -59,6 +65,8 @@ it('can provide attributes for a job with properties', function () {
 });
 
 it('can provide attributes for a job with properties which values will be reduced', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
@@ -72,6 +80,8 @@ it('can provide attributes for a job with properties which values will be reduce
 });
 
 it('can parse job properties set by the user', function () {
+    setupFlare();
+
     $date = CarbonImmutable::create(2020, 05, 16, 12, 0, 0);
 
     $job = new QueueableJob(
@@ -93,6 +103,8 @@ it('can parse job properties set by the user', function () {
 });
 
 it('can record a closure job', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(
@@ -106,6 +118,8 @@ it('can record a closure job', function () {
 });
 
 it('can provide attributes for chained jobs', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(createQueuedJob(
@@ -149,6 +163,8 @@ it('can provide attributes for chained jobs', function () {
 });
 
 it('can restrict the chain depth', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(createQueuedJob(
@@ -166,6 +182,8 @@ it('can restrict the chain depth', function () {
 });
 
 it('can disable including the chain', function () {
+    setupFlare();
+
     $provider = app(LaravelJobAttributesProvider::class);
 
     $attributes = $provider->toArray(createQueuedJob(
@@ -180,6 +198,8 @@ it('can disable including the chain', function () {
 });
 
 it('can handle a job with an unserializeable payload', function () {
+    setupFlare();
+
     $payload = json_encode([
         'job' => 'Fake Job Name',
     ]);

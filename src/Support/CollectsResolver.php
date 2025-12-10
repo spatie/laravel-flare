@@ -16,6 +16,7 @@ use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
+use Spatie\LaravelFlare\Recorders\ContextRecorder\ContextRecorder;
 use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
@@ -36,6 +37,7 @@ class CollectsResolver extends BaseCollectsResolver
     protected function handleUnknownCollectType(FlareCollectType $type, array $options): void
     {
         match ($type) {
+            LaravelCollectType::LaravelContext => $this->laravelContext($options),
             LaravelCollectType::LivewireComponents => $this->livewireComponents($options),
             LaravelCollectType::LaravelInfo => $this->laravelInfo($options),
             LaravelCollectType::ExceptionContext => $this->exceptionContext($options),
@@ -43,6 +45,23 @@ class CollectsResolver extends BaseCollectsResolver
             CollectType::Jobs => $this->jobs($options),
             default => null,
         };
+    }
+
+    protected function context(array $options): void
+    {
+        $this->laravelContext([
+            'include_laravel_context' => false, // in case only context is being collected
+        ]);
+    }
+
+    protected function laravelContext(array $options): void
+    {
+        $this->addRecorder(
+            ContextRecorder::class,
+            [
+                'include_laravel_context' => $options['include_laravel_context'] ?? ContextRecorder::DEFAULT_INCLUDE_LARAVEL_CONTEXT,
+            ]
+        );
     }
 
     protected function requests(array $options): void

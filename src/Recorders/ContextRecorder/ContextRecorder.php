@@ -8,10 +8,21 @@ use Spatie\FlareClient\Recorders\ContextRecorder\ContextRecorder as BaseContextR
 
 class ContextRecorder extends BaseContextRecorder
 {
-    public function __construct(
-        protected bool $includeLaravelContext,
-    ) {
+    protected bool $includeLaravelContext;
 
+    const DEFAULT_INCLUDE_LARAVEL_CONTEXT = true;
+
+    public function __construct(
+        protected array $config = [
+            'include_laravel_context' => self::DEFAULT_INCLUDE_LARAVEL_CONTEXT,
+        ],
+    ) {
+        $this->configure($this->config);
+    }
+
+    protected function configure(array $config): void
+    {
+        $this->includeLaravelContext = $config['include_laravel_context'] ?? self::DEFAULT_INCLUDE_LARAVEL_CONTEXT;
     }
 
     public function toArray(): array

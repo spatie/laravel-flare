@@ -136,7 +136,8 @@ class TestCommand extends Command
         $testException = new Exception('This is an exception to test if the integration with Flare works.');
 
         try {
-            app(Flare::class)->sendTestReport($testException);
+            app(Flare::class)->reporter->sendTestReport($testException);
+
             $this->info('');
         } catch (Exception $exception) {
             $this->warn('❌ We were unable to send an exception to Flare. ');
