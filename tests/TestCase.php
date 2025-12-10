@@ -4,7 +4,6 @@ namespace Spatie\LaravelFlare\Tests;
 
 use Illuminate\Foundation\Testing\Concerns\MakesHttpRequests;
 use Spatie\LaravelFlare\Facades\Flare;
-use Spatie\LaravelFlare\FlareServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {

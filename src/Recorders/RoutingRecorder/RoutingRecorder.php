@@ -8,7 +8,6 @@ use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Routing\Events\Routing;
 use Spatie\FlareClient\Enums\RecorderType;
-use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Recorders\RoutingRecorder\RoutingRecorder as BaseRoutingRecorder;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Lifecycle;

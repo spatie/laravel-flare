@@ -7,13 +7,10 @@ use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
-use Spatie\FlareClient\Tests\Shared\FakeTraceExporter;
 use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\FlareServiceProvider;
 use Spatie\LaravelFlare\Support\CollectsResolver;
-use Spatie\LaravelFlare\Support\TracingKernel;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\TestCase;
 
 uses(TestCase::class)->beforeEach(function () {

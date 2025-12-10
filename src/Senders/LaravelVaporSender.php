@@ -4,7 +4,6 @@ namespace Spatie\LaravelFlare\Senders;
 
 use Closure;
 use Spatie\FlareClient\Enums\FlareEntityType;
-use Spatie\FlareClient\Enums\FlarePayloadType;
 use Spatie\FlareClient\Senders\Sender;
 use Spatie\FlareClient\Senders\Support\Response;
 use Spatie\LaravelFlare\Jobs\SendFlarePayload;

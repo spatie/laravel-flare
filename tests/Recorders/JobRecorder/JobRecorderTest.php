@@ -4,9 +4,7 @@ use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\LaravelFlare\Enums\SpanType;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
 it('can trace jobs executions', function () {
     $flare = setupFlare(alwaysSampleTraces: true);

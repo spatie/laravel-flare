@@ -1,9 +1,7 @@
 <?php
 
-use Dflydev\DotAccessData\Data;
 use Illuminate\Support\Facades\Context;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
 it('will add context information with an exception', function () {
     $flare = setupFlare();
@@ -13,7 +11,7 @@ it('will add context information with an exception', function () {
 
     $flare->report(new Exception);
 
-    FakeApi::lastReport()->expectAttribute('context.laravel',['foo' => 'bar']);
+    FakeApi::lastReport()->expectAttribute('context.laravel', ['foo' => 'bar']);
 });
 
 it('will not add context information with an exception if no context was set', function () {
