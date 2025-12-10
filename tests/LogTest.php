@@ -5,13 +5,8 @@ use Illuminate\Support\Facades\Route;
 use Monolog\Level;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
-use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-use function Pest\Laravel\freezeTime;
-use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
     config()->set('logging.channels.flare.driver', 'flare');
@@ -23,7 +18,7 @@ beforeEach(function () {
 });
 
 it('it does not report exceptions using the flare api via logger', function () {
-    setupFlare(fn(FlareConfig $config) => $config->report(false));
+    setupFlare(fn (FlareConfig $config) => $config->report(false));
 
     Route::get('exception', fn () => nonExistingFunction());
 
@@ -64,7 +59,7 @@ it('does report log messages', function () {
 });
 
 it('reports log messages above the specified minimum level', function () {
-    $flare = setupFlare(fn(FlareConfig $config) => $config->log(minimalLevel: Level::Critical));
+    $flare = setupFlare(fn (FlareConfig $config) => $config->log(minimalLevel: Level::Critical));
 
     Log::error('this is a log message');
     Log::emergency('this is a log message');
@@ -124,7 +119,7 @@ it('adds log messages to the report', function () {
 });
 
 it('it can raise the minimal level of logs added to reports', function () {
-    setupFlare(fn(FlareConfig $config) => $config->collectLogsWithErrors(minimalLevel: Level::Notice) );
+    setupFlare(fn (FlareConfig $config) => $config->collectLogsWithErrors(minimalLevel: Level::Notice));
 
     Route::get('exception', function () {
         Log::info('info log');
@@ -147,7 +142,7 @@ it('it can raise the minimal level of logs added to reports', function () {
 });
 
 it('it can raise the minimal level of logs added to reports but the logger minimal level is king', function () {
-    setupFlare(fn(FlareConfig $config) => $config->collectLogsWithErrors(minimalLevel: Level::Info)->log(minimalLevel: Level::Notice));
+    setupFlare(fn (FlareConfig $config) => $config->collectLogsWithErrors(minimalLevel: Level::Info)->log(minimalLevel: Level::Notice));
 
     Route::get('exception', function () {
         Log::info('info log'); // This will not be logged because the logger minimal level is notice
@@ -170,7 +165,7 @@ it('it can raise the minimal level of logs added to reports but the logger minim
 });
 
 it('can set a max amount of log items added to reports and always keeps the latest ones', function () {
-    setupFlare(fn(FlareConfig $config) => $config->collectLogsWithErrors(maxItems: 3));
+    setupFlare(fn (FlareConfig $config) => $config->collectLogsWithErrors(maxItems: 3));
 
     Route::get('exception', function () {
         Log::info('info log 1');
@@ -191,7 +186,7 @@ it('can set a max amount of log items added to reports and always keeps the late
     $lastReport->expectEvent(2)->expectAttribute('log.message', 'info log 5');
 });
 
-it('will never store logs as trace events', function (){
+it('will never store logs as trace events', function () {
     $flare = setupFlare(alwaysSampleTraces: true);
 
     $flare->tracer->startTrace();

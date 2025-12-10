@@ -5,7 +5,6 @@ use Illuminate\Support\Collection;
 use Spatie\Backtrace\Arguments\ArgumentReducers;
 use Spatie\FlareClient\Flare;
 use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeArgumentsReducer;
 
 beforeEach(function () {

@@ -7,7 +7,6 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
-use Spatie\FlareClient\Recorders\ApplicationRecorder\ApplicationRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Recorders\ResponseRecorder\ResponseRecorder;
 use Spatie\FlareClient\Tracer;

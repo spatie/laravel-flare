@@ -1,12 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Spatie\FlareClient\Tests\Shared\FakeApi;
 use function Pest\Laravel\get;
 use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\Enums\CacheResult;
 use Spatie\FlareClient\Enums\SpanEventType;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 
 it('records cache operations', function (
     Closure $preRecording,

@@ -3,14 +3,9 @@
 use Illuminate\Contracts\Console\Kernel;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Flare;
-use Spatie\FlareClient\Tests\Shared\ExpectSpan;
-use Spatie\FlareClient\Tests\Shared\ExpectTrace;
-use Spatie\FlareClient\Tests\Shared\ExpectTracer;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
-use Spatie\LaravelFlare\Support\TracingKernel;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\stubs\Commands\TestCommand;
 use Spatie\LaravelFlare\Tests\stubs\Exceptions\ExpectedException;
 

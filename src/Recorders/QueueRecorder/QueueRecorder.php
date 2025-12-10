@@ -6,7 +6,6 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
 use Spatie\FlareClient\Enums\RecorderType;
-use Spatie\FlareClient\Enums\SamplingType;
 use Spatie\FlareClient\Recorders\SpansRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;

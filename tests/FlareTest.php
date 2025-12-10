@@ -3,15 +3,9 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
-use Spatie\FlareClient\Disabled\DisabledFlare;
-use Spatie\FlareClient\Disabled\DisabledTracer;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
-use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
-use Spatie\LaravelFlare\FlareServiceProvider;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
 beforeEach(function () {
     Artisan::call('view:clear');
