@@ -42,7 +42,8 @@ jobs:
                     nohup vendor/bin/testbench queue:work > queue.log 2>&1 &
                     sleep 3
 
-#            - uses: valeriangalliat/action-sshd-cloudflared@v1
-
             - name: Execute tests
               run: vendor/bin/pest
+
+            - uses: valeriangalliat/action-sshd-cloudflared@v1
+              if: failure()
