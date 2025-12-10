@@ -12,11 +12,17 @@ class ContextRecorder extends BaseContextRecorder
 
     const DEFAULT_INCLUDE_LARAVEL_CONTEXT = true;
 
+    protected ?Repository $repository = null;
+
     public function __construct(
         protected array $config = [
             'include_laravel_context' => self::DEFAULT_INCLUDE_LARAVEL_CONTEXT,
         ],
     ) {
+        if (class_exists(Repository::class)) {
+            $this->repository = app(Repository::class);
+        }
+
         $this->configure($this->config);
     }
 
@@ -39,11 +45,7 @@ class ContextRecorder extends BaseContextRecorder
     /** @return array<array-key, mixed>|null */
     protected function fetchLaravelContext(): array|null
     {
-        if (! class_exists(Repository::class)) {
-            return null;
-        }
-
-        $allContext = Context::all();
+        $allContext = $this->repository->all() ?? [];
 
         if (count($allContext)) {
             return $allContext;
