@@ -36,7 +36,6 @@ use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
 use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
-use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\CollectsResolver;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
@@ -80,7 +79,7 @@ class FlareServiceProvider extends ServiceProvider
             },
             isUsingSubtasksClosure: fn () => $this->app->runningConsoleCommand(['horizon:work', 'queue:work', 'serve', 'vapor:work', 'octane:start', 'octane:reload'])
                 || (bool) env('LARAVEL_OCTANE', false) !== false,
-            subtaskEndedClosure: function (){
+            subtaskEndedClosure: function () {
                 AddJobInformation::clearLatestJobInfo();
             },
             gracefulSpanEnderClosure: function (Span $span) {
