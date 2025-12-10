@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Recorders\ContextRecorder;
 
 use Illuminate\Log\Context\Repository;
-use Illuminate\Support\Facades\Context;
 use Spatie\FlareClient\Recorders\ContextRecorder\ContextRecorder as BaseContextRecorder;
 
 class ContextRecorder extends BaseContextRecorder
