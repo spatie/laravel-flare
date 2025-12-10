@@ -31,6 +31,8 @@ it('can report a command', function () {
         new ExpectedException('This is a test exception'),
     )->toArray();
 
+    dump($report['events']);
+
     expect($report['events'])->toHaveCount(1);
 
     expect($report['events'][0])
