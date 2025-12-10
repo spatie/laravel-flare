@@ -4,16 +4,8 @@ use Spatie\FlareClient\Enums\SpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
 use Spatie\LaravelFlare\Tests\TestClasses\WorkbenchServer;
 
-beforeEach(function () {
-    WorkbenchServer::setup();
-});
-
-afterAll(function () {
-    WorkbenchServer::stop();
-});
-
 it('can get a simple welcome page trace', function () {
-    $workspace = ExpectSentPayloads::get(WorkbenchServer::fullUrl(). '/');
+    $workspace = ExpectSentPayloads::get('/');
 
     $workspace->assertSent(traces: 1);
 
@@ -47,7 +39,7 @@ it('can get a simple welcome page trace', function () {
 });
 
 it('can handle a case where execution is aborted', function () {
-    $workspace = ExpectSentPayloads::get(WorkbenchServer::fullUrl(). '/abort');
+    $workspace = ExpectSentPayloads::get('/abort');
 
     $workspace->assertSent(traces: 1);
 

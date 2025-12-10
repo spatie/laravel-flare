@@ -2,8 +2,12 @@
 
 namespace Spatie\LaravelFlare\Tests\TestClasses;
 
+use Exception;
+use GuzzleHttp\Exception\ConnectException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 use Spatie\FlareClient\Enums\FlareEntityType;
 use Spatie\FlareClient\Tests\Shared\ExpectLogData;
 use Spatie\FlareClient\Tests\Shared\ExpectReport;
@@ -12,6 +16,8 @@ use SplFileInfo;
 
 class ExpectSentPayloads
 {
+    protected string $url = 'http://127.0.0.1:8000';
+
     public static function get(string $endpoint): self
     {
         return new self($endpoint, 'get');
@@ -115,13 +121,17 @@ class ExpectSentPayloads
     protected function initializeWorkspace(
         int $waitAtLeastMicroseconds = 500,
     ): void {
-        $client = Http::timeout(2);
+        $client = Http::timeout(2)->baseUrl($this->url);
 
-        $response = match ($this->method) {
-            'get' => $client->get($this->endpoint),
-            'post' => $client->post($this->endpoint, $this->params),
-            default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
-        };
+        try {
+            match ($this->method) {
+                'get' => $client->get($this->endpoint),
+                'post' => $client->post($this->endpoint, $this->params),
+                default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
+            };
+        }catch (ConnectException|ConnectionException $e){
+            throw new Exception('Workbench server is not running. Please start it by running `composer run serve`');
+        }
 
         usleep($waitAtLeastMicroseconds);
 
