@@ -31,7 +31,7 @@ class FlareTracingMiddleware
         ];
 
         if (Str::startsWith($request->decodedPath(), $ignorePaths)) {
-            $this->tracer->trash();
+            $this->tracer->unsample();
 
             return $next($request);
         }

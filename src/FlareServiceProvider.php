@@ -6,9 +6,6 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
-use Illuminate\Queue\Events\JobFailed;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Routing\Contracts\CallableDispatcher;
 use Illuminate\Routing\Contracts\ControllerDispatcher;
 use Illuminate\Support\Facades\Log;
@@ -24,25 +21,21 @@ use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareProvider;
 use Spatie\FlareClient\Logger as FlareLogger;
-use Spatie\FlareClient\Recorders\ContextRecorder\ContextRecorder as BaseContextRecorder;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
 use Spatie\FlareClient\Support\GracefulSpanEnder;
-use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Support\Lifecycle;
 use Spatie\FlareClient\Time\Time;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
-use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
 use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
-use Spatie\LaravelFlare\Recorders\ContextRecorder\ContextRecorder;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\CollectsResolver;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
@@ -100,7 +93,8 @@ class FlareServiceProvider extends ServiceProvider
                 $shouldNotEnd = $type === SpanType::Application || $type === SpanType::Request || $type === SpanType::ApplicationTerminating;
 
                 return $shouldNotEnd === false;
-            }
+            },
+            disableApiQueue: $this->app->runningInConsole() && isset($_SERVER['argv']) && in_array('tinker', $_SERVER['argv'])
         );
 
         $this->registerShareButton();
@@ -153,7 +147,6 @@ class FlareServiceProvider extends ServiceProvider
 
         $this->provider->boot();
 
-        $this->configureTinker();
         $this->configureOctane();
         $this->registerViewExceptionMapper();
 
@@ -207,7 +200,7 @@ class FlareServiceProvider extends ServiceProvider
     {
         $mode = $this->provider->mode;
 
-        Log::extend('flare', function ($app, $config) use ($mode)  {
+        Log::extend('flare', function ($app, $config) use ($mode) {
             if ($mode === FlareMode::Disabled) {
                 return new Logger('Flare');
             }
@@ -227,21 +220,11 @@ class FlareServiceProvider extends ServiceProvider
         config()->set('error-share.enabled', $this->config->enableShareButton);
     }
 
-    protected function configureTinker(): void
-    {
-        if ($this->app->runningInConsole()) {
-            if (isset($_SERVER['argv']) && ['artisan', 'tinker'] === $_SERVER['argv']) {
-                app(Flare::class)->sendReportsImmediately();
-            }
-        }
-    }
-
     protected function configureOctane(): void
     {
         if (app()->bound('octane') === false) {
             return;
         }
-
 
         if ($this->provider->mode === FlareMode::Disabled) {
             return;

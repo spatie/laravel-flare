@@ -171,13 +171,6 @@ class CollectsResolver extends BaseCollectsResolver
         parent::cache($options);
     }
 
-    protected function logs(array $options): void
-    {
-        $options['recorder'] ??= LogRecorder::class;
-
-        parent::logs($options);
-    }
-
     protected function externalHttp(array $options): void
     {
         $options['recorder'] ??= ExternalHttpRecorder::class;

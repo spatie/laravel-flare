@@ -37,10 +37,22 @@ parameters:
 			path: src/FlareConfig.php
 
 		-
-			message: '#^Parameter \$collects of class Spatie\\LaravelFlare\\FlareConfig constructor expects array\<string, array\{type\: Spatie\\FlareClient\\Contracts\\FlareCollectType, ignored\: bool\|null, options\: array\}\>, array\<''application''\|''cache''\|''console''\|''database…''\|''dumps''\|''errors_with_traces''\|''external_http''\|''filesystem''\|''flare_middleware''\|''git_info''\|''glows''\|''jobs''\|''laravel_context''\|''laravel_exception…''\|''laravel_handled…''\|''laravel_info''\|''laravel_livewire…''\|''logs''\|''notifications''\|''queries''\|''recorders''\|''redis_commands''\|''requests''\|''server_info''\|''solutions''\|''stack_frame…''\|''throwables''\|''views'', array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}\> given\.$#'
+			message: '#^Parameter \$collects of class Spatie\\LaravelFlare\\FlareConfig constructor expects array\<string, array\{type\: Spatie\\FlareClient\\Contracts\\FlareCollectType, ignored\: bool\|null, options\: array\}\>, array\<''application''\|''cache''\|''console''\|''context''\|''database…''\|''dumps''\|''errors_with_traces''\|''external_http''\|''filesystem''\|''flare_middleware''\|''git_info''\|''glows''\|''jobs''\|''laravel_context''\|''laravel_exception…''\|''laravel_handled…''\|''laravel_info''\|''laravel_livewire…''\|''logs_with_errors''\|''notifications''\|''queries''\|''recorders''\|''redis_commands''\|''requests''\|''server_info''\|''solutions''\|''stack_frame…''\|''throwables''\|''views'', array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/FlareConfig.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:registered\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:runningConsoleCommand\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/FlareServiceProvider.php
 
 		-
 			message: '#^Class Laravel\\Octane\\Events\\RequestReceived not found\.$#'
@@ -67,46 +79,22 @@ parameters:
 			path: src/FlareServiceProvider.php
 
 		-
-			message: '#^Parameter \#3 \$registerRecorderAndMiddlewaresCallback of class Spatie\\FlareClient\\FlareProvider constructor expects \(Closure\(Illuminate\\Contracts\\Container\\Container\|Spatie\\FlareClient\\Support\\Container, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\|null, Closure\(Illuminate\\Contracts\\Container\\Container, string, array\)\: void given\.$#'
+			message: '#^Parameter \$registerRecorderAndMiddlewaresCallback of class Spatie\\FlareClient\\FlareProvider constructor expects \(Closure\(Illuminate\\Contracts\\Container\\Container\|Spatie\\FlareClient\\Support\\Container, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\|null, Closure\(Illuminate\\Contracts\\Container\\Container, string, array\)\: void given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/FlareServiceProvider.php
 
 		-
-			message: '#^Expression on left side of \?\? is not nullable\.$#'
-			identifier: nullCoalesce.expr
+			message: '#^Parameter \$traceparent of method Spatie\\FlareClient\\Support\\Lifecycle\:\:start\(\) expects string\|null, array\|string\|null given\.$#'
+			identifier: argument.type
 			count: 1
-			path: src/Recorders/LogRecorder/LogRecorder.php
+			path: src/FlareServiceProvider.php
 
 		-
 			message: '#^Property Spatie\\FlareClient\\Support\\CollectsResolver\:\:\$middlewares \(array\<class\-string\<Spatie\\FlareClient\\FlareMiddleware\\FlareMiddleware\>, array\<string, mixed\>\>\) does not accept array\<string, array\<string, mixed\>\>\.$#'
 			identifier: assign.propertyType
 			count: 2
 			path: src/Support/CollectsResolver.php
-
-		-
-			message: '#^Parameter \#1 \$logLevel of static method Spatie\\LaravelFlare\\Exceptions\\InvalidConfig\:\:invalidLogLevel\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Support/FlareLogHandler.php
-
-		-
-			message: '#^Parameter \#1 \$name of static method Monolog\\Level\:\:fromName\(\) expects ''ALERT''\|''Alert''\|''alert''\|''CRITICAL''\|''Critical''\|''critical''\|''DEBUG''\|''Debug''\|''debug''\|''EMERGENCY''\|''Emergency''\|''emergency''\|''ERROR''\|''Error''\|''error''\|''INFO''\|''Info''\|''info''\|''NOTICE''\|''Notice''\|''notice''\|''WARNING''\|''Warning''\|''warning'', string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Support/FlareLogHandler.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:registered\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Support/TracingKernel.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:runningConsoleCommand\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/Support/TracingKernel.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Contracts\\View\\Engine\:\:getCompiler\(\)\.$#'
