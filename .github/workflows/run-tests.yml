@@ -33,11 +33,13 @@ jobs:
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest
 
-            - name: Start workbench server
+            - name: Build workbench server
+              run : composer run build
+
+            - name: Start workbench server & queue
               run: |
-                    composer run build &
-                    nohup composer run serve > server.log 2>&1 &
-                    nohup composer run queue:work > queue.log 2>&1 &
+                    nohup vendor/bin/testbench serve > server.log 2>&1 &
+                    nohup vendor/bin/testbench queue:work > queue.log 2>&1 &
                     sleep 3
 
             - uses: valeriangalliat/action-sshd-cloudflared@v1
