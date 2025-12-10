@@ -25,7 +25,6 @@ use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
-use Spatie\FlareClient\Support\GracefulSpanEnder;
 use Spatie\FlareClient\Support\Lifecycle;
 use Spatie\FlareClient\Time\Time;
 use Spatie\FlareClient\Time\TimeHelper;
@@ -39,9 +38,7 @@ use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\CollectsResolver;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
-use Spatie\LaravelFlare\Support\GracefulSpanEnder as LaravelGracefulSpanEnder;
 use Spatie\LaravelFlare\Support\Telemetry;
-use Spatie\LaravelFlare\Support\TracingKernel;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
 

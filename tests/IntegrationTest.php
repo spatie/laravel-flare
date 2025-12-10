@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Process;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
 use Spatie\LaravelFlare\Tests\TestClasses\WorkbenchServer;
@@ -14,7 +12,7 @@ afterAll(function () {
     WorkbenchServer::stop();
 });
 
-it('can get a simple welcome page trace', function (){
+it('can get a simple welcome page trace', function () {
     $workspace = ExpectSentPayloads::get(WorkbenchServer::fullUrl(). '/');
 
     $workspace->assertSent(traces: 1);
@@ -48,7 +46,7 @@ it('can get a simple welcome page trace', function (){
         ->expectHasAttribute('flare.peak_memory_usage');
 });
 
-it('can handle a case where execution is aborted', function (){
+it('can handle a case where execution is aborted', function () {
     $workspace = ExpectSentPayloads::get(WorkbenchServer::fullUrl(). '/abort');
 
     $workspace->assertSent(traces: 1);

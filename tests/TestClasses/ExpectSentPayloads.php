@@ -114,8 +114,7 @@ class ExpectSentPayloads
 
     protected function initializeWorkspace(
         int $waitAtLeastMicroseconds = 500,
-    ): void
-    {
+    ): void {
         $client = Http::timeout(2);
 
         $response = match ($this->method) {

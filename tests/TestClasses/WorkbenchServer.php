@@ -17,7 +17,7 @@ class WorkbenchServer
 
     public static function setup(): void
     {
-        if(isset(self::$process)) {
+        if (isset(self::$process)) {
             return;
         }
 
@@ -41,7 +41,7 @@ class WorkbenchServer
 
     public static function stop(): void
     {
-        if(isset(self::$process)) {
+        if (isset(self::$process)) {
             return;
         }
 

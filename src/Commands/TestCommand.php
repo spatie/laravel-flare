@@ -52,7 +52,7 @@ class TestCommand extends Command
             $success = $this->sendTestPayload($tester, FlareEntityType::Errors);
         }
 
-        if($config['flare.trace'] === false) {
+        if ($config['flare.trace'] === false) {
             $this->info('❌ Tracing is disabled. Please enable it by setting the `flare.trace` config value to `true` if you want to test it.');
         } else {
             $success = $success && $this->sendTestPayload($tester, FlareEntityType::Traces);
@@ -168,7 +168,7 @@ class TestCommand extends Command
                 FlareEntityType::Traces => $tester->trace(),
             };
 
-            $emoji = match ($entityType){
+            $emoji = match ($entityType) {
                 FlareEntityType::Errors => '⚠️',
                 FlareEntityType::Logs => '📝',
                 FlareEntityType::Traces => '🔍',
