@@ -131,12 +131,17 @@ class TestCommand extends Command
         return false;
     }
 
-    protected function sendTestException(): void
+    protected function sendTestException(bool $traceEnabled): void
     {
         $testException = new Exception('This is an exception to test if the integration with Flare works.');
 
         try {
             app(Flare::class)->reporter->sendTestReport($testException);
+
+            if ($traceEnabled) {
+                $testTrace = require __DIR__ . '/../../resources/test-trace-payload.php';
+                app(Flare::class)->sendTestTrace($testTrace);
+            }
 
             $this->info('');
         } catch (Exception $exception) {
@@ -181,7 +186,11 @@ class TestCommand extends Command
 
             return;
         }
+        if ($traceEnabled) {
+            $this->info('We tried to send an exception and performance monitoring data to Flare. Please check if it arrived!');
 
+            return;
+        }
         $this->info('We tried to send an exception to Flare. Please check if it arrived!');
     }
 }
