@@ -142,7 +142,7 @@ class JobRecorder extends SpansRecorder
         // with errors on the main request lifecycle
         $shouldLeaveBreadcrumbs = $this->lifecycle->usesSubtasks;
 
-        if($shouldLeaveBreadcrumbs) {
+        if ($shouldLeaveBreadcrumbs) {
             AddJobInformation::setUsedTrackingUuid($trackingUuid = $this->tracer->ids->uuid());
         }
 

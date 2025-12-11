@@ -86,8 +86,8 @@ class FlareServiceProvider extends ServiceProvider
             }
         };
         $this->isUsingSubtasksClosure ??= fn () => $this->app->runningConsoleCommand(
-                ['horizon:work', 'queue:work', 'serve', 'vapor:work', 'octane:start', 'octane:reload']
-            ) || (bool) env('LARAVEL_OCTANE', false) !== false;
+            ['horizon:work', 'queue:work', 'serve', 'vapor:work', 'octane:start', 'octane:reload']
+        ) || (bool) env('LARAVEL_OCTANE', false) !== false;
         $this->subtaskEndedClosure ??= function () {
             AddJobInformation::clearLatestJobInfo();
         };
