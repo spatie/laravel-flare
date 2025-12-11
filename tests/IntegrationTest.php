@@ -157,10 +157,10 @@ describe('Laravel integration', function () {
             });
     });
 
-    it('can handle a request with an injected validation request', function (){
+    it('can handle a request with an injected validation request', function () {
         $postData = [
             'id' => 42,
-            'email' => 'joe@spatie.be'
+            'email' => 'joe@spatie.be',
         ];
 
         $workspace = ExpectSentPayloads::post('/injected-validation-request', $postData);
@@ -176,7 +176,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.response.status_code', 200);
     });
 
-    it('can handle a request with a failed injected validation request', function (){
+    it('can handle a request with a failed injected validation request', function () {
         $workspace = ExpectSentPayloads::post('/injected-validation-request', []);
 
         $workspace->assertSent(traces: 2); // One validation, one redirect after validation failure
