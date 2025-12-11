@@ -60,7 +60,7 @@ describe('Laravel integration', function () {
         $trace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 403);
     });
 
-    it('can track invokeable controllers', function (){
+    it('can track invokeable controllers', function () {
         $workspace = ExpectSentPayloads::get('/invokable-controller');
 
         $workspace->assertSent(traces: 1);
@@ -74,7 +74,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('laravel.route.action_type', 'controller');
     });
 
-    it('can track resource controllers', function (){
+    it('can track resource controllers', function () {
         $workspace = ExpectSentPayloads::get('/resource-controller');
 
         $workspace->assertSent(traces: 1);
@@ -88,7 +88,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('laravel.route.action_type', 'controller');
     });
 
-    it('can track named routes', function (){
+    it('can track named routes', function () {
         $workspace = ExpectSentPayloads::get('/named-route');
 
         $workspace->assertSent(traces: 1);
@@ -102,7 +102,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('laravel.route.action_type', 'controller');
     });
 
-    it('can track a route with parameter', function (){
+    it('can track a route with parameter', function () {
         $workspace = ExpectSentPayloads::get('/parameter-route/42');
 
         $workspace->assertSent(traces: 1);
@@ -114,7 +114,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('laravel.route.parameters', ['id' => '42']);
     });
 
-    it('can track a route with an optional parameter (not provided)', function (){
+    it('can track a route with an optional parameter (not provided)', function () {
         $workspace = ExpectSentPayloads::get('/optional-parameter-route');
 
         $workspace->assertSent(traces: 1);
@@ -126,7 +126,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('laravel.route.parameters', []);
     });
 
-    it('can track a route with model binding missing', function (){
+    it('can track a route with model binding missing', function () {
         $workspace = ExpectSentPayloads::get('/model-binding-route/1');
 
         $workspace->assertSent(traces: 1);
@@ -139,7 +139,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.response.status_code', 404);
     });
 
-    it('can track a route with model found missing', function (){
+    it('can track a route with model found missing', function () {
         $user = UserFactory::new()->create();
 
         $workspace = ExpectSentPayloads::get("/model-binding-route/{$user->id}");
@@ -159,7 +159,7 @@ describe('Laravel integration', function () {
 
     // Queue
 
-    it('can handle a job dispatched after the request', function (){
+    it('can handle a job dispatched after the request', function () {
 
     });
 })->skipOnWindows();
