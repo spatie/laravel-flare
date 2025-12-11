@@ -9,7 +9,7 @@ use Workbench\Database\Factories\UserFactory;
 
 beforeEach(function () {
     User::query()->truncate();
-});
+})->skipOnWindows();
 
 describe('Laravel integration', function () {
     // Requests
@@ -190,9 +190,65 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.response.status_code', 302);
     });
 
+    it('can handle a throttled route', function () {
+        $workspace = ExpectSentPayloads::get('/throttled-route');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.route', 'throttled-route')
+            ->expectAttribute('http.response.status_code', 429);
+    });
+
+    it('can handle a route aborted by middleware', function () {
+        $workspace = ExpectSentPayloads::get('/abort-middleware');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.route', 'abort-middleware')
+            ->expectAttribute('http.response.status_code', 404);
+    });
+
+    it('can handle a route failing in before middleware', function () {
+        $workspace = ExpectSentPayloads::get('/failing-before-middleware');
+
+        $workspace->assertSent(reports: 1, traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.route', 'failing-before-middleware')
+            ->expectAttribute('http.response.status_code', 500);
+
+        $workspace->lastReport()
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Failing before middleware');
+    });
+
+    it('can handle a route failing in after middleware', function () {
+        $workspace = ExpectSentPayloads::get('/failing-after-middleware');
+
+        $workspace->assertSent(reports: 1, traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.route', 'failing-after-middleware')
+            ->expectAttribute('http.response.status_code', 500);
+
+        $workspace->lastReport()
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Failing after middleware');
+    });
+
     // Queue
 
     it('can handle a job dispatched after the request', function () {
 
-    });
+    })->skip();
 })->skipOnWindows();
