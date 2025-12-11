@@ -37,3 +37,9 @@ Route::get('throttled-route', fn () => "Throttled")->middleware(ThrottleRequests
 Route::get('abort-middleware', fn () => 'Middleware aborted')->middleware(Abort404Middleware::class);
 Route::get('failing-before-middleware', fn () => 'Failing before middleware')->middleware(FailingBeforeMiddleware::class);
 Route::get('failing-after-middleware', fn () => 'Failing before middleware')->middleware(FailingAfterMiddleware::class);
+
+Route::get('json-response', fn () => ['foo' => 'bar']);
+Route::get('string-response', fn () => 'Hello World');
+Route::get('download-response', fn () => response()->download(storage_path('app/example.txt')));
+Route::get('typed-response', fn () => response('Hello World'));
+Route::view('view-response-routed', 'welcome');

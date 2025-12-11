@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
 use Workbench\App\Http\Controllers\InvokableController;
@@ -8,8 +9,14 @@ use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
 
 beforeEach(function () {
-    User::query()->truncate();
-})->skipOnWindows();
+    if(PHP_OS_FAMILY === 'Windows') {
+        return;
+    }
+
+    DB::table('users')->truncate();
+    DB::table('cache')->truncate();
+    DB::table('jobs')->truncate();
+});
 
 describe('Laravel integration', function () {
     // Requests
@@ -191,6 +198,8 @@ describe('Laravel integration', function () {
     });
 
     it('can handle a throttled route', function () {
+        ExpectSentPayloads::get('/throttled-route');
+
         $workspace = ExpectSentPayloads::get('/throttled-route');
 
         $workspace->assertSent(traces: 1);
