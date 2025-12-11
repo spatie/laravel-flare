@@ -157,6 +157,39 @@ describe('Laravel integration', function () {
             });
     });
 
+    it('can handle a request with an injected validation request', function (){
+        $postData = [
+            'id' => 42,
+            'email' => 'joe@spatie.be'
+        ];
+
+        $workspace = ExpectSentPayloads::post('/injected-validation-request', $postData);
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.request.method', 'POST')
+            ->expectAttribute('http.route', 'injected-validation-request')
+            ->expectAttribute('http.request.body.size', 33)
+            ->expectAttribute('http.response.status_code', 200);
+    });
+
+    it('can handle a request with a failed injected validation request', function (){
+        $workspace = ExpectSentPayloads::post('/injected-validation-request', []);
+
+        $workspace->assertSent(traces: 2); // One validation, one redirect after validation failure
+
+        $trace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.request.method', 'POST')
+            ->expectAttribute('http.route', 'injected-validation-request')
+            ->expectAttribute('http.request.body.size', 2)
+            ->expectAttribute('http.response.status_code', 302);
+    });
+
     // Queue
 
     it('can handle a job dispatched after the request', function () {

@@ -88,6 +88,21 @@ class ExpectSentPayloads
         );
     }
 
+    public function report(int $index): ExpectReport
+    {
+        return $this->reports[$index];
+    }
+
+    public function trace(int $index): ExpectTrace
+    {
+        return $this->traces[$index];
+    }
+
+    public function log(int $index): ExpectLogData
+    {
+        return $this->logs[$index];
+    }
+
     public function lastReport(): ExpectReport
     {
         return $this->reports[array_key_last($this->reports)];
@@ -123,7 +138,7 @@ class ExpectSentPayloads
         $client = Http::timeout(2)->baseUrl($this->url);
 
         try {
-            match ($this->method) {
+            $response = match ($this->method) {
                 'get' => $client->get($this->endpoint),
                 'post' => $client->post($this->endpoint, $this->params),
                 default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
@@ -162,5 +177,13 @@ class ExpectSentPayloads
                 FlareEntityType::Logs => $this->logs[$file->getInode()] = new ExpectLogData($content),
             };
         }
+
+        ksort($this->reports);
+        ksort($this->traces);
+        ksort($this->logs);
+
+        $this->reports = array_values($this->reports);
+        $this->traces = array_values($this->traces);
+        $this->logs = array_values($this->logs);
     }
 }
