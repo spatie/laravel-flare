@@ -34,6 +34,7 @@ jobs:
                     composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-suggest
 
             - name: Build workbench server
+              if: runner.os == 'Linux'
               run : composer run build
 
             - name: Start workbench server & queue
