@@ -35,7 +35,7 @@ it('can trace jobs executions', function () {
 });
 
 it('can trace jobs failures', function () {
-    $flare = setupFlare(alwaysSampleTraces: true);
+    $flare = setupFlare(alwaysSampleTraces: true, isUsingSubtasks: true);
 
     $flare->tracer->startTrace();
 

@@ -137,8 +137,14 @@ class JobRecorder extends SpansRecorder
             return;
         }
 
-        // The error will be handled after this so let's leave some breadcrumbs
-        AddJobInformation::setUsedTrackingUuid($trackingUuid = $this->tracer->ids->uuid());
+        // Error handling is performed after, so leave breadcrumbs
+        // only do this on a queue worker since otherwise it may interfere
+        // with errors on the main request lifecycle
+        $shouldLeaveBreadcrumbs = $this->lifecycle->usesSubtasks;
+
+        if($shouldLeaveBreadcrumbs) {
+            AddJobInformation::setUsedTrackingUuid($trackingUuid = $this->tracer->ids->uuid());
+        }
 
         $throwableClass = $event->exception::class;
 
@@ -164,7 +170,7 @@ class JobRecorder extends SpansRecorder
             includeMemoryUsage: true
         );
 
-        if ($span !== null) {
+        if ($span !== null && $shouldLeaveBreadcrumbs) {
             AddJobInformation::setLatestJob($span);
         }
 

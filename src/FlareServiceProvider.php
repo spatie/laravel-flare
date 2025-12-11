@@ -2,8 +2,10 @@
 
 namespace Spatie\LaravelFlare;
 
+use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Http\Kernel as HttpKernelInterface;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Routing\Contracts\CallableDispatcher;
@@ -16,6 +18,7 @@ use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
 use Monolog\Logger;
+use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\FlareMode;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Flare;
@@ -53,6 +56,57 @@ class FlareServiceProvider extends ServiceProvider
 
     protected int $registeredTimeUnixNano;
 
+    /**
+     * @param Closure(\Spatie\FlareClient\Support\Container|IlluminateContainer, class-string<Recorder>, array):void|null $registerRecorderAndMiddlewaresCallback
+     * @param class-string<\Spatie\FlareClient\Support\CollectsResolver>|null $collectsResolver
+     * @param Closure():bool|null $isUsingSubtasksClosure
+     * @param Closure():void|null $subtaskEndedClosure
+     * @param Closure(bool):bool|null $shouldMakeSamplingDecisionClosure
+     * @param Closure(Span):bool|null $gracefulSpanEnderClosure
+     */
+    public function __construct(
+        Application $app,
+        protected ?string $collectsResolver = null,
+        protected ?Closure $registerRecorderAndMiddlewaresCallback = null,
+        protected ?Closure $isUsingSubtasksClosure = null,
+        protected ?Closure $subtaskEndedClosure = null,
+        protected ?Closure $shouldMakeSamplingDecisionClosure = null,
+        protected ?Closure $gracefulSpanEnderClosure = null,
+        protected bool $disableApiQueue = false
+    ) {
+        parent::__construct($app);
+
+        $this->collectsResolver ??= CollectsResolver::class;
+        $this->registerRecorderAndMiddlewaresCallback ??= function (Container $container, string $class, array $config) {
+            $this->app->singleton($class);
+            $this->app->when($class)->needs('$config')->give($config);
+
+            if (method_exists($class, 'registered')) {
+                $class::registered($container, $config);
+            }
+        };
+        $this->isUsingSubtasksClosure ??= fn () => $this->app->runningConsoleCommand(
+                ['horizon:work', 'queue:work', 'serve', 'vapor:work', 'octane:start', 'octane:reload']
+            ) || (bool) env('LARAVEL_OCTANE', false) !== false;
+        $this->subtaskEndedClosure ??= function () {
+            AddJobInformation::clearLatestJobInfo();
+        };
+        $this->gracefulSpanEnderClosure ??= function (Span $span) {
+            /** @var SpanType|LaravelSpanType|string|null $type */
+            $type = $span->attributes['flare.span_type'] ?? null;
+
+            if ($type === null) {
+                return true;
+            }
+
+            // Application, request will always be handled by Laravel and thus us, terminating by lifecycle shutdown
+            $shouldNotEnd = $type === SpanType::Application || $type === SpanType::Request || $type === SpanType::ApplicationTerminating;
+
+            return $shouldNotEnd === false;
+        };
+        $this->disableApiQueue ??= $this->app->runningInConsole() && isset($_SERVER['argv']) && in_array('tinker', $_SERVER['argv']);
+    }
+
     public function register(): void
     {
         if (! $this->app->has(FlareConfig::class)) {
@@ -69,33 +123,11 @@ class FlareServiceProvider extends ServiceProvider
             config: $this->config,
             container: $this->app,
             collectsResolver: CollectsResolver::class,
-            registerRecorderAndMiddlewaresCallback: function (Container $container, string $class, array $config) {
-                $this->app->singleton($class);
-                $this->app->when($class)->needs('$config')->give($config);
-
-                if (method_exists($class, 'registered')) {
-                    $class::registered($container, $config);
-                }
-            },
-            isUsingSubtasksClosure: fn () => $this->app->runningConsoleCommand(['horizon:work', 'queue:work', 'serve', 'vapor:work', 'octane:start', 'octane:reload'])
-                || (bool) env('LARAVEL_OCTANE', false) !== false,
-            subtaskEndedClosure: function () {
-                AddJobInformation::clearLatestJobInfo();
-            },
-            gracefulSpanEnderClosure: function (Span $span) {
-                /** @var SpanType|LaravelSpanType|string|null $type */
-                $type = $span->attributes['flare.span_type'] ?? null;
-
-                if ($type === null) {
-                    return true;
-                }
-
-                // Application, request will always be handled by Laravel and thus us, terminating by lifecycle shutdown
-                $shouldNotEnd = $type === SpanType::Application || $type === SpanType::Request || $type === SpanType::ApplicationTerminating;
-
-                return $shouldNotEnd === false;
-            },
-            disableApiQueue: $this->app->runningInConsole() && isset($_SERVER['argv']) && in_array('tinker', $_SERVER['argv'])
+            registerRecorderAndMiddlewaresCallback: $this->registerRecorderAndMiddlewaresCallback,
+            isUsingSubtasksClosure: $this->isUsingSubtasksClosure,
+            subtaskEndedClosure: $this->subtaskEndedClosure,
+            gracefulSpanEnderClosure: $this->gracefulSpanEnderClosure,
+            disableApiQueue: $this->disableApiQueue,
         );
 
         $this->registerShareButton();
