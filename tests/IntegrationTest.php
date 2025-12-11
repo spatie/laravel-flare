@@ -5,11 +5,10 @@ use Spatie\FlareClient\Enums\SpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
 use Workbench\App\Http\Controllers\InvokableController;
 use Workbench\App\Http\Controllers\ResourceController;
-use Workbench\App\Models\User;
 use Workbench\Database\Factories\UserFactory;
 
 beforeEach(function () {
-    if(PHP_OS_FAMILY === 'Windows') {
+    if (PHP_OS_FAMILY === 'Windows') {
         return;
     }
 
