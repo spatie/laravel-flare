@@ -5,6 +5,7 @@ namespace Spatie\LaravelFlare\Tests\TestClasses;
 use Exception;
 use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Spatie\FlareClient\Enums\FlareEntityType;
@@ -17,13 +18,19 @@ class ExpectSentPayloads
 {
     protected string $url = 'http://127.0.0.1:8000';
 
-    public static function get(string $endpoint, ?int $waitAtLeastMs = null): self
-    {
-        return new self($endpoint, 'get', waitAtLeastMs: $waitAtLeastMs);
+    public static function get(
+        string $endpoint,
+        ?int $waitAtLeastMs = null,
+        bool $waitUntilAllJobsAreProcessed = false,
+    ): self {
+        return new self($endpoint, 'get', waitAtLeastMs: $waitAtLeastMs, waitUntilAllJobsAreProcessed: $waitUntilAllJobsAreProcessed);
     }
 
-    public static function post(string $endpoint, array $parameters, ?int $waitAtLeastMs = null): self
-    {
+    public static function post(
+        string $endpoint,
+        array $parameters,
+        ?int $waitAtLeastMs = null
+    ): self {
         return new self($endpoint, 'post', $parameters, waitAtLeastMs: $waitAtLeastMs);
     }
 
@@ -43,11 +50,15 @@ class ExpectSentPayloads
         public array $traces = [],
         public array $logs = [],
         ?int $waitAtLeastMs = null,
+        bool $waitUntilAllJobsAreProcessed = false,
     ) {
         $this->workSpacePath = __DIR__.'/../../workbench/storage';
 
         $this->cleanupWorkspace();
-        $this->initializeWorkspace($waitAtLeastMs ?? 500);
+        $this->initializeWorkspace(
+            waitAtLeastMs: $waitAtLeastMs,
+            waitUntilAllJobsAreProcessed: $waitUntilAllJobsAreProcessed
+        );
     }
 
     public function assertSent(?int $reports = 0, ?int $traces = 0, ?int $logs = 0): void
@@ -134,7 +145,8 @@ class ExpectSentPayloads
     }
 
     protected function initializeWorkspace(
-        int $waitAtLeastMicroseconds
+        ?int $waitAtLeastMs,
+        bool $waitUntilAllJobsAreProcessed,
     ): void {
         $client = Http::timeout(2)->baseUrl($this->url);
 
@@ -148,7 +160,10 @@ class ExpectSentPayloads
             throw new Exception('Workbench server is not running. Please start it by running `composer run serve`');
         }
 
-        usleep($waitAtLeastMicroseconds);
+        $this->wait(
+            waitAtLeastMs: $waitAtLeastMs,
+            waitUntilAllJobsAreProcessed: $waitUntilAllJobsAreProcessed,
+        );
 
         foreach (File::files($this->workSpacePath) as $file) {
             $entityType = match (true) {
@@ -188,5 +203,47 @@ class ExpectSentPayloads
         $this->reports = array_values($this->reports);
         $this->traces = array_values($this->traces);
         $this->logs = array_values($this->logs);
+    }
+
+    protected function wait(
+        ?int $waitAtLeastMs,
+        bool $waitUntilAllJobsAreProcessed,
+    ) {
+        if ($waitAtLeastMs === null && ! $waitUntilAllJobsAreProcessed) {
+            usleep(500); // Just to be sure
+
+            return;
+        }
+
+        if ($waitAtLeastMs !== null) {
+            usleep($waitAtLeastMs);
+        }
+
+        $backoff = [
+            500_000,
+            750_000,
+            1_000_000,
+            1_500_000,
+            2_500_000,
+            4_000_000,
+        ];
+
+        $currentBackoffIndex = 0;
+
+        while (true) {
+            if(! array_key_exists($currentBackoffIndex, $backoff)) {
+                throw new Exception('Jobs were not executed, either make sure the worker is started by running `vendor/bin/testbench queue:work` or that we waited long enough for the jobs to be processed.');
+            }
+
+            usleep($backoff[$currentBackoffIndex]);
+
+            $pendingJobs = DB::table('jobs');
+
+            if($pendingJobs->count() === 0) {
+                return;
+            }
+
+            $currentBackoffIndex++;
+        }
     }
 }

@@ -26,10 +26,7 @@ class SuccesJob implements ShouldQueue
      */
     public function handle(): void
     {
-        DB::table('users')->first();
 
-        cache()->set('hello', 'world');
-        cache()->get('hello');
     }
 
     public function tags(): array

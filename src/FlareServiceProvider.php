@@ -60,7 +60,6 @@ class FlareServiceProvider extends ServiceProvider
      * @param Closure(\Spatie\FlareClient\Support\Container|IlluminateContainer, class-string<Recorder>, array):void|null $registerRecorderAndMiddlewaresCallback
      * @param class-string<\Spatie\FlareClient\Support\CollectsResolver>|null $collectsResolver
      * @param Closure():bool|null $isUsingSubtasksClosure
-     * @param Closure():void|null $subtaskEndedClosure
      * @param Closure(bool):bool|null $shouldMakeSamplingDecisionClosure
      * @param Closure(Span):bool|null $gracefulSpanEnderClosure
      */
@@ -69,7 +68,6 @@ class FlareServiceProvider extends ServiceProvider
         protected ?string $collectsResolver = null,
         protected ?Closure $registerRecorderAndMiddlewaresCallback = null,
         protected ?Closure $isUsingSubtasksClosure = null,
-        protected ?Closure $subtaskEndedClosure = null,
         protected ?Closure $shouldMakeSamplingDecisionClosure = null,
         protected ?Closure $gracefulSpanEnderClosure = null,
         protected bool $disableApiQueue = false
@@ -88,9 +86,6 @@ class FlareServiceProvider extends ServiceProvider
         $this->isUsingSubtasksClosure ??= fn () => $this->app->runningConsoleCommand(
             ['horizon:work', 'queue:work', 'serve', 'vapor:work', 'octane:start', 'octane:reload']
         ) || (bool) env('LARAVEL_OCTANE', false) !== false;
-        $this->subtaskEndedClosure ??= function () {
-            AddJobInformation::clearLatestJobInfo();
-        };
         $this->gracefulSpanEnderClosure ??= function (Span $span) {
             /** @var SpanType|LaravelSpanType|string|null $type */
             $type = $span->attributes['flare.span_type'] ?? null;
@@ -125,7 +120,6 @@ class FlareServiceProvider extends ServiceProvider
             collectsResolver: CollectsResolver::class,
             registerRecorderAndMiddlewaresCallback: $this->registerRecorderAndMiddlewaresCallback,
             isUsingSubtasksClosure: $this->isUsingSubtasksClosure,
-            subtaskEndedClosure: $this->subtaskEndedClosure,
             gracefulSpanEnderClosure: $this->gracefulSpanEnderClosure,
             disableApiQueue: $this->disableApiQueue,
         );

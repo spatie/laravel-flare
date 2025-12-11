@@ -81,6 +81,8 @@ class JobRecorder extends SpansRecorder
 
     public function recordProcessing(JobProcessing $event): ?Span
     {
+        AddJobInformation::clearLatestJobInfo();
+
         $traceparent = $event->job->payload()[Ids::FLARE_TRACE_PARENT] ?? null;
 
         $shouldIgnore = $this->shouldIgnore($event->job);
@@ -100,8 +102,6 @@ class JobRecorder extends SpansRecorder
             $event->connectionName,
             $this->maxChainedJobReportingDepth
         );
-
-        AddJobInformation::clearLatestJobInfo();
 
         $jobName = $attributes['laravel.job.name'] ?? $attributes['laravel.job.class'] ?? 'Unknown';
 
@@ -141,6 +141,8 @@ class JobRecorder extends SpansRecorder
         // only do this on a queue worker since otherwise it may interfere
         // with errors on the main request lifecycle
         $shouldLeaveBreadcrumbs = $this->lifecycle->usesSubtasks;
+
+        $trackingUuid = null;
 
         if ($shouldLeaveBreadcrumbs) {
             AddJobInformation::setUsedTrackingUuid($trackingUuid = $this->tracer->ids->uuid());

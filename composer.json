@@ -15,12 +15,6 @@
     ],
     "homepage": "https://flareapp.io/",
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../flare-client-php"
-        }
-    ],
     "require": {
         "php": "^8.2",
         "ext-curl": "*",
@@ -28,7 +22,7 @@
         "ext-mbstring": "*",
         "illuminate/support": "^11.47|^12.42",
         "spatie/error-solutions": "^2.0",
-        "spatie/flare-client-php": "@dev",
+        "spatie/flare-client-php": "dev-logging",
         "spatie/laravel-error-share": "^1.0.3",
         "symfony/console": "^7.2.1|^8.0",
         "symfony/var-dumper": "^7.2.3|^8.0"

@@ -52,7 +52,14 @@ class LaravelJobAttributesProvider
 
         $attributes = [];
 
-        if ($jobClass = $payload['data']['commandName'] ?? null) {
+        $jobClass = match (true) {
+            ($payload['data']['commandName'] ?? null) === null => null,
+            is_string($payload['data']['commandName']) => $payload['data']['commandName'],
+            is_object($payload['data']['commandName']) => get_class($payload['data']['commandName']),
+            default => null,
+        };
+
+        if ($jobClass) {
             $attributes['laravel.job.class'] = $jobClass;
         }
 

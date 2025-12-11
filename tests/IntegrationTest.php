@@ -2,15 +2,18 @@
 
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\DynamicComponent;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
+use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
 use Workbench\App\Http\Controllers\InvokableController;
 use Workbench\App\Http\Controllers\ResourceController;
+use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\UserFactory;
@@ -610,8 +613,6 @@ describe('Laravel integration', function () {
     });
 
     it('can handle a route with multiple queries', function () {
-        UserFactory::new()->create(['id' => 1, 'name' => 'John']);
-
         $workspace = ExpectSentPayloads::get('/multiple-queries');
 
         $workspace->assertSent(traces: 1);
@@ -791,6 +792,8 @@ describe('Laravel integration', function () {
             ->expectExceptionClass(ConnectionException::class);
     });
 
+    // File System
+
     it('can keep track of file system operations', function () {
         $workspace = ExpectSentPayloads::get('/filesystem');
 
@@ -810,10 +813,203 @@ describe('Laravel integration', function () {
                 ->expectAttribute('filesystem.contents.size', '8 B')
                 ->expectAttribute('filesystem.operation.success', true),
             fn (ExpectSpan $span) => $span
-                    ->expectParentId($requestSpan)
-                    ->expectAttribute('filesystem.operation', 'get')
-                    ->expectAttribute('filesystem.path', 'example.txt')
-                    ->expectAttribute('filesystem.contents.size', '8 B'),
+                ->expectParentId($requestSpan)
+                ->expectAttribute('filesystem.operation', 'get')
+                ->expectAttribute('filesystem.path', 'example.txt')
+                ->expectAttribute('filesystem.contents.size', '8 B'),
         );
     });
+
+    // Queues
+
+    it('can handle a queued job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-job', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 2);
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('laravel.job.queue.connection_name', 'database')
+            ->expectAttribute('laravel.job.queue.name', 'default')
+            ->expectHasAttribute('laravel.job.uuid')
+            ->expectAttribute('laravel.job.name', SuccesJob::class)
+            ->expectAttribute('laravel.job.class', SuccesJob::class);
+
+        $jobTrace = $workspace->trace(1)
+            ->expectSpanCount(4); // Job, transaction: select and remove job
+
+        $jobTrace->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.queue.connection_name', 'database')
+            ->expectAttribute('laravel.job.queue.name', 'default')
+            ->expectAttribute('laravel.job.name', SuccesJob::class)
+            ->expectAttribute('laravel.job.class', SuccesJob::class)
+//            ->expectAttribute('laravel.job.attempts', 1) // TODO, not on queue database worker?
+            ->expectAttribute('laravel.job.success', true)
+            ->expectHasAttribute('laravel.job.uuid')
+            ->expectHasAttribute('flare.peak_memory_usage');
+    });
+
+    it('can handle a queued closure job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-job-closure', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 2);
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('laravel.job.queue.connection_name', 'database')
+            ->expectAttribute('laravel.job.queue.name', 'default')
+            ->expectHasAttribute('laravel.job.uuid')
+            ->expectAttribute(
+                'laravel.job.name',
+                fn (string $value) => expect($value)->toStartWith('Closure (')
+            )
+            ->expectAttribute('laravel.job.class', CallQueuedClosure::class);
+
+        $jobTrace = $workspace->trace(1)
+            ->expectSpanCount(4);
+
+        $jobTrace->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.queue.connection_name', 'database')
+            ->expectAttribute('laravel.job.queue.name', 'default')
+            ->expectAttribute(
+                'laravel.job.name',
+                fn (string $value) => expect($value)->toStartWith('Closure (')
+            )
+            ->expectAttribute('laravel.job.class', CallQueuedClosure::class)
+            ->expectAttribute('laravel.job.success', true)
+            ->expectHasAttribute('laravel.job.uuid')
+            ->expectHasAttribute('flare.peak_memory_usage');
+    });
+
+    it('can handle a failed queued closure job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-failed-job-closure', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(reports: 1, traces: 2);
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan);
+
+        $jobTrace = $workspace->trace(1)
+            ->expectSpanCount(5); // Job, transaction: select and remove job, plus the failed attempt
+        $jobSpan = $jobTrace->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.success', false)
+            ->expectSpanEventCount(1);
+
+        $jobExceptionEvent = $jobSpan->expectSpanEvent(0)
+            ->expectType(SpanEventType::Exception);
+
+        $workspace->lastReport()
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Job failed')
+            ->expectTrackingUuid($jobExceptionEvent->attributes()['exception.id'])
+            ->expectEventCount(1)
+            ->expectEvent(0)
+            ->expectType(LaravelSpanType::Job)
+            ->expectStart($jobSpan->span['startTimeUnixNano'])
+            ->expectEnd($jobSpan->span['endTimeUnixNano'])
+            ->expectAttribute('laravel.job.queue.connection_name', 'database')
+            ->expectAttribute('laravel.job.queue.name', 'default')
+            ->expectAttribute(
+                'laravel.job.name',
+                fn (string $value) => expect($value)->toStartWith('Closure (')
+            )
+            ->expectAttribute('laravel.job.class', CallQueuedClosure::class)
+            ->expectAttribute('laravel.job.success', false)
+            ->expectHasAttribute('laravel.job.uuid')
+            ->expectHasAttribute('flare.peak_memory_usage');
+    });
+
+    it('can handle a synchronous closure job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-sync-job-closure');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $trace->expectSpanCount(0, LaravelSpanType::Job); // No queueing span for sync dispatch
+    });
+
+    it('can handle a job dispatched after response', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-job-after-response', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 1);
+
+        $httpTrace = $workspace->trace(0);
+
+        $httpTrace->expectLaravelRequestLifecycle(terminatingSpans: function (int &$spanIndex, ExpectSpan $terminatingSpan) use ($httpTrace) {
+            $terminatingSpan->expectType(SpanType::ApplicationTerminating);
+
+            $httpTrace->expectSpan($spanIndex)
+                ->expectParentId($terminatingSpan)
+                ->expectType(LaravelSpanType::Job)
+                ->expectAttribute('laravel.job.queue.connection_name', 'sync')
+                ->expectAttribute('laravel.job.queue.name', 'sync')
+                ->expectAttribute('laravel.job.name', SuccesJob::class)
+                ->expectAttribute('laravel.job.class', SuccesJob::class)
+                ->expectAttribute('laravel.job.success', true)
+                ->expectHasAttribute('laravel.job.uuid')
+                ->expectHasAttribute('flare.peak_memory_usage');
+        });
+
+        $httpTrace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 200);
+
+        $httpTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+    });
+
+    it('can handle a failed job dispatched after response', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-fail-job-after-response');
+
+        $workspace->assertSent(reports: 1, traces: 1);
+
+        $httpTrace = $workspace->trace(0);
+
+        $httpTrace->expectLaravelRequestLifecycle(terminatingSpans: function (int &$spanIndex, ExpectSpan $terminatingSpan) use ($httpTrace) {
+            $terminatingSpan->expectType(SpanType::ApplicationTerminating);
+
+            $httpTrace->expectSpan($spanIndex)
+                ->expectParentId($terminatingSpan)
+                ->expectType(LaravelSpanType::Job)
+                ->expectAttribute('laravel.job.queue.connection_name', 'sync')
+                ->expectAttribute('laravel.job.queue.name', 'sync')
+                ->expectAttribute('laravel.job.success', false)
+                ->expectHasAttribute('laravel.job.uuid')
+                ->expectHasAttribute('flare.peak_memory_usage')
+                ->expectSpanEventCount(1)
+                ->expectSpanEvent(0)
+                ->expectType(SpanEventType::Exception);
+        });
+
+        $httpTrace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 200);
+
+        $httpTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+
+        $workspace->lastReport()
+            ->expectExceptionClass(Exception::class);
+    });
+
+    // TODO: Still a lot todo, hopefully we can handle attempts
 })->skipOnWindows();
