@@ -159,7 +159,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('laravel.route.parameters', ['user' => '1'])
             ->expectAttribute('http.response.status_code', 404);
     });
-6
+
     it('can track a route with model found missing', function () {
         $user = UserFactory::new()->create();
 
