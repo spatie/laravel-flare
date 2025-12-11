@@ -271,6 +271,7 @@ class FlareServiceProvider extends ServiceProvider
             $this->getFlare()->lifecycle->endSubtask();
         });
 
+        // TODO: check
         app('events')->listen(TaskReceived::class, function () {
             $this->getFlare()->lifecycle->startSubtask();
         });

@@ -45,7 +45,7 @@ class FlareTracingMiddleware
     public function terminate(Request $request, Response $response): void
     {
         Flare::request()?->recordEnd(
-            responseStatusCode: $response->getStatusCode(),
+            response: $response,
             attributes: $this->attributesProvider->toArray($request, includeContents: false)
         );
 

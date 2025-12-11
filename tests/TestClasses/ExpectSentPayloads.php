@@ -17,14 +17,14 @@ class ExpectSentPayloads
 {
     protected string $url = 'http://127.0.0.1:8000';
 
-    public static function get(string $endpoint): self
+    public static function get(string $endpoint, ?int $waitAtLeastMs = null): self
     {
-        return new self($endpoint, 'get');
+        return new self($endpoint, 'get', waitAtLeastMs: $waitAtLeastMs);
     }
 
-    public static function post(string $endpoint, array $parameters): self
+    public static function post(string $endpoint, array $parameters, ?int $waitAtLeastMs = null): self
     {
-        return new self($endpoint, 'post', $parameters);
+        return new self($endpoint, 'post', $parameters, waitAtLeastMs: $waitAtLeastMs);
     }
 
     private string $workSpacePath;
@@ -42,11 +42,12 @@ class ExpectSentPayloads
         public array $reports = [],
         public array $traces = [],
         public array $logs = [],
+        ?int $waitAtLeastMs = null,
     ) {
         $this->workSpacePath = __DIR__.'/../../workbench/storage';
 
         $this->cleanupWorkspace();
-        $this->initializeWorkspace();
+        $this->initializeWorkspace($waitAtLeastMs ?? 500);
     }
 
     public function assertSent(?int $reports = 0, ?int $traces = 0, ?int $logs = 0): void
@@ -66,17 +67,17 @@ class ExpectSentPayloads
 
     public function assertReportsSent(int $expectedCount): void
     {
-        expect(count($this->reports))->toBe($expectedCount);
+        expect(count($this->reports))->toBe($expectedCount, 'Number of reports sent does not match expected count.');
     }
 
     public function assertTracesSent(int $expectedCount): void
     {
-        expect(count($this->traces))->toBe($expectedCount);
+        expect(count($this->traces))->toBe($expectedCount, 'Number of traces sent does not match expected count.');
     }
 
     public function assertLogsSent(int $expectedCount): void
     {
-        expect(count($this->logs))->toBe($expectedCount);
+        expect(count($this->logs))->toBe($expectedCount, 'Number of logs sent does not match expected count.');
     }
 
     public function assertNothingSent(): void
@@ -133,7 +134,7 @@ class ExpectSentPayloads
     }
 
     protected function initializeWorkspace(
-        int $waitAtLeastMicroseconds = 500,
+        int $waitAtLeastMicroseconds
     ): void {
         $client = Http::timeout(2)->baseUrl($this->url);
 
@@ -177,6 +178,8 @@ class ExpectSentPayloads
                 FlareEntityType::Logs => $this->logs[$file->getInode()] = new ExpectLogData($content),
             };
         }
+
+//        ray($this->reports, $this->traces, $this->logs)->label('Captured payloads');
 
         ksort($this->reports);
         ksort($this->traces);
