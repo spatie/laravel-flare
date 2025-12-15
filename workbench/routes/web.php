@@ -1,8 +1,10 @@
 <?php
 
 use Composer\InstalledVersions;
+use Illuminate\Bus\Batch;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -18,10 +20,13 @@ use Workbench\App\Http\Middleware\FailingAfterMiddleware;
 use Workbench\App\Http\Middleware\FailingBeforeMiddleware;
 use Workbench\App\Http\Requests\ValidationRequest;
 use Workbench\App\Jobs\AttemptTestJob;
+use Workbench\App\Jobs\BatchedJob;
+use Workbench\App\Jobs\DeletedJob;
 use Workbench\App\Jobs\ExitingJob;
 use Workbench\App\Jobs\FailJob;
 use Workbench\App\Jobs\IgnoredJob;
 use Workbench\App\Jobs\NestedJob;
+use Workbench\App\Jobs\ReleaseJob;
 use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\Livewire\Counter;
 use Workbench\App\Livewire\Full;
@@ -240,6 +245,30 @@ Route::get('trigger-nested-job', function () {
 
 Route::get('trigger-exiting-job', function () {
     dispatch(new ExitingJob());
+
+    return 'Dispatched';
+});
+
+Route::get('trigger-release-job', function () {
+    dispatch(new ReleaseJob());
+
+    return 'Dispatched';
+});
+
+Route::get('trigger-deleted-job', function () {
+    dispatch(new DeletedJob());
+
+    return 'Dispatched';
+});
+
+Route::get('trigger-batch', function () {
+    Bus::batch([
+        BatchedJob::success(),
+        BatchedJob::success(),
+        BatchedJob::failed(),
+        BatchedJob::success(),
+        BatchedJob::addingAnotherJob()
+    ])->allowFailures()->dispatch();
 
     return 'Dispatched';
 });

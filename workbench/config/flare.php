@@ -1,8 +1,11 @@
 <?php
 
 use Spatie\FlareClient\Api;
+use Spatie\FlareClient\Enums\CollectType;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
+use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\FlareConfig;
+use Workbench\App\Jobs\IgnoredJob;
 use Workbench\App\Senders\FileSender;
 
 return [
@@ -10,7 +13,13 @@ return [
 
     'collects' => FlareConfig::defaultCollects(
         ignore: [],
-        extra: []
+        extra: [
+            CollectType::Jobs->value => [
+                'ignore' => [
+                    IgnoredJob::class,
+                ],
+            ]
+        ]
     ),
 
     'sender' => [

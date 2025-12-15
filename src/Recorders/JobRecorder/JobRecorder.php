@@ -124,6 +124,8 @@ class JobRecorder extends SpansRecorder
 
         $this->endSpan(additionalAttributes: [
             'laravel.job.success' => true,
+            'laravel.job.released' => $event->job->isReleased(),
+            'laravel.job.deleted' => $event->job->isDeleted(),
         ], includeMemoryUsage: true);
 
         $this->lifecycle->endSubtask();
@@ -153,6 +155,8 @@ class JobRecorder extends SpansRecorder
         $span = $this->endSpan(
             additionalAttributes: [
                 'laravel.job.success' => false,
+                'laravel.job.released' => $event->job->isReleased(),
+                'laravel.job.deleted' => $event->job->isDeleted(),
             ],
             spanCallback: fn (Span $span) => $span
                 ->setStatus(SpanStatusCode::Error, $event->exception->getMessage())

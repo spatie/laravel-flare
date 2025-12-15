@@ -2,6 +2,7 @@
 
 namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 
+use Illuminate\Bus\Events\BatchDispatched;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
@@ -58,6 +59,8 @@ class QueueRecorder extends SpansRecorder
             if ($this->tracer->isSampling() === false || $this->isIgnored($payload)) {
                 $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
 
+                $this->tracer->pauseSampling();
+
                 return $payload;
             }
 
@@ -65,12 +68,14 @@ class QueueRecorder extends SpansRecorder
                 return $payload;
             }
 
-            $this->startSpan(nameAndAttributes: function () use ($payload, $queue, $connection) {
+            $jobAttributes = $this->laravelJobAttributesProvider->getJobPropertiesFromPayload($payload);
+
+            $this->startSpan(nameAndAttributes: function () use ($jobAttributes, $payload, $queue, $connection) {
                 $attributes = [
                     'flare.span_type' => SpanType::Queueing,
                     'laravel.job.queue.connection_name' => $connection,
                     'laravel.job.queue.name' => $queue,
-                    ...$this->laravelJobAttributesProvider->getJobPropertiesFromPayload($payload),
+                    ...$jobAttributes,
                 ];
 
                 $jobName = $attributes['laravel.job.name'] ?? $attributes['laravel.job.class'] ?? 'Unknown';
@@ -83,6 +88,13 @@ class QueueRecorder extends SpansRecorder
 
             $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
 
+            if (array_key_exists('laravel.job.batch_id', $jobAttributes)) {
+                // Batched jobs never dispatch a JobQueued event
+
+                $this->tracer->endSpan();
+            }
+
+
             return $payload;
         });
 
@@ -94,6 +106,8 @@ class QueueRecorder extends SpansRecorder
         JobQueued $event,
     ): ?Span {
         if ($this->isIgnored($event->payload())) {
+            $this->tracer->resumeSampling();
+
             return null;
         }
 

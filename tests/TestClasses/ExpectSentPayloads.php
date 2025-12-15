@@ -194,8 +194,6 @@ class ExpectSentPayloads
             };
         }
 
-//        ray($this->reports, $this->traces, $this->logs)->label('Captured payloads');
-
         ksort($this->reports);
         ksort($this->traces);
         ksort($this->logs);
@@ -208,7 +206,7 @@ class ExpectSentPayloads
     protected function wait(
         ?int $waitAtLeastMs,
         bool $waitUntilAllJobsAreProcessed,
-    ) {
+    ): void {
         if ($waitAtLeastMs === null && ! $waitUntilAllJobsAreProcessed) {
             usleep(500); // Just to be sure
 

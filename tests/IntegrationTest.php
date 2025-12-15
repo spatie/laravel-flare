@@ -3,6 +3,7 @@
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\CallQueuedClosure;
+use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\DynamicComponent;
 use Spatie\FlareClient\Enums\SpanEventType;
@@ -13,12 +14,20 @@ use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
 use Workbench\App\Http\Controllers\InvokableController;
 use Workbench\App\Http\Controllers\ResourceController;
+use Workbench\App\Jobs\BatchedJob;
+use Workbench\App\Jobs\DeletedJob;
+use Workbench\App\Jobs\ExitingJob;
+use Workbench\App\Jobs\NestedJob;
+use Workbench\App\Jobs\ReleaseJob;
 use Workbench\App\Jobs\SuccesJob;
+use Workbench\App\Livewire\Counter;
 use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\UserFactory;
 
 beforeEach(function () {
+//    dump($columns = Schema::getColumnListing('users'));
+
     if (PHP_OS_FAMILY === 'Windows') {
         return;
     }
@@ -1011,5 +1020,377 @@ describe('Laravel integration', function () {
             ->expectExceptionClass(Exception::class);
     });
 
-    // TODO: Still a lot todo, hopefully we can handle attempts
+    it('can handle a job chain', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-job-chain', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 4); // 1 HTTP request + 3 jobs
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace
+            ->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan)
+            ->expectTraceId($requestSpan->span['traceId']);
+
+        $job1Span = $workspace->trace(1)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectTraceId($requestSpan->span['traceId'])
+            ->expectParentId($queuingSpan);
+
+        $queue1Span = $workspace->trace(1)
+            ->expectSpan(LaravelSpanType::Queueing)
+            ->expectTraceId($requestSpan->span['traceId'])
+            ->expectParentId($job1Span);
+
+        $job2Span = $workspace->trace(2)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectParentId($queue1Span);
+
+        $queue2Span = $workspace->trace(2)
+            ->expectSpan(LaravelSpanType::Queueing)
+            ->expectTraceId($requestSpan->span['traceId'])
+            ->expectParentId($job2Span);
+
+        $workspace->trace(3)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectParentId($queue2Span);
+    });
+
+    it('can handle a synchronous job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-sync-job');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $requestSpan = $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $trace->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('laravel.job.queue.connection_name', 'sync')
+            ->expectAttribute('laravel.job.queue.name', 'sync')
+            ->expectAttribute('laravel.job.name', SuccesJob::class)
+            ->expectAttribute('laravel.job.class', SuccesJob::class)
+            ->expectAttribute('laravel.job.success', true)
+            ->expectHasAttribute('laravel.job.uuid')
+            ->expectHasAttribute('flare.peak_memory_usage');
+
+        $trace->expectSpanCount(0, LaravelSpanType::Queueing);
+    });
+
+    it('can handle a retrying job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-retrying-job', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(reports: 3, traces: 4); // 3 reports (one per attempt), 1 HTTP request + 3 job attempts
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan);
+
+        $workspace->trace(1)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.success', false)
+            ->expectSpanEventCount(1)
+            ->expectSpanEvent(0)
+            ->expectType(SpanEventType::Exception);
+
+        $workspace->trace(2)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.success', false)
+            ->expectSpanEventCount(1)
+            ->expectSpanEvent(0)
+            ->expectType(SpanEventType::Exception);
+
+        $workspace->trace(3)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.success', false)
+            ->expectSpanEventCount(1)
+            ->expectSpanEvent(0)
+            ->expectType(SpanEventType::Exception);
+
+        $workspace->lastReport()
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Whoops here we go again');
+    });
+
+    it('can handle a job with multiple attempts until success', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-attempts-job', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(reports: 4, traces: 6); // 4 reports (attempts 1-4), 1 HTTP request + 5 job attempts
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan);
+
+        for ($i = 1; $i <= 4; $i++) {
+            $workspace->trace($i)
+                ->expectSpan(LaravelSpanType::Job)
+                ->expectParentId($queuingSpan)
+                ->expectTraceId($queuingSpan->span['traceId'])
+                ->expectAttribute('laravel.job.success', false)
+                ->expectSpanEventCount(1)
+                ->expectSpanEvent(0)
+                ->expectType(SpanEventType::Exception);
+        }
+
+        $workspace->trace(5)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.success', true);
+    });
+
+    it('can handle an ignored job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-ignored-job', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 1); // 1 HTTP request
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $httpTrace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 200);
+
+        $httpTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+
+        // Job being stored in database is also ignored
+        $httpTrace->expectSpanCount(0, SpanType::Query);
+    });
+
+    it('can handle a nested job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-nested-job', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 3); // 1 HTTP request + 2 jobs
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('laravel.job.class', NestedJob::class);
+
+        $nestedJobTrace = $workspace->trace(1);
+
+        $nestedJobSpan = $nestedJobTrace->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.class', NestedJob::class)
+            ->expectAttribute('laravel.job.success', true);
+
+        $nestedQueuingSpan = $nestedJobTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($nestedJobSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.class', SuccesJob::class);
+
+        $workspace->trace(2)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($nestedQueuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.class', SuccesJob::class)
+            ->expectAttribute('laravel.job.success', true);
+    });
+
+    it('can handle an exiting job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-exiting-job', waitUntilAllJobsAreProcessed: false);
+
+        $workspace->assertSent(traces: 1); // 1 HTTP request, Job will never be sent
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('laravel.job.class', ExitingJob::class);
+    })->skip('This kills the queue process, so do not test this');
+
+    it('can handle a released job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-release-job', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 3, reports: 1); // 1 HTTP request + 1 job that releases itself
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('laravel.job.class', ReleaseJob::class);
+
+        $jobTrace = $workspace->trace(1);
+
+        $jobTrace->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.class', ReleaseJob::class)
+            ->expectAttribute('laravel.job.success', true)
+            ->expectAttribute('laravel.job.released', true);
+
+        $jobTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+
+        $workspace->trace(2)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.class', ReleaseJob::class)
+            ->expectAttribute('laravel.job.success', false)
+            ->expectSpanEventCount(1)
+            ->expectSpanEvent(0)
+            ->expectType(SpanEventType::Exception)
+            ->expectAttribute('exception.type', MaxAttemptsExceededException::class);
+    });
+
+    it('can handle a deleted job', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-deleted-job', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(traces: 2); // 1 HTTP request + 1 job that deletes itself
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('laravel.job.class', DeletedJob::class);
+
+        $jobTrace = $workspace->trace(1);
+
+        $jobTrace->expectSpan(LaravelSpanType::Job)
+            ->expectParentId($queuingSpan)
+            ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('laravel.job.class', DeletedJob::class)
+            ->expectAttribute('laravel.job.success', true)
+            ->expectAttribute('laravel.job.deleted', true);
+    });
+
+    it('can handle a batch with some failing jobs', function () {
+        $workspace = ExpectSentPayloads::get('/trigger-batch', waitUntilAllJobsAreProcessed: true);
+
+        $workspace->assertSent(reports: 1, traces: 7); // 1 HTTP request + 4 batched jobs
+
+        $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
+
+        $requestSpan = $httpTrace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $transactionSpan = $httpTrace->expectSpan(SpanType::Transaction)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('db.transaction.status', 'committed');
+
+        $httpTrace->expectSpans(
+            LaravelSpanType::Queueing,
+            fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
+            fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
+            fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
+            fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
+            fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
+        );
+
+        // Success Job
+        foreach ([1, 2, 4, 6] as $successJobTrace) {
+            $workspace->trace($successJobTrace)
+                ->expectSpan(LaravelSpanType::Job)
+                ->expectAttribute('laravel.job.success', true)
+                ->expectAttribute('laravel.job.class', BatchedJob::class);
+        }
+
+        // Failing Job
+        $workspace->trace(3)
+            ->expectSpan(LaravelSpanType::Job)
+            ->expectAttribute('laravel.job.class', BatchedJob::class)
+            ->expectAttribute('laravel.job.success', false)
+            ->expectHasAttribute('laravel.job.batch_id')
+            ->expectSpanEventCount(1)
+            ->expectSpanEvent(0)
+            ->expectType(SpanEventType::Exception)
+            ->expectAttribute('exception.type', Exception::class)
+            ->expectAttribute('exception.message', 'Batched job failed');
+
+        $addingJobTrace = $workspace->trace(5);
+
+        $addingJobTrace->expectSpan(LaravelSpanType::Job)
+            ->expectAttribute('laravel.job.class', BatchedJob::class)
+            ->expectAttribute('laravel.job.success', true)
+            ->expectAttribute('laravel.job.properties', ['shouldFail' => false, 'shouldAddAnotherJob' => true]);
+
+        $addingJobTrace->expectSpan(LaravelSpanType::Queueing)
+            ->expectAttribute('laravel.job.class', BatchedJob::class)
+            ->expectAttribute('laravel.job.properties', ['shouldFail' => false, 'shouldAddAnotherJob' => false])
+            ->expectHasAttribute('laravel.job.batch_id');
+
+        $workspace->lastReport()
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Batched job failed');
+    });
+
+    // Livewire
+
+    it('can handle a basic livewire component', function () {
+        $workspace = ExpectSentPayloads::get('/livewire');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $requestSpan = $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $componentSpan = $trace
+            ->expectSpan(LaravelSpanType::LivewireComponent)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('livewire.component.class', Counter::class)
+            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter')
+            ->expectAttribute('view.name', 'livewire.counter')
+            ->expectHasAttribute('livewire.component.phase.mounting')
+            ->expectHasAttribute('livewire.component.phase.rendering')
+            ->expectHasAttribute('livewire.component.phase.dehydrating');
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentMounting)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
+
+        $componentRenderingSpan = $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
+
+        $trace->expectSpans(
+            SpanType::View,
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($componentRenderingSpan)
+                ->expectAttribute('view.name', 'livewire.counter')
+                ->expectAttribute('view.name', 'livewire.counter')
+                ->expectHasAttribute('view.file'),
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($requestSpan)
+                ->expectAttribute('view.name', 'components.layouts.app')
+                ->expectHasAttribute('view.file'),
+        );
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentDehydrating)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
+    });
 })->skipOnWindows();
