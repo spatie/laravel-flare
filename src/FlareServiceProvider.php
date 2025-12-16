@@ -98,7 +98,7 @@ class FlareServiceProvider extends ServiceProvider
 
             return $shouldNotEnd === false;
         };
-        $this->disableApiQueue ??= $this->app->runningInConsole() && isset($_SERVER['argv']) && in_array('tinker', $_SERVER['argv']);
+        $this->disableApiQueue = $this->disableApiQueue || ($this->app->runningInConsole() && isset($_SERVER['argv']) && in_array('tinker', $_SERVER['argv']));
     }
 
     public function register(): void

@@ -44,7 +44,7 @@ class ContextRecorder extends BaseContextRecorder
     /** @return array<array-key, mixed>|null */
     protected function fetchLaravelContext(): array|null
     {
-        $allContext = $this->repository->all() ?? [];
+        $allContext = $this->repository?->all() ?? [];
 
         if (count($allContext)) {
             return $allContext;

@@ -69,7 +69,7 @@ class QueueRecorder extends SpansRecorder
 
             $jobAttributes = $this->laravelJobAttributesProvider->getJobPropertiesFromPayload($payload);
 
-            $this->startSpan(nameAndAttributes: function () use ($jobAttributes, $payload, $queue, $connection) {
+            $this->startSpan(nameAndAttributes: function () use ($jobAttributes, $queue, $connection) {
                 $attributes = [
                     'flare.span_type' => SpanType::Queueing,
                     'laravel.job.queue.connection_name' => $connection,

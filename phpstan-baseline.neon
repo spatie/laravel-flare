@@ -79,8 +79,14 @@ parameters:
 			path: src/FlareServiceProvider.php
 
 		-
-			message: '#^Parameter \$registerRecorderAndMiddlewaresCallback of class Spatie\\FlareClient\\FlareProvider constructor expects \(Closure\(Illuminate\\Contracts\\Container\\Container\|Spatie\\FlareClient\\Support\\Container, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\|null, Closure\(Illuminate\\Contracts\\Container\\Container, string, array\)\: void given\.$#'
+			message: '#^Parameter \$registerRecorderAndMiddlewaresCallback of class Spatie\\FlareClient\\FlareProvider constructor expects \(Closure\(Illuminate\\Contracts\\Container\\Container\|Spatie\\FlareClient\\Support\\Container, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\|null, \(Closure\(Spatie\\FlareClient\\Support\\Container\|Spatie\\LaravelFlare\\IlluminateContainer, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\|null given\.$#'
 			identifier: argument.type
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: '#^Parameter \$registerRecorderAndMiddlewaresCallback of method Spatie\\LaravelFlare\\FlareServiceProvider\:\:__construct\(\) has invalid type Spatie\\LaravelFlare\\IlluminateContainer\.$#'
+			identifier: class.notFound
 			count: 1
 			path: src/FlareServiceProvider.php
 
@@ -89,6 +95,24 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: src/FlareServiceProvider.php
+
+		-
+			message: '#^Property Spatie\\LaravelFlare\\FlareServiceProvider\:\:\$registerRecorderAndMiddlewaresCallback \(\(Closure\(Spatie\\FlareClient\\Support\\Container\|Spatie\\LaravelFlare\\IlluminateContainer, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\|null\) does not accept \(Closure\(Illuminate\\Contracts\\Container\\Container, string, array\)\: void\)\|\(Closure\(Spatie\\FlareClient\\Support\\Container\|Spatie\\LaravelFlare\\IlluminateContainer, class\-string\<Spatie\\FlareClient\\Contracts\\Recorders\\Recorder\>, array\)\: void\)\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: '#^Property Spatie\\LaravelFlare\\FlareServiceProvider\:\:\$registerRecorderAndMiddlewaresCallback has unknown class Spatie\\LaravelFlare\\IlluminateContainer as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/FlareServiceProvider.php
+
+		-
+			message: '#^Parameter \#1 \$response of method Spatie\\LaravelFlare\\Senders\\LaravelHttpSender\:\:handleResponse\(\) expects Illuminate\\Http\\Client\\Response, GuzzleHttp\\Promise\\PromiseInterface\|Illuminate\\Http\\Client\\Response given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Senders/LaravelHttpSender.php
 
 		-
 			message: '#^Property Spatie\\FlareClient\\Support\\CollectsResolver\:\:\$middlewares \(array\<class\-string\<Spatie\\FlareClient\\FlareMiddleware\\FlareMiddleware\>, array\<string, mixed\>\>\) does not accept array\<string, array\<string, mixed\>\>\.$#'
