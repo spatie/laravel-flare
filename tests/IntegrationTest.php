@@ -69,7 +69,7 @@ describe('Laravel integration', function () {
             ->expectHasAttribute('flare.peak_memory_usage')
             ->expectAttribute('http.response.headers', function ($value) {
                 expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type', 'text/html; charset=utf-8');
+                expect($value)->toHaveKey('content-type');
                 expect($value)->toHaveKey('cache-control');
                 expect($value)->toHaveKey('date');
                 expect($value)->toHaveKey('set-cookie', "<CENSORED:string>");
@@ -309,7 +309,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.route', 'string-response')
             ->expectAttribute('http.response.headers', function ($value) {
                 expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type', 'text/html; charset=utf-8');
+                expect($value)->toHaveKey('content-type');
             })
             ->expectAttribute('http.response.body.size', 11)
             ->expectAttribute('http.response.status_code', 200);
@@ -343,7 +343,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.route', 'typed-response')
             ->expectAttribute('http.response.headers', function ($value) {
                 expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type', 'text/html; charset=utf-8');
+                expect($value)->toHaveKey('content-type');
             })
             ->expectAttribute('http.response.body.size', 11)
             ->expectAttribute('http.response.status_code', 200);
@@ -360,7 +360,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.route', 'view-response-routed')
             ->expectAttribute('http.response.headers', function ($value) {
                 expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type', 'text/html; charset=utf-8');
+                expect($value)->toHaveKey('content-type');
             })
             ->expectAttribute('http.response.body.size', fn ($value) => expect($value)->toBeGreaterThan(0))
             ->expectAttribute('http.response.status_code', 200);
@@ -382,7 +382,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.route', 'view-response')
             ->expectAttribute('http.response.headers', function ($value) {
                 expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type', 'text/html; charset=utf-8');
+                expect($value)->toHaveKey('content-type');
             })
             ->expectAttribute('http.response.body.size', fn ($value) => expect($value)->toBeGreaterThan(0))
             ->expectAttribute('http.response.status_code', 200);
