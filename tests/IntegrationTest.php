@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\View\DynamicComponent;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanType;
+use Spatie\FlareClient\Tests\Shared\ExpectReportEvent;
 use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
 use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
@@ -26,12 +27,11 @@ use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\UserFactory;
 
 beforeEach(function () {
-//    dump($columns = Schema::getColumnListing('users'));
-
     if (PHP_OS_FAMILY === 'Windows') {
         return;
     }
 });
+
 
 describe('Laravel integration', function () {
     // Requests
@@ -1392,5 +1392,275 @@ describe('Laravel integration', function () {
         $trace->expectSpan(LaravelSpanType::LivewireComponentDehydrating)
             ->expectParentId($componentSpan)
             ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
+    });
+
+    // Logs
+
+    it('can handle log messages', function () {
+        $workspace = ExpectSentPayloads::get('/logs');
+
+        $workspace->assertSent(traces: 1, logs: 1, reports: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $responseSpan = $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 500)
+            ->expectSpanEventCount(0, SpanEventType::Log);
+
+        $log = $workspace->log(0)->expectLogCount(8);
+
+        $log->expectLog(0)
+            ->expectBody('Debug message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('debug')
+            ->expectSeverityNumber(5)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $log->expectLog(1)
+            ->expectBody('Info message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('info')
+            ->expectSeverityNumber(9)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $log->expectLog(2)
+            ->expectBody('Notice message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('notice')
+            ->expectSeverityNumber(10)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $log->expectLog(3)
+            ->expectBody('Warning message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('warning')
+            ->expectSeverityNumber(13)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $log->expectLog(4)
+            ->expectBody('Error message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('error')
+            ->expectSeverityNumber(17)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $log->expectLog(5)
+            ->expectBody('Critical message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('critical')
+            ->expectSeverityNumber(18)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $log->expectLog(6)
+            ->expectBody('Alert message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('alert')
+            ->expectSeverityNumber(19)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $log->expectLog(7)
+            ->expectBody('Emergency message')
+            ->expectAttribute('log.context', [])
+            ->expectSeverityText('emergency')
+            ->expectSeverityNumber(21)
+            ->expectMatchesSpan($responseSpan)
+            ->expectSampling();
+
+        $workspace->lastReport()
+            ->expectEventCount(7) // We only start logging from info level
+            ->expectEvents(
+                SpanEventType::Log,
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('log.message', 'Info message')
+                    ->expectAttribute('log.level', 'info')
+                    ->expectAttribute('log.context', [])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('log.message', 'Notice message')
+                    ->expectAttribute('log.level', 'notice')
+                    ->expectAttribute('log.context', [])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('log.message', 'Warning message')
+                    ->expectAttribute('log.level', 'warning')
+                    ->expectAttribute('log.context', [])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('log.message', 'Error message')
+                    ->expectAttribute('log.level', 'error')
+                    ->expectAttribute('log.context', [])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('log.message', 'Critical message')
+                    ->expectAttribute('log.level', 'critical')
+                    ->expectAttribute('log.context', [])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('log.message', 'Alert message')
+                    ->expectAttribute('log.level', 'alert')
+                    ->expectAttribute('log.context', [])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('log.message', 'Emergency message')
+                    ->expectAttribute('log.level', 'emergency')
+                    ->expectAttribute('log.context', [])
+                    ->expectMissingEnd()
+            );
+    });
+
+    // Glows
+
+    it('can handle glow messages', function () {
+        $workspace = ExpectSentPayloads::get('/glows');
+
+        $workspace->assertSent(traces: 1, reports: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 500)
+            ->expectSpanEvents(
+                SpanEventType::Glow,
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Debug')
+                    ->expectAttribute('glow.level', 'debug')
+                    ->expectAttribute('glow.context', ['foo' => 'bar']),
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Info')
+                    ->expectAttribute('glow.level', 'info')
+                    ->expectAttribute('glow.context', ['foo' => 'bar']),
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Notice')
+                    ->expectAttribute('glow.level', 'notice')
+                    ->expectAttribute('glow.context', ['foo' => 'bar']),
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Warning')
+                    ->expectAttribute('glow.level', 'warning')
+                    ->expectAttribute('glow.context', ['foo' => 'bar']),
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Error')
+                    ->expectAttribute('glow.level', 'error')
+                    ->expectAttribute('glow.context', ['foo' => 'bar']),
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Critical')
+                    ->expectAttribute('glow.level', 'critical')
+                    ->expectAttribute('glow.context', ['foo' => 'bar']),
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Alert')
+                    ->expectAttribute('glow.level', 'alert')
+                    ->expectAttribute('glow.context', ['foo' => 'bar']),
+                fn (ExpectSpanEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Emergency')
+                    ->expectAttribute('glow.level', 'emergency')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+            );
+
+        $workspace->lastReport()
+            ->expectEventCount(8)
+            ->expectEvents(
+                SpanEventType::Glow,
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Debug')
+                    ->expectAttribute('glow.level', 'debug')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Info')
+                    ->expectAttribute('glow.level', 'info')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Notice')
+                    ->expectAttribute('glow.level', 'notice')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Warning')
+                    ->expectAttribute('glow.level', 'warning')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Error')
+                    ->expectAttribute('glow.level', 'error')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Critical')
+                    ->expectAttribute('glow.level', 'critical')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Alert')
+                    ->expectAttribute('glow.level', 'alert')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd(),
+                fn (ExpectReportEvent $event) => $event
+                    ->expectAttribute('glow.name', 'Emergency')
+                    ->expectAttribute('glow.level', 'emergency')
+                    ->expectAttribute('glow.context', ['foo' => 'bar'])
+                    ->expectMissingEnd()
+            );
+    });
+
+    // Context
+
+    it('can handle context', function () {
+        $workspace = ExpectSentPayloads::get('/context');
+
+        $workspace->assertSent(traces: 1, logs: 1, reports: 1);
+
+        $workspace->lastTrace()
+            ->expectLaravelRequestLifecycle()
+            ->expectSpan(SpanType::Application)
+            ->expectAttribute('context.custom', [
+                'single_flare_entry' => 'value',
+                'multi_flare_entry' => [
+                    'key1' => 'value1',
+                    'key2' => 'value2',
+                ],
+            ])
+            ->expectAttribute('context.laravel', [
+                'single_entry' => 'value',
+            ]);
+
+        $workspace->log(0)
+            ->expectLogCount(1)
+            ->expectLog(0)
+            ->expectAttribute('log.context', [
+                'log_context_key' => 'log_context_value',
+            ])
+            ->expectAttribute('context.custom', [
+                'single_flare_entry' => 'value',
+                'multi_flare_entry' => [
+                    'key1' => 'value1',
+                    'key2' => 'value2',
+                ],
+            ])
+            ->expectAttribute('context.laravel', [
+                'single_entry' => 'value',
+            ]);
+
+        $workspace->lastReport()
+            ->expectAttribute('context.exception', [
+                'info' => 'Additional context information',
+                'code' => 1234,
+            ])
+            ->expectAttribute('context.custom', [
+                'single_flare_entry' => 'value',
+                'multi_flare_entry' => [
+                    'key1' => 'value1',
+                    'key2' => 'value2',
+                ],
+            ])
+            ->expectAttribute('context.laravel', [
+                'single_entry' => 'value',
+            ]);
     });
 })->skipOnWindows();

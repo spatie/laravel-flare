@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Monolog\Level;
 use Spatie\FlareClient\Flare;
+use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Workbench\App\Exceptions\ContextException;
 use Workbench\App\Http\Controllers\InvokableController;
 use Workbench\App\Http\Controllers\ResourceController;
@@ -298,20 +300,24 @@ Route::get('logs', function () {
     Log::alert('Alert message');
     Log::emergency('Emergency message');
 
+    throw new Exception('All logs recorded');
+
     return 'ok';
 });
 
 // Glows
 
 Route::get('glows', function (){
-    Flare::glow()->record('Debug', Level::Debug, ['foo' => 'bar']);
-    Flare::glow()->record('Info', Level::Info, ['foo' => 'bar']);
-    Flare::glow()->record('Notice', Level::Notice, ['foo' => 'bar']);
-    Flare::glow()->record('Warning', Level::Warning, ['foo' => 'bar']);
-    Flare::glow()->record('Error', Level::Error, ['foo' => 'bar']);
-    Flare::glow()->record('Critical', Level::Critical, ['foo' => 'bar']);
-    Flare::glow()->record('Alert', Level::Alert, ['foo' => 'bar']);
-    Flare::glow()->record('Emergency', Level::Emergency, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Debug', Level::Debug, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Info', Level::Info, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Notice', Level::Notice, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Warning', Level::Warning, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Error', Level::Error, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Critical', Level::Critical, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Alert', Level::Alert, ['foo' => 'bar']);
+    FlareFacade::glow()->record('Emergency', Level::Emergency, ['foo' => 'bar']);
+
+    throw new Exception('All glows recorded');
 
     return 'ok';
 });
@@ -323,23 +329,14 @@ Route::get('context', function (){
     Context::addHidden('single_hidden_entry', 'hidden_value');
 
 
-    Flare::context('single_flare_entry', 'value');
-    Flare::context('multi_flare_entry', [
+    FlareFacade::context('single_flare_entry', 'value');
+    FlareFacade::context('multi_flare_entry', [
         'key1' => 'value1',
         'key2' => 'value2',
     ]);
 
-    return 'ok';
-});
-
-Route::get('context-and-exception', function (){
-    Context::add('single_entry', 'value');
-    Context::addHidden('single_hidden_entry', 'hidden_value');
-
-    Flare::context('single_flare_entry', 'value');
-    Flare::context('multi_flare_entry', [
-        'key1' => 'value1',
-        'key2' => 'value2',
+    Log::info('Logging with context', [
+        'log_context_key' => 'log_context_value',
     ]);
 
     throw ContextException::create();
