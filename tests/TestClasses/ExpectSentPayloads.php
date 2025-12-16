@@ -229,7 +229,7 @@ class ExpectSentPayloads
         $currentBackoffIndex = 0;
 
         while (true) {
-            if(! array_key_exists($currentBackoffIndex, $backoff)) {
+            if (! array_key_exists($currentBackoffIndex, $backoff)) {
                 throw new Exception('Jobs were not executed, either make sure the worker is started by running `vendor/bin/testbench queue:work` or that we waited long enough for the jobs to be processed.');
             }
 
@@ -237,7 +237,7 @@ class ExpectSentPayloads
 
             $pendingJobs = DB::table('jobs');
 
-            if($pendingJobs->count() === 0) {
+            if ($pendingJobs->count() === 0) {
                 return;
             }
 

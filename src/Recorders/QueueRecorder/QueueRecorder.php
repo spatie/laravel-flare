@@ -2,7 +2,6 @@
 
 namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 
-use Illuminate\Bus\Events\BatchDispatched;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;

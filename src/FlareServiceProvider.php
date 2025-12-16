@@ -35,7 +35,6 @@ use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
-use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
 use Spatie\LaravelFlare\Http\RouteDispatchers\CallableRouteDispatcher;
 use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
