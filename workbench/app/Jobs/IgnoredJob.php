@@ -23,7 +23,7 @@ class IgnoredJob implements ShouldQueue
      */
     public function handle(): void
     {
-        DB::table('users')->first();
+        DB::table('posts')->first();
 
         cache()->set('hello', 'world');
         cache()->get('hello');

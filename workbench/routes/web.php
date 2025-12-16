@@ -35,6 +35,7 @@ use Workbench\App\Livewire\Full;
 use Workbench\App\Livewire\MountException;
 use Workbench\App\Livewire\Nested;
 use Workbench\App\Livewire\Wired;
+use Workbench\App\Models\Post;
 use Workbench\App\Models\User;
 
 // Requests
@@ -52,9 +53,9 @@ Route::get('resource-controller', [ResourceController::class, 'index']);
 
 Route::get('named-route', [ResourceController::class, 'index'])->name('named-route');
 
-Route::get('parameter-route/{id}', fn ($id) => 'User {$id}');
-Route::get('optional-parameter-route/{id?}', fn ($id = null) => "User {$id}");
-Route::get('model-binding-route/{user}', fn (User $user) => "User {$user->name}");
+Route::get('parameter-route/{id}', fn ($id) => 'Post {$id}');
+Route::get('optional-parameter-route/{id?}', fn ($id = null) => "Post {$id}");
+Route::get('model-binding-route/{post}', fn (Post $post) => "Post {$post->name}");
 
 Route::post('injected-validation-request', fn (ValidationRequest $request) => $request->all());
 
@@ -106,21 +107,21 @@ Route::view('view-error', 'error', );
 // Queries
 
 Route::get('query', function () {
-    $user = User::first();
+    $post = Post::first();
 
-    return "Hello ".$user->name;
+    return "Hello ".$post->name;
 });
 
 Route::get('multiple-queries', function () {
-    $user = User::where('id', 1)->first();
-    $user = User::where('name', 'John')->first();
+    Post::where('id', 1)->first();
+     Post::where('name', 'John')->first();
 
     return "Ran 2 queries";
 });
 
 Route::get('transaction', function () {
     DB::transaction(function () {
-        User::create(['name' => fake()->name, 'email' => fake()->email, 'password' => bcrypt('password')]);
+        Post::create(['name' => fake()->name]);
     });
 
     return 'Transaction committed';
@@ -128,7 +129,7 @@ Route::get('transaction', function () {
 
 Route::get('failing-transaction', function () {
     DB::transaction(function () {
-        User::create([]);
+        Post::create([]);
     });
 
     return 'Transaction failed';

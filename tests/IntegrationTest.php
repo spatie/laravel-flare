@@ -5,6 +5,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\DynamicComponent;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanType;
@@ -24,6 +25,7 @@ use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\Livewire\Counter;
 use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
+use Workbench\Database\Factories\PostFactory;
 use Workbench\Database\Factories\UserFactory;
 
 beforeEach(function () {
@@ -31,7 +33,6 @@ beforeEach(function () {
         return;
     }
 });
-
 
 describe('Laravel integration', function () {
     // Requests
@@ -158,7 +159,7 @@ describe('Laravel integration', function () {
     });
 
     it('can track a route with model binding missing', function () {
-        DB::table('users')->delete(); // Cleanup from previous tests
+        DB::table('posts')->delete(); // Cleanup from previous tests
 
         $workspace = ExpectSentPayloads::get('/model-binding-route/1');
 
@@ -167,26 +168,26 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('http.route', 'model-binding-route/{user}')
-            ->expectAttribute('laravel.route.parameters', ['user' => '1'])
+            ->expectAttribute('http.route', 'model-binding-route/{post}')
+            ->expectAttribute('laravel.route.parameters', ['post' => '1'])
             ->expectAttribute('http.response.status_code', 404);
     });
 
     it('can track a route with model found missing', function () {
-        $user = UserFactory::new()->create();
+        $post = PostFactory::new()->create();
 
-        $workspace = ExpectSentPayloads::get("/model-binding-route/{$user->id}");
+        $workspace = ExpectSentPayloads::get("/model-binding-route/{$post->id}");
 
         $workspace->assertSent(traces: 1);
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('http.route', 'model-binding-route/{user}')
-            ->expectAttribute('laravel.route.parameters', function ($value) use ($user) {
+            ->expectAttribute('http.route', 'model-binding-route/{post}')
+            ->expectAttribute('laravel.route.parameters', function ($value) use ($post) {
                 expect($value)->toBeArray();
-                expect($value)->toHaveKey('user');
-                expect($value['user'])->toEqualCanonicalizing($user->refresh()->toArray());
+                expect($value)->toHaveKey('post');
+                expect($value['post'])->toEqualCanonicalizing($post->refresh()->toArray());
             });
     });
 
@@ -394,8 +395,6 @@ describe('Laravel integration', function () {
     });
 
     it('can handle a view with nesting', function () {
-        UserFactory::new()->count(3)->create();
-
         $workspace = ExpectSentPayloads::get('/view-nesting-response');
 
         $workspace->assertSent(traces: 1);
@@ -601,7 +600,7 @@ describe('Laravel integration', function () {
     // Queries
 
     it('can handle a query route', function () {
-        UserFactory::new()->create(['name' => 'John Doe']);
+        PostFactory::new()->create(['name' => 'John Doe']);
 
         $workspace = ExpectSentPayloads::get('/query');
 
@@ -616,7 +615,7 @@ describe('Laravel integration', function () {
             ->expectParentId($requestSpan)
             ->expectAttribute('db.system', 'sqlite')
             ->expectHasAttribute('db.name')
-            ->expectAttribute('db.statement', 'select * from "users" limit 1')
+            ->expectAttribute('db.statement', 'select * from "posts" limit 1')
             ->expectAttribute('db.sql.bindings', [])
             ->expectAttribute('laravel.db.connection', 'sqlite');
     });
@@ -637,14 +636,14 @@ describe('Laravel integration', function () {
                 ->expectParentId($requestSpan)
                 ->expectAttribute('db.system', 'sqlite')
                 ->expectHasAttribute('db.name')
-                ->expectAttribute('db.statement', 'select * from "users" where "id" = ? limit 1')
+                ->expectAttribute('db.statement', 'select * from "posts" where "id" = ? limit 1')
                 ->expectAttribute('db.sql.bindings', [1])
                 ->expectAttribute('laravel.db.connection', 'sqlite'),
             fn (ExpectSpan $span) => $span
                 ->expectParentId($requestSpan)
                 ->expectAttribute('db.system', 'sqlite')
                 ->expectHasAttribute('db.name')
-                ->expectAttribute('db.statement', 'select * from "users" where "name" = ? limit 1')
+                ->expectAttribute('db.statement', 'select * from "posts" where "name" = ? limit 1')
                 ->expectAttribute('db.sql.bindings', ['John'])
                 ->expectAttribute('laravel.db.connection', 'sqlite')
         );
