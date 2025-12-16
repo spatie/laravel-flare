@@ -5,7 +5,6 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Queue\MaxAttemptsExceededException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\DynamicComponent;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanType;
@@ -26,7 +25,6 @@ use Workbench\App\Livewire\Counter;
 use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\PostFactory;
-use Workbench\Database\Factories\UserFactory;
 
 beforeEach(function () {
     if (PHP_OS_FAMILY === 'Windows') {
