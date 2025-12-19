@@ -42,7 +42,7 @@ class AddRequestInformation extends BaseAddRequestInformation
     {
         $request = app(LaravelRequest::class);
 
-        if($this->attributesProvider instanceof LaravelRequestAttributesProvider) {
+        if ($this->attributesProvider instanceof LaravelRequestAttributesProvider) {
             return $this->attributesProvider->toArray(
                 $request,
                 includeContents: true,
