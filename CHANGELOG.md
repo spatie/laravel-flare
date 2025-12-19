@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.6.1 - 2025-12-19
+
+- Fix issue where test command would early return before checking all report callbacks
+
 ## 2.6.0 - 2025-12-19
 
 - Allow configuring request & console attribute providers
