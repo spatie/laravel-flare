@@ -1,6 +1,8 @@
 <?php
 
 use Spatie\FlareClient\Api;
+use Spatie\FlareClient\AttributesProviders\ConsoleAttributesProvider;
+use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\FlareConfig;
 
@@ -59,6 +61,8 @@ return [
 
     'attribute_providers' => [
         'user' => LaravelUserAttributesProvider::class,
+        'console' => ConsoleAttributesProvider::class,
+        'request' => LaravelRequestAttributesProvider::class,
     ],
 
     /*

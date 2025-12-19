@@ -24,6 +24,7 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSoluti
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\FlareClient\Api;
+use Spatie\FlareClient\AttributesProviders\ConsoleAttributesProvider;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
@@ -33,6 +34,8 @@ use Spatie\FlareClient\Support\TraceLimits;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
+use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
+use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
@@ -96,7 +99,7 @@ class FlareConfig extends BaseFlareConfig
             censorClientIps: config('flare.censor.client_ips'),
             censorHeaders: config('flare.censor.headers'),
             censorBodyFields: config('flare.censor.body_fields'),
-            userAttributesProvider: config('flare.attribute_providers.user'),
+            userAttributesProvider: config('flare.attribute_providers.user', LaravelUserAttributesProvider::class),
             collectsResolver: CollectsResolver::class,
             overriddenGroupings: config('flare.overridden_groupings'),
             includeStackTraceWithMessages: config()->get('logging.channels.flare.stack_trace', false)
@@ -108,6 +111,11 @@ class FlareConfig extends BaseFlareConfig
             : Level::Error;
 
         $config->enableShareButton = config('flare.enable_share_button', true);
+
+        // TODO: move this to constructor, but for breaking change purposes set the properties
+
+        $config->requestAttributesProvider = config('flare.attribute_providers.request', LaravelRequestAttributesProvider::class);
+        $config->consoleAttributesProvider = config('flare.attribute_providers.console', ConsoleAttributesProvider::class);
 
         return $config;
     }
