@@ -1,79 +1,84 @@
 <?php
 
 use Spatie\FlareClient\Enums\SpanEventType;
-use Spatie\FlareClient\Tests\Shared\ExpectSpan;
-use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
-use Spatie\FlareClient\Tests\Shared\ExpectTrace;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
+use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\Tests\Shared\FakeApi;
+use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\LaravelFlare\Enums\SpanType;
-use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-
-uses(ConfigureFlare::class);
 
 it('can trace jobs executions', function () {
-    setupFlareForTracing();
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
 
     try {
         dispatch(function () {
             return 'ok';
         })->onConnection('sync');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $this->assertNotNull($e);
     }
 
-    ExpectTrace::create(FakeSender::instance()->getLastPayload())
-        ->hasSpanCount(1)
-        ->span(
-            fn (ExpectSpan $span) => $span
-                ->hasName('Job - Closure (JobRecorderTest.php:'.__LINE__ - 11 .')')
-                ->hasAttribute('flare.span_type', SpanType::Job)
-                ->hasAttribute('laravel.job.queue.connection_name', 'sync')
-                ->hasAttribute('laravel.job.queue.name', 'sync')
-                ->hasAttribute('laravel.job.success', true)
-                ->hasAttribute('laravel.job.delete_when_missing_models', true)
-                ->hasSpanEventCount(0)
-        );
+    $flare->tracer->endTrace();
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job)
+        ->expectName('Job - Closure (JobRecorderTest.php:'.__LINE__ - 13 .')')
+        ->expectAttribute('laravel.job.queue.connection_name', 'sync')
+        ->expectAttribute('laravel.job.queue.name', 'sync')
+        ->expectAttribute('laravel.job.success', true)
+        ->expectAttribute('laravel.job.delete_when_missing_models', true)
+        ->expectHasAttribute('flare.peak_memory_usage')
+        ->expectSpanEventCount(0);
 });
 
 it('can trace jobs failures', function () {
-    setupFlareForTracing();
+    $flare = setupFlare(alwaysSampleTraces: true, isUsingSubtasks: true);
+
+    $flare->tracer->startTrace();
 
     try {
         dispatch(function () {
-            throw new \Exception('Failed');
+            throw new Exception('Failed');
         })->onConnection('sync');
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         $this->assertNotNull($e);
     }
 
-    ExpectTrace::create(FakeSender::instance()->getLastPayload())
-        ->hasSpanCount(1)
-        ->span(
-            fn (ExpectSpan $span) => $span
-                ->hasAttribute('laravel.job.success', false)
-                ->hasSpanEventCount(1)
-                ->spanEvent(
-                    fn (ExpectSpanEvent $spanEvent) => $spanEvent
-                        ->hasName('Exception - Exception')
-                        ->hasAttribute('flare.span_event_type', SpanEventType::Exception)
-                        ->hasAttribute('exception.message', 'Failed')
-                )
-        );
+    $flare->tracer->endTrace();
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job)
+        ->expectAttribute('laravel.job.success', false)
+        ->expectSpanEventCount(1)
+        ->expectSpanEvent(0)
+        ->expectName('Exception - Exception')
+        ->expectType(SpanEventType::Exception)
+        ->expectAttribute('exception.message', 'Failed');
 });
 
-it('will not try to add an exception to a never started span', function () {
-    setupFlareForTracing(
-        fn (FlareConfig $config) => $config->sampleRate(0)
-    );
+it('can trace and at the same time report job exceptions', function () {
+    FakeIds::setup()->nextUuid('fake-uuid');
 
-    try {
-        dispatch(function () {
-            throw new \Exception('Failed');
-        })->onConnection('sync');
-    } catch (\Exception $e) {
-        $this->assertNotNull($e);
-    }
+    $flare = setupFlare(alwaysSampleTraces: true);
 
-    $this->assertNull(FakeSender::instance()->getLastPayload());
+    $flare->tracer->startTrace();
+
+    dispatch(function () {
+        app(Flare::class)->reportHandled(new Exception('Failed'));
+    })->onConnection('sync');
+
+    $flare->tracer->endTrace();
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectSpanEvent(0)
+        ->expectAttribute('exception.id', 'fake-uuid');
+
+    FakeApi::lastReport()->expectTrackingUuid('fake-uuid');
 });

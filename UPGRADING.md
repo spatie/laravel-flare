@@ -3,6 +3,12 @@
 Because there are many breaking changes an upgrade is not that easy. There are many edge cases this guide does not
 cover. We accept PRs to improve this guide.
 
+## From v2 to v3
+
+- The filterReportsUsing closure now takes an array instead of a Report object.
+- If you've written your own SpanRecorders, please check your recorders, starting a trace from these recorder isn't possible anymore
+- The deprecated way to create SpanRecorders has been removed
+
 ## From v1 to v2
 
 The second version of the package has been a complete rewrite, we've added some interesting points in this upgrade guide but advise you to read the docs again.

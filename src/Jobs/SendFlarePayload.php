@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Spatie\FlareClient\Enums\FlarePayloadType;
+use Spatie\FlareClient\Enums\FlareEntityType;
 use Spatie\FlareClient\Senders\Sender;
 use Spatie\FlareClient\Senders\Support\Response;
 
@@ -29,7 +29,7 @@ class SendFlarePayload implements ShouldQueue
         protected array $senderConfig,
         protected string $endpoint,
         protected array $payload,
-        protected FlarePayloadType $payloadType,
+        protected FlareEntityType $type,
     ) {
     }
 
@@ -43,8 +43,9 @@ class SendFlarePayload implements ShouldQueue
             $this->endpoint,
             $config->get('flare.key'),
             $this->payload,
-            $this->payloadType,
-            function (Response $response) {
+            $this->type,
+            test: false,
+            callback: function (Response $response) {
             }
         );
     }
