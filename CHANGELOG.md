@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.6.0 - 2025-12-19
+
+- Allow configuring request & console attribute providers
+
 ## 2.5.1 - 2025-11-13
 
 ### What's Changed

@@ -3,33 +3,13 @@
 namespace Spatie\LaravelFlare\Recorders\RequestRecorder;
 
 use Illuminate\Http\Request as LaravelRequest;
-use Spatie\FlareClient\AttributesProviders\ResponseAttributesProvider;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Recorders\RequestRecorder\RequestRecorder as BaseRequestRecorder;
 use Spatie\FlareClient\Spans\Span;
-use Spatie\FlareClient\Support\BackTracer;
-use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Symfony\Component\HttpFoundation\Request;
 
 class RequestRecorder extends BaseRequestRecorder
 {
-    public function __construct(
-        Tracer $tracer,
-        BackTracer $backTracer,
-        array $config,
-        LaravelRequestAttributesProvider $requestAttributesProvider,
-        ResponseAttributesProvider $responseAttributesProvider
-    ) {
-        parent::__construct(
-            $tracer,
-            $backTracer,
-            $config,
-            $requestAttributesProvider,
-            $responseAttributesProvider
-        );
-    }
-
     public function recordStart(
         ?Request $request = null,
         ?string $route = null,
