@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Senders;
 
 use Closure;
-use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Support\Facades\Http;
 use Spatie\FlareClient\Enums\FlareEntityType;
