@@ -22,9 +22,9 @@ class LaravelHttpSender implements Sender
         $this->timeout = $this->config['timeout'] ?? 10;
     }
 
-    public function post(string $endpoint, string $apiToken, array $payload, FlareEntityType $type, bool $test, Closure $callback): void
+    public function post(string $endpoint, string $apiKey, array $payload, FlareEntityType $type, bool $test, Closure $callback): void
     {
-        $response = Http::withHeader('x-api-token', $apiToken)
+        $response = Http::withHeader('x-api-token', $apiKey)
             ->timeout($this->timeout)
             ->post($endpoint, $payload);
 
@@ -37,7 +37,7 @@ class LaravelHttpSender implements Sender
     ): void {
         $callback(new Response(
             $response->status(),
-            $response->json() ?? $response->body(),
+            ($response->json() ?? $response->body())['errors'] ?? [],
         ));
     }
 }

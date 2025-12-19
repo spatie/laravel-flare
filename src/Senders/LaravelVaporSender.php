@@ -39,7 +39,7 @@ class LaravelVaporSender implements Sender
         $this->connection = $this->config['connection'] ?? null;
     }
 
-    public function post(string $endpoint, string $apiToken, array $payload, FlareEntityType $type, bool $test, Closure $callback): void
+    public function post(string $endpoint, string $apiKey, array $payload, FlareEntityType $type, bool $test, Closure $callback): void
     {
         $shouldQueue = match (true) {
             $test => false,
@@ -55,7 +55,7 @@ class LaravelVaporSender implements Sender
         if (! $shouldQueue) {
             $this->resolveSender()->post(
                 $endpoint,
-                $apiToken,
+                $apiKey,
                 $payload,
                 $type,
                 $test,
@@ -83,7 +83,7 @@ class LaravelVaporSender implements Sender
 
         dispatch($job);
 
-        $callback(new Response(200, ['queued' => true]));
+        $callback(new Response(200, []));
     }
 
     protected function resolveSender(): Sender
