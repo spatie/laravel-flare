@@ -138,14 +138,14 @@ class TestCommand extends Command
                 $callback = $reflection->getValue($reportCallback);
 
                 if (! $callback instanceof Closure) {
-                    return false;
+                    continue;
                 }
 
                 $reflection = new ReflectionClosure($callback);
                 $closureReturnTypeReflection = $reflection->getReturnType();
 
                 if (! $closureReturnTypeReflection instanceof ReflectionNamedType) {
-                    return false;
+                    continue;
                 }
 
                 return $closureReturnTypeReflection->getName() === Flare::class;
