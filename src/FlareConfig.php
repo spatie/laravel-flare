@@ -79,6 +79,8 @@ class FlareConfig extends BaseFlareConfig
             censorClientIps: config('flare.censor.client_ips'),
             censorHeaders: config('flare.censor.headers'),
             censorBodyFields: config('flare.censor.body_fields'),
+            censorCookies: config('flare.censor.cookies', false),
+            censorSession: config('flare.censor.session', false),
             report: config('flare.report'),
             reportErrorLevels: config('flare.report_error_levels'),
             overriddenGroupings: config('flare.overridden_groupings'),
