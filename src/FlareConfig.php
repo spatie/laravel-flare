@@ -99,6 +99,8 @@ class FlareConfig extends BaseFlareConfig
             censorClientIps: config('flare.censor.client_ips'),
             censorHeaders: config('flare.censor.headers'),
             censorBodyFields: config('flare.censor.body_fields'),
+            censorCookies: config('flare.censor.cookies', false),
+            censorSession: config('flare.censor.session', false),
             userAttributesProvider: config('flare.attribute_providers.user', LaravelUserAttributesProvider::class),
             collectsResolver: CollectsResolver::class,
             overriddenGroupings: config('flare.overridden_groupings'),
