@@ -5,10 +5,7 @@ use Illuminate\Support\Collection;
 use Spatie\Backtrace\Arguments\ArgumentReducers;
 use Spatie\FlareClient\Flare;
 use Spatie\LaravelFlare\FlareConfig;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeArgumentsReducer;
-
-uses(ConfigureFlare::class);
 
 beforeEach(function () {
     ini_set('zend.exception_ignore_args', 0); // Enabled on GH actions
@@ -24,9 +21,9 @@ it('can reduce a collection', function () {
         return new Exception('Whoops');
     }
 
-    $report = $flare->report(collectionException(collect(['a', 'b', 'nested' => ['c', 'd']])));
+    $report = $flare->report(collectionException(collect(['a', 'b', 'nested' => ['c', 'd']])))->toArray();
 
-    expect($report->toArray()['stacktrace'][1]['arguments'][0])->toBe([
+    expect($report['stacktrace'][1]['arguments'][0])->toBe([
         'name' => 'collection',
         'value' => ['a', 'b', 'nested' => 'array (size=2)'],
         'original_type' => Collection::class,
@@ -47,9 +44,9 @@ it('can reduce a model', function () {
         return new Exception('Whoops');
     }
 
-    $report = app(Flare::class)->report(userException($user));
+    $report = app(Flare::class)->report(userException($user))->toArray();
 
-    expect($report->toArray()['stacktrace'][1]['arguments'][0])->toBe([
+    expect($report['stacktrace'][1]['arguments'][0])->toBe([
         'name' => 'user',
         'value' => 'id:10',
         'original_type' => User::class,
@@ -67,9 +64,9 @@ it('can disable the use of arguments', function () {
         return new Exception('Whoops');
     }
 
-    $report = $flare->report(exceptionWithArgumentsDisabled('Hello World'));
+    $report = $flare->report(exceptionWithArgumentsDisabled('Hello World'))->toArray();
 
-    expect($report->toArray()['stacktrace'][1]['arguments'])->toBeNull();
+    expect($report['stacktrace'][1]['arguments'])->toBeNull();
 });
 
 it('can set a custom arguments reducer', function () {
@@ -82,7 +79,7 @@ it('can set a custom arguments reducer', function () {
         return new Exception('Whoops');
     }
 
-    $report = $flare->report(exceptionWithCustomArgumentReducer('Hello World'));
+    $report = $flare->report(exceptionWithCustomArgumentReducer('Hello World'))->toArray();
 
-    expect($report->toArray()['stacktrace'][1]['arguments'][0]['value'])->toBe('FAKE');
+    expect($report['stacktrace'][1]['arguments'][0]['value'])->toBe('FAKE');
 });
