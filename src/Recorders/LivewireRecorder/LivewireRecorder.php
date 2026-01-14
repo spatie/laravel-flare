@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\EventBus;
-use Livewire\Mechanisms\ComponentRegistry;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Recorders\SpansRecorder;
@@ -15,6 +14,7 @@ use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Enums\LivewireComponentPhase;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
+use Spatie\LaravelFlare\Support\LivewireComponentClassFinder;
 
 class LivewireRecorder extends SpansRecorder
 {
@@ -36,7 +36,6 @@ class LivewireRecorder extends SpansRecorder
         BackTracer $backTracer,
         array $config,
         protected EventBus $eventBus,
-        protected ComponentRegistry $componentRegistry,
         protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
         protected ?ViewRecorder $viewRecorder = null,
     ) {
@@ -79,7 +78,11 @@ class LivewireRecorder extends SpansRecorder
         string $component,
         ?string $stubbedId,
     ): void {
-        $class = $this->componentRegistry->getClass($component);
+        $class = LivewireComponentClassFinder::findForComponentName($component);
+
+        if ($class === null) {
+            return;
+        }
 
         $class = ltrim($class, '\\');
 

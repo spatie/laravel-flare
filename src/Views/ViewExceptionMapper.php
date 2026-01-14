@@ -98,7 +98,6 @@ class ViewExceptionMapper
         }
 
         $traceProperty = new ReflectionProperty('Exception', 'trace');
-        $traceProperty->setAccessible(true);
         $traceProperty->setValue($exception, $trace);
     }
 
