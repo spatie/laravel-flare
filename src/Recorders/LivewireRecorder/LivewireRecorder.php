@@ -14,6 +14,7 @@ use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Enums\LivewireComponentPhase;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
+use Spatie\LaravelFlare\Support\LivewireComponentClassFinder;
 
 class LivewireRecorder extends SpansRecorder
 {
@@ -53,19 +54,6 @@ class LivewireRecorder extends SpansRecorder
         return 'livewire';
     }
 
-    protected function getComponentClass(string $componentName): ?string
-    {
-        // Livewire v4
-        if (class_exists(\Livewire\Finder\Finder::class)) {
-            return app(\Livewire\Finder\Finder::class)
-                ->resolveClassComponentClassName($componentName);
-        }
-
-        // Livewire v3
-        return app(\Livewire\Mechanisms\ComponentRegistry::class)
-            ->getClass($componentName);
-    }
-
     public function boot(): void
     {
         if ($this->withTraces === false) {
@@ -90,7 +78,7 @@ class LivewireRecorder extends SpansRecorder
         string $component,
         ?string $stubbedId,
     ): void {
-        $class = $this->getComponentClass($component);
+        $class = LivewireComponentClassFinder::findForComponentName($component);
 
         $class = ltrim($class, '\\');
 
