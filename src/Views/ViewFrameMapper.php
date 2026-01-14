@@ -41,14 +41,11 @@ class ViewFrameMapper
 
         if (! $compilerEngineReflection->hasProperty('lastCompiled') && $compilerEngineReflection->hasProperty('engine')) {
             $compilerEngine = $compilerEngineReflection->getProperty('engine');
-            $compilerEngine->setAccessible(true);
             $compilerEngine = $compilerEngine->getValue($this->compilerEngine);
             $lastCompiled = new ReflectionProperty($compilerEngine, 'lastCompiled');
-            $lastCompiled->setAccessible(true);
             $lastCompiled = $lastCompiled->getValue($compilerEngine);
         } else {
             $lastCompiled = $compilerEngineReflection->getProperty('lastCompiled');
-            $lastCompiled->setAccessible(true);
             $lastCompiled = $lastCompiled->getValue($this->compilerEngine);
         }
 

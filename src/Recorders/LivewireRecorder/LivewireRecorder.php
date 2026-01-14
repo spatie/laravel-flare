@@ -80,6 +80,10 @@ class LivewireRecorder extends SpansRecorder
     ): void {
         $class = LivewireComponentClassFinder::findForComponentName($component);
 
+        if ($class === null) {
+            return;
+        }
+
         $class = ltrim($class, '\\');
 
         if (in_array($class, $this->ignoredComponents)) {
