@@ -2,6 +2,7 @@
 
 use Spatie\FlareClient\Api;
 use Spatie\FlareClient\AttributesProviders\ConsoleAttributesProvider;
+use Spatie\FlareClient\AttributesProviders\ResponseAttributesProvider;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\FlareConfig;
@@ -63,6 +64,7 @@ return [
         'user' => LaravelUserAttributesProvider::class,
         'console' => ConsoleAttributesProvider::class,
         'request' => LaravelRequestAttributesProvider::class,
+        'response' => ResponseAttributesProvider::class,
     ],
 
     /*
@@ -94,17 +96,34 @@ return [
         'session' => false,
     ],
 
+
     /*
     |--------------------------------------------------------------------------
-    | Reporting log statements
+    | Sender
     |--------------------------------------------------------------------------
     |
-    | If this setting is `false` log statements won't be sent as events to Flare,
-    | no matter which error level you specified in the Flare log channel.
+    | The sender is responsible for sending the error reports and traces to
+    | Flare it can be configured if needed.
     |
     */
 
-    'send_logs_as_events' => true,
+    'sender' => [
+        'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
+        'config' => [
+            'timeout' => 10,
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Report
+    |--------------------------------------------------------------------------
+    |
+    | Flare reports errors and exceptions happening within your application.
+    |
+    */
+
+    'report' => env('FLARE_REPORT', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -148,23 +167,6 @@ return [
 //        Illuminate\Http\Client\ConnectionException::class => Spatie\FlareClient\Enums\OverriddenGrouping::ExceptionMessageAndClass,
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Sender
-    |--------------------------------------------------------------------------
-    |
-    | The sender is responsible for sending the error reports and traces to
-    | Flare it can be configured if needed.
-    |
-    */
-
-    'sender' => [
-        'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
-        'config' => [
-            'timeout' => 10,
-        ],
-    ],
-
 
     /*
     |--------------------------------------------------------------------------
@@ -176,19 +178,19 @@ return [
     |
     */
 
-    'trace' => env('FLARE_TRACE', false),
+    'trace' => env('FLARE_TRACE', true),
 
     /*
-    |--------------------------------------------------------------------------
-    | Sampler
-    |--------------------------------------------------------------------------
-    |
-    | The sampler is used to determine which traces should be recorded and
-    | which traces should be dropped. It is possible to set the rate
-    | at which traces should be recorded. The default rate is 0.1
-    | which means that 10% of the traces will be recorded.
-    |
-    */
+   |--------------------------------------------------------------------------
+   | Sampler
+   |--------------------------------------------------------------------------
+   |
+   | The sampler is used to determine which traces should be recorded and
+   | which traces should be dropped. It is possible to set the rate
+   | at which traces should be recorded. The default rate is 0.1
+   | which means that 10% of the traces will be recorded.
+   |
+   */
     'sampler' => [
         'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
         'config' => [
@@ -211,4 +213,28 @@ return [
         'max_span_events_per_span' => 128,
         'max_attributes_per_span_event' => 128,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Log
+    |--------------------------------------------------------------------------
+    |
+    | Logging show you an overview of log entries within your application.
+    |
+    */
+
+    'log' => env('FLARE_LOG', false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Minimal log level
+    |--------------------------------------------------------------------------
+    |
+    | You can specify the minimal (Monolog) log level that should be sent to Flare.
+    | Log levels lower than the specified level will be ignored.
+    | If null all log levels will be sent to Flare.
+    |
+    */
+
+    'minimal_log_level' => null,
 ];
