@@ -5,9 +5,35 @@ cover. We accept PRs to improve this guide.
 
 ## From v2 to v3
 
-- The filterReportsUsing closure now takes an array instead of a Report object.
-- If you've written your own SpanRecorders, please check your recorders, starting a trace from these recorder isn't possible anymore
-- The deprecated way to create SpanRecorders has been removed
+
+### Update your config file
+
+- `send_logs_as_events` - this key no longer exists. Log shipping is now a first-class feature controlled by the `log` key (see below).
+- A `report` key has been added to enable/disable error reporting, it is enabled by default.
+- A `trace` key has been added to enable/disable tracing, it is enabled by default.
+- A `log` key has been added to enable/disable the new standalone log shipping feature, it is disabled by default.
+
+### Logging setup changed
+
+Flare now has a dedicated logging system available, you enable it as such:
+
+1. **Add** `'log' => true` to your `config/flare.php` to enable the new standalone log shipping feature.
+2. **Route logs to flare**  add the `flare` channel in your `config/logging.php`:
+    ```php
+    'channels' => [
+       'flare' => [
+           'driver' => 'flare',
+       ],
+    ],
+    ```
+    And add it to your log stack in `.env`:
+    ```
+    LOG_STACK=single,flare
+    ```
+   
+### The base Flare client package
+
+Was also completely rewritten, we recommend you to also check the [upgrade guide](https://github.com/spatie/flare-client-php/blob/main/UPGRADING.md) for that package.
 
 ## From v1 to v2
 

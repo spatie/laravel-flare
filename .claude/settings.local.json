@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(./vendor/bin/pest:*)",
-      "Read(//Users/ruben/Spatie/flare-client-php/**)"
+      "Read(//Users/ruben/Spatie/flare-client-php/**)",
+      "Bash(git -C /Users/ruben/Spatie/laravel-flare show:*)",
+      "WebFetch(domain:flareapp.io)"
     ],
     "deny": [],
     "ask": []
