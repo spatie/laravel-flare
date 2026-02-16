@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.7.0 - 2026-01-14
+
+### What's Changed
+
+* Add support for Livewire v4 by @joshhanley in https://github.com/spatie/laravel-flare/pull/31
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.6.2...2.7.0
+
 ## 2.6.2 - 2026-01-08
 
 - Add support for censoring cookies and session
