@@ -286,7 +286,7 @@ Route::get('livewire-old-route', Counter::class);
 Route::get('livewire-mount-exception', MountException::class);
 
 if(version_compare(InstalledVersions::getVersion('livewire/livewire'), '4.0.0', '>=')) {
-    Route::livewire('livewire-route', Counter::class);
+    // Route::livewire('livewire-route', Counter::class);
 };
 
 // Logs
