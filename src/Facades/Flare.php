@@ -7,7 +7,6 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
-use Spatie\FlareClient\Recorders\ApplicationRecorder\ApplicationRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Recorders\ResponseRecorder\ResponseRecorder;
 use Spatie\FlareClient\Tracer;
@@ -19,13 +18,11 @@ use Throwable;
 
 /**
  * @method static FlareClient context(string|mixed[] $key, mixed $value = null)
- * @method static FlareClient sendReportsImmediately(bool $sendReportsImmediately = true)
  * @method static FlareClient withApplicationVersion(string|Closure $version)
  * @method static FlareClient filterExceptionsUsing(Closure $filterExceptionsCallable)
  * @method static FlareClient filterReportsUsing(Closure $filterReportsCallable)
  * @method static GlowRecorder|null glow()
  * @method static FilesystemRecorder|null filesystem()
- * @method static ApplicationRecorder application()
  * @method static RoutingRecorder|null routing()
  * @method static ResponseRecorder|null response()
  * @method static RequestRecorder|null request()

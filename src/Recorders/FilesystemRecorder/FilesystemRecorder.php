@@ -36,7 +36,7 @@ class FilesystemRecorder extends BaseFilesystemRecorder
     public static function registered(Application $container, array $config): void
     {
         $shouldWrapDisks = ($config['track_all_disks'] ?? static::DEFAULT_TRACK_ALL_DISKS)
-            || Arr::first($config, fn ($disk) => is_array($disk) && array_key_exists('flare', $disk)) !== null;
+            || Arr::first(config('filesystems.disks'), fn ($disk) => is_array($disk) && array_key_exists('flare', $disk)) !== null;
 
         if ($shouldWrapDisks) {
             $container->singleton('filesystem', function () use ($config) {
