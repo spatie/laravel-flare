@@ -164,13 +164,14 @@ class TestCommand extends Command
 
             if ($exception instanceof BadResponseCode) {
                 $this->info('');
-                $message = 'Unknown error';
 
                 $body = $exception->response->body;
 
-                if (is_array($body) && isset($body['message'])) {
-                    $message = $body['message'];
-                }
+                $message = match (true) {
+                    is_array($body) && isset($body['message']) => $body['message'],
+                    is_string($body) && $body !== '' => $body,
+                    default => 'Unknown error',
+                };
 
                 $this->warn("{$exception->response->code} - {$message}");
             } else {
