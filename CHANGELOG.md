@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.7.2 - 2026-02-27
+
+Add support for Laravel 13
+
 ## 2.7.1 - 2026-02-23
 
 **Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.7.0...2.7.1
