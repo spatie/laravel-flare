@@ -14,6 +14,9 @@ jobs:
                 livewire: [3.*, 4.*]
                 stability: [prefer-lowest, prefer-stable]
                 os: [ubuntu-latest, windows-latest]
+                exclude:
+                    - laravel: 13.*
+                      livewire: 3.*
 
         name: P${{ matrix.php }} - L${{ matrix.laravel }} - LW${{ matrix.livewire }} -${{ matrix.stability }} - ${{ matrix.os }}
 
