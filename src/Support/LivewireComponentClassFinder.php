@@ -8,7 +8,7 @@ class LivewireComponentClassFinder
     {
         // Livewire v4
         if (class_exists(\Livewire\Finder\Finder::class)) {
-            return app(\Livewire\Finder\Finder::class)->resolveClassComponentClassName($name);
+            return app('livewire.finder')->resolveClassComponentClassName($name);
         }
 
 
