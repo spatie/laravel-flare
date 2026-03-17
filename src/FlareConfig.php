@@ -23,6 +23,8 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSoluti
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\FlareClient\Api;
+use Spatie\FlareClient\AttributesProviders\ConsoleAttributesProvider;
+use Spatie\FlareClient\AttributesProviders\ResponseAttributesProvider;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
@@ -30,6 +32,7 @@ use Spatie\FlareClient\FlareMiddleware\AddLogs;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
@@ -90,9 +93,9 @@ class FlareConfig extends BaseFlareConfig
             sampler: config('flare.sampler.class'),
             samplerConfig: config('flare.sampler.config'),
             userAttributesProvider: config('flare.attribute_providers.user'),
-            requestAttributesProvider: config('flare.attribute_providers.request'),
-            responseAttributesProvider: config('flare.attribute_providers.response'),
-            consoleAttributesProvider: config('flare.attribute_providers.console'),
+            requestAttributesProvider: config('flare.attribute_providers.request', LaravelRequestAttributesProvider::class),
+            responseAttributesProvider: config('flare.attribute_providers.response', ResponseAttributesProvider::class),
+            consoleAttributesProvider: config('flare.attribute_providers.console', ConsoleAttributesProvider::class),
         );
 
         $config->enableShareButton = config('flare.enable_share_button', true);
