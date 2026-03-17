@@ -13,6 +13,12 @@ use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 uses(ConfigureFlare::class);
 
 beforeEach(function () {
+    config()->set('database.default', 'testing');
+    config()->set('database.connections.testing', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+    ]);
+
     Schema::dropIfExists('users');
 
     Schema::create('users', function ($table) {
