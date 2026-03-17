@@ -10,7 +10,11 @@ use Spatie\LaravelFlare\FlareConfig;
 
 beforeEach(function () {
     config()->set('logging.channels.flare.driver', 'flare');
-    config()->set('logging.default', 'flare');
+    config()->set('logging.channels.stack', [
+        'driver' => 'stack',
+        'channels' => ['single', 'flare'],
+    ]);
+    config()->set('logging.default', 'stack');
 
     $datetime = new DateTimeImmutable('2019-01-01 12:34:56');
 

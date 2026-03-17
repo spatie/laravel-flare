@@ -8,6 +8,12 @@ use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\FlareConfig;
 
 beforeEach(function () {
+    config()->set('database.default', 'testing');
+    config()->set('database.connections.testing', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+    ]);
+
     Schema::dropIfExists('users');
 
     Schema::create('users', function ($table) {

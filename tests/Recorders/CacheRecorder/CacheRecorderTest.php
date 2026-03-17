@@ -8,6 +8,10 @@ use Spatie\FlareClient\Enums\CacheResult;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 
+beforeEach(function () {
+    config()->set('cache.default', 'array');
+});
+
 it('records cache operations', function (
     Closure $preRecording,
     Closure $record,
