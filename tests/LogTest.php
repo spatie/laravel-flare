@@ -13,7 +13,11 @@ uses(ConfigureFlare::class);
 
 beforeEach(function () {
     config()->set('logging.channels.flare.driver', 'flare');
-    config()->set('logging.default', 'flare');
+    config()->set('logging.channels.stack', [
+        'driver' => 'stack',
+        'channels' => ['single', 'flare'],
+    ]);
+    config()->set('logging.default', 'stack');
 
     FakeTime::setup('2019-01-01 12:34:56');
 });
@@ -176,7 +180,12 @@ it('it will report an exception with log span events with metadata', function ()
     expect($arguments['exceptionClass'])->toBe('Error');
     expect($arguments['message'])->toBe('Call to undefined function nonExistingFunction()');
 
-    expect($arguments['events'][0]['attributes'])->toHaveKey('log.context', ['meta' => 'data']);
+    $loggedEvents = array_values(array_filter(
+        $arguments['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Log && $event['attributes']['log.message'] === 'log',
+    )); // Remove all logs from other packages
+
+    expect($loggedEvents[0]['attributes'])->toHaveKey('log.context', ['meta' => 'data']);
 });
 
 // Datasets
