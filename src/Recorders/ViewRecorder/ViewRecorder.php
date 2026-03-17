@@ -77,7 +77,13 @@ class ViewRecorder extends BaseViewRecorder
         $engines = array_values(array_unique($viewFactory->getExtensions()));
 
         $viewFactory->composer('*', function (View $view) {
-            WrappedViewEngine::$currentView = $view->getName();
+            $viewName = $view->getName();
+
+            if ($viewName === $view->getPath()) {
+                $viewName = $this->resolveFileBasedViewName($viewName);
+            }
+
+            WrappedViewEngine::$currentView = $viewName;
 
             return $view;
         });
@@ -90,6 +96,21 @@ class ViewRecorder extends BaseViewRecorder
                 $originalEngine,
             ));
         }
+    }
+
+    protected function resolveFileBasedViewName(string $path): string
+    {
+        if (! $this->app->bound('livewire')) {
+            return $path;
+        }
+
+        $component = $this->app->make('livewire')->current();
+
+        if ($component === null) {
+            return $path;
+        }
+
+        return $component->getName();
     }
 
     protected function resolveComponentClass(string $componentName): ?string
