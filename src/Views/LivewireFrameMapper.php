@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Views;
 
 use Illuminate\Contracts\Foundation\Application;
-use Livewire\Compiler\CacheManager;
 use Livewire\Compiler\Compiler;
 use ReflectionProperty;
 
@@ -20,7 +19,7 @@ class LivewireFrameMapper
     public function __construct(
         protected Application $app,
     ) {
-        if($this->app->bound('livewire.compiler')) {
+        if ($this->app->bound('livewire.compiler')) {
             $this->compiler = $this->app->make('livewire.compiler');
         }
     }
