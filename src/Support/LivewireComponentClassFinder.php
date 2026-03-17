@@ -13,6 +13,10 @@ class LivewireComponentClassFinder
 
 
         // Livewire v3
-        return app(\Livewire\Mechanisms\ComponentRegistry::class)->getClass($name);
+        if (class_exists(\Livewire\Mechanisms\ComponentRegistry::class)) {
+            return app(\Livewire\Mechanisms\ComponentRegistry::class)->getClass($name);
+        }
+
+        return null;
     }
 }

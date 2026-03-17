@@ -17,6 +17,8 @@ jobs:
                 exclude:
                     - laravel: 13.*
                       livewire: 3.*
+                    - laravel: 13.*
+                      php: 8.2
 
         name: P${{ matrix.php }} - L${{ matrix.laravel }} - LW${{ matrix.livewire }} -${{ matrix.stability }} - ${{ matrix.os }}
 
