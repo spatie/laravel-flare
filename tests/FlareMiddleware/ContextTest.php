@@ -1,17 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Context;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-
-uses(ConfigureFlare::class);
-
-beforeEach(function () {
-    // We need to duplicate the class check here because this runs before the skip check
-    class_exists(Context::class) && Context::flush();
-})->skip(
-    ! class_exists(Context::class),
-    'Context facade not available (introduced in Laravel 11)',
-);
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 
 it('will add context information with an exception', function () {
     $flare = setupFlare();
@@ -19,30 +9,21 @@ it('will add context information with an exception', function () {
     Context::add('foo', 'bar');
     Context::addHidden('hidden', 'value');
 
-    $report = $flare->report(new Exception);
+    $flare->report(new Exception);
 
-    $context = $report->toArray()['attributes'];
-
-    $this->assertArrayHasKey('context.laravel', $context);
-    $this->assertArrayHasKey('foo', $context['context.laravel']);
-    $this->assertArrayNotHasKey('hidden', $context['context.laravel']);
-    $this->assertEquals('bar', $context['context.laravel']['foo']);
+    FakeApi::lastReport()->expectAttribute('context.laravel', ['foo' => 'bar']);
 });
 
 it('will not add context information with an exception if no context was set', function () {
-    $report = setupFlare()->report(new Exception);
+    setupFlare()->report(new Exception);
 
-    $context = $report->toArray()['attributes'];
-
-    $this->assertArrayNotHasKey('laravel.context', $context);
+    FakeApi::lastReport()->expectMissingAttribute('context.laravel');
 });
 
 it('will not add context information with an exception if only hidden context was set', function () {
     Context::addHidden('hidden', 'value');
 
-    $report = setupFlare()->report(new Exception);
+    setupFlare()->report(new Exception);
 
-    $context = $report->toArray()['attributes'];
-
-    $this->assertArrayNotHasKey('laravel.context', $context);
+    FakeApi::lastReport()->expectMissingAttribute('context.laravel');
 });

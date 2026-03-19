@@ -1,17 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
-use Spatie\FlareClient\Disabled\DisabledFlare;
-use Spatie\FlareClient\Disabled\DisabledTracer;
 use Spatie\FlareClient\Flare;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
-use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
-use Spatie\LaravelFlare\FlareServiceProvider;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-
-uses(ConfigureFlare::class);
 
 beforeEach(function () {
     Artisan::call('view:clear');
@@ -34,7 +28,7 @@ it('can manually report exceptions', function () {
 
     $flare->report(new Exception());
 
-    FakeSender::instance()->assertRequestsSent(1);
+    FakeApi::assertSent(reports: 1);
 });
 
 
@@ -43,34 +37,19 @@ it('can report exceptions using the Laravel report helper', function () {
 
     report(new Exception());
 
-    FakeSender::instance()->assertRequestsSent(1);
+    FakeApi::assertSent(reports: 1);
 });
 
-it('will register a version of the disabled Flare client if no API key is set', function () {
-    bootupDisabledFlare();
+it('will not trace, log or report when flare is disabled', function () {
+    setupFlare(withoutApiKey: true, alwaysSampleTraces: true);
 
     $flare = app(Flare::class);
 
-    expect($flare)->toBeInstanceOf(DisabledFlare::class);
-    expect($flare->tracer())->toBeInstanceOf(DisabledTracer::class);
-});
-
-it('will allow handling reports with disabled Flare (yet nothing will be sent or recorder)', function () {
-    bootupDisabledFlare();
-
-    FlareFacade::handles();
+    // Todo: extend this with more checks
 
     report(new Exception());
 
-    expect(true)->toBeTrue();
+    Log::critical("test");
+
+    FakeApi::assertSent(reports: 0, traces: 0, logs: 0);
 });
-
-function bootupDisabledFlare()
-{
-    config()->set('flare.key', '');
-
-    $provider = new FlareServiceProvider(app());
-
-    $provider->register();
-    $provider->boot();
-}
