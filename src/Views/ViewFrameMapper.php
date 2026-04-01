@@ -10,24 +10,39 @@ class ViewFrameMapper
 {
     protected Engine $compilerEngine;
 
-    protected BladeSourceMapCompiler $bladeSourceMapCompiler;
-
     protected array $knownPaths;
 
-    public function __construct(BladeSourceMapCompiler $bladeSourceMapCompiler)
-    {
+    protected bool $hasLivewireSingleFileComponents;
+
+    public function __construct(
+        protected BladeSourceMapCompiler $bladeSourceMapCompiler,
+        protected LivewireSingleFileComponentFrameMapper $livewireSfcMapper,
+    ) {
         $resolver = app('view.engine.resolver');
 
         $this->compilerEngine = $resolver->resolve('blade');
-
-        $this->bladeSourceMapCompiler = $bladeSourceMapCompiler;
+        $this->hasLivewireSingleFileComponents = app()->bound('livewire.factory');
     }
 
     public function findCompiledView(string $compiledPath): ?string
     {
         $this->knownPaths ??= $this->getKnownPaths();
 
-        return $this->knownPaths[$compiledPath] ?? null;
+        $resolvedPath = $this->knownPaths[$compiledPath] ?? null;
+
+        if ($resolvedPath === null && $this->hasLivewireSingleFileComponents) {
+            return $this->livewireSfcMapper->findSourcePath($compiledPath);
+        }
+
+        if ($resolvedPath === null) {
+            return null;
+        }
+
+        if ($this->hasLivewireSingleFileComponents) {
+            return $this->livewireSfcMapper->findSourcePath($resolvedPath) ?? $resolvedPath;
+        }
+
+        return $resolvedPath;
     }
 
     public function getBladeLineNumber(string $view, int $compiledLineNumber): int

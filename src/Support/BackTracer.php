@@ -4,14 +4,12 @@ namespace Spatie\LaravelFlare\Support;
 
 use Spatie\Backtrace\Frame;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
-use Spatie\LaravelFlare\Views\LivewireFrameMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
 
 class BackTracer extends BaseBackTracer
 {
     public function __construct(
         protected ViewFrameMapper $viewFrameMapper,
-        protected LivewireFrameMapper $livewireFrameMapper,
         protected ?string $applicationPath,
     ) {
         parent::__construct($applicationPath);
@@ -23,15 +21,14 @@ class BackTracer extends BaseBackTracer
             if ($originalPath = $this->viewFrameMapper->findCompiledView($frame->file)) {
                 $frame->file = $originalPath;
                 $frame->lineNumber = $this->viewFrameMapper->getBladeLineNumber($frame->file, $frame->lineNumber);
-
-                return $frame;
-            }
-
-            if ($originalPath = $this->livewireFrameMapper->findCompiledFile($frame->file)) {
-                $frame->file = $originalPath;
             }
 
             return $frame;
         }, parent::frames($limit));
+    }
+
+    public function framesWithoutViewMapping(?int $limit = null): array
+    {
+        return parent::frames($limit);
     }
 }
