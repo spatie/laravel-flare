@@ -12,6 +12,7 @@ use Spatie\FlareClient\Recorders\ViewRecorder\ViewRecorder as BaseViewRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class ViewRecorder extends BaseViewRecorder
 {
@@ -23,7 +24,8 @@ class ViewRecorder extends BaseViewRecorder
         protected Dispatcher $dispatcher,
         BackTracer $backTracer,
         ArgumentReducers|null $argumentReducers,
-        array $config
+        array $config,
+        protected LivewireComponentFinder $livewireComponentFinder,
     ) {
         parent::__construct($tracer, $backTracer, $argumentReducers, $config);
     }
@@ -65,6 +67,8 @@ class ViewRecorder extends BaseViewRecorder
         if ($isComponent && $isInlineComponent && ($componentClass = $this->resolveComponentClass($data['componentName']))) {
             $attributes['view.component.class'] = $componentClass;
         }
+
+        $file = $this->livewireComponentFinder->findCurrentSingleFileComponentFile() ?? $file;
 
         return parent::recordRendering($viewName, [], $file, $attributes);
     }

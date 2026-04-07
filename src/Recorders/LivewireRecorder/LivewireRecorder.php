@@ -14,7 +14,7 @@ use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\Enums\LivewireComponentPhase;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
-use Spatie\LaravelFlare\Support\LivewireComponentClassFinder;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class LivewireRecorder extends SpansRecorder
 {
@@ -37,6 +37,7 @@ class LivewireRecorder extends SpansRecorder
         array $config,
         protected EventBus $eventBus,
         protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
+        protected LivewireComponentFinder $componentFinder,
         protected ?ViewRecorder $viewRecorder = null,
     ) {
         parent::__construct($tracer, $backTracer, $config);
@@ -78,7 +79,7 @@ class LivewireRecorder extends SpansRecorder
         string $component,
         ?string $stubbedId,
     ): void {
-        $class = LivewireComponentClassFinder::findForComponentName($component);
+        $class = $this->componentFinder->findClass($component);
 
         if ($class === null) {
             return;
@@ -90,13 +91,21 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
+        $isSingleFileComponent = $this->componentFinder->isSingleFileComponent($component);
+
+        $attributes = [
+            'flare.span_type' => SpanType::LivewireComponent,
+            'livewire.component.name' => $component,
+            'livewire.component.single_file_component' => $isSingleFileComponent,
+        ];
+
+        if (! $isSingleFileComponent) {
+            $attributes['livewire.component.class'] = $class;
+        }
+
         $span = $this->startSpan(
             name: "Livewire - {$component}  (pre-mount)",
-            attributes: [
-                'flare.span_type' => SpanType::LivewireComponent,
-                'livewire.component.class' => $class,
-                'livewire.component.name' => $component,
-            ],
+            attributes: $attributes,
         );
 
         if ($span === null) {
@@ -108,6 +117,7 @@ class LivewireRecorder extends SpansRecorder
             phase: LivewireComponentPhase::Mounting,
             stubbedId: $stubbedId,
             currentPhaseStartTime: $this->tracer->time->getCurrentTime(),
+            isSingleFileComponent: $isSingleFileComponent,
         );
 
         if ($this->splitByPhase === false) {
@@ -190,13 +200,21 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
+        $isSingleFileComponent = $this->componentFinder->isSingleFileComponent($component->getName());
+
+        $attributes = [
+            'flare.span_type' => SpanType::LivewireComponent,
+            'livewire.component.name' => $component->getName(),
+            'livewire.component.single_file_component' => $isSingleFileComponent,
+        ];
+
+        if (! $isSingleFileComponent) {
+            $attributes['livewire.component.class'] = $component::class;
+        }
+
         $span = $this->startSpan(
             name: "Livewire - {$component->getName()}",
-            attributes: [
-                'flare.span_type' => SpanType::LivewireComponent,
-                'livewire.component.name' => $component->getName(),
-                'livewire.component.class' => $component::class,
-            ],
+            attributes: $attributes,
         );
 
         if ($span === null) {
@@ -207,6 +225,7 @@ class LivewireRecorder extends SpansRecorder
             span: $span,
             phase: LivewireComponentPhase::Hydrating,
             currentPhaseStartTime: $this->tracer->time->getCurrentTime(),
+            isSingleFileComponent: $isSingleFileComponent,
         );
 
         if ($this->splitByPhase === false) {
@@ -273,9 +292,13 @@ class LivewireRecorder extends SpansRecorder
             to: LivewireComponentPhase::Rendering,
         );
 
-        $componentState->span->addAttributes([
-            'view.name' => $view->getName(),
-        ]);
+        if ($componentState->isSingleFileComponent && ($viewFile = $this->componentFinder->findSingleFileComponentFile($component->getName()))) {
+            $componentState->span->addAttribute('view.file', $viewFile);
+        }
+
+        if(! $componentState->isSingleFileComponent) {
+            $componentState->span->addAttribute('view.name', $view->getName());
+        }
 
         if ($this->splitByPhase === false) {
             return;

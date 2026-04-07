@@ -6,10 +6,15 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Livewire\LivewireManager;
-use Spatie\LaravelFlare\Support\LivewireComponentClassFinder;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class LivewireAttributesProvider
 {
+    public function __construct(
+        protected LivewireComponentFinder $componentFinder,
+    ) {
+    }
+
     /**
      * @param array<string> $ignore
      */
@@ -40,7 +45,7 @@ class LivewireAttributesProvider
             foreach ($request->input('components') as $component) {
                 $snapshot = json_decode($component['snapshot'], true);
 
-                $class = LivewireComponentClassFinder::findForComponentName($snapshot['memo']['name']);
+                $class = $this->componentFinder->findClass($snapshot['memo']['name']);
 
                 if (in_array($class, $ignore)) {
                     continue;

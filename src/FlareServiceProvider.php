@@ -32,7 +32,9 @@ use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
 use Spatie\FlareClient\Support\GracefulSpanEnder;
 use Spatie\FlareClient\Support\StacktraceMapper;
 use Spatie\FlareClient\Tracer;
+use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider;
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
+use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Http\Middleware\FlareTracingMiddleware;
@@ -41,6 +43,7 @@ use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
 use Spatie\LaravelFlare\Recorders\ContextRecorder\ContextRecorder;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 use Spatie\LaravelFlare\Support\GracefulSpanEnder as LaravelGracefulSpanEnder;
 use Spatie\LaravelFlare\Support\LaravelStacktraceMapper;
 use Spatie\LaravelFlare\Support\Telemetry;
@@ -98,6 +101,7 @@ class FlareServiceProvider extends ServiceProvider
 
         $this->app->singleton(GracefulSpanEnder::class, LaravelGracefulSpanEnder::class);
 
+        $this->app->singleton(LivewireComponentFinder::class);
         $this->app->singleton(LivewireSingleFileComponentFrameMapper::class);
         $this->app->singleton(ViewFrameMapper::class);
 
