@@ -296,7 +296,7 @@ class LivewireRecorder extends SpansRecorder
             $componentState->span->addAttribute('view.file', str_replace(base_path() . DIRECTORY_SEPARATOR, '', $viewFile));
         }
 
-        if(! $componentState->isSingleFileComponent) {
+        if (! $componentState->isSingleFileComponent) {
             $componentState->span->addAttribute('view.name', $view->getName());
         }
 
