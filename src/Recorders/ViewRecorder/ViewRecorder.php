@@ -70,6 +70,10 @@ class ViewRecorder extends BaseViewRecorder
 
         $file = $this->livewireComponentFinder->findCurrentSingleFileComponentFile() ?? $file;
 
+        if ($file !== null) {
+            $file = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file);
+        }
+
         return parent::recordRendering($viewName, [], $file, $attributes);
     }
 
