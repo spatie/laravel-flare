@@ -30,19 +30,12 @@ class ViewFrameMapper
 
         $resolvedPath = $this->knownPaths[$compiledPath] ?? null;
 
-        if ($resolvedPath === null && $this->hasLivewireSingleFileComponents) {
-            return $this->livewireSfcMapper->findSourcePath($compiledPath);
-        }
-
-        if ($resolvedPath === null) {
-            return null;
-        }
-
-        if ($this->hasLivewireSingleFileComponents) {
-            return $this->livewireSfcMapper->findSourcePath($resolvedPath) ?? $resolvedPath;
-        }
-
-        return $resolvedPath;
+        return match (true) {
+            $resolvedPath === null && $this->hasLivewireSingleFileComponents => $this->livewireSfcMapper->findSourcePath($compiledPath),
+            $resolvedPath === null => null,
+            $this->hasLivewireSingleFileComponents => $this->livewireSfcMapper->findSourcePath($resolvedPath) ?? $resolvedPath,
+            default => $resolvedPath,
+        };
     }
 
     public function getBladeLineNumber(string $view, int $compiledLineNumber): int

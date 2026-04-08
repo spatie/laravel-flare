@@ -4,6 +4,7 @@ namespace Spatie\LaravelFlare\Views;
 
 use Illuminate\Contracts\Foundation\Application;
 use ReflectionProperty;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class LivewireSingleFileComponentFrameMapper
 {
@@ -12,15 +13,12 @@ class LivewireSingleFileComponentFrameMapper
 
     public function __construct(
         protected Application $app,
+        protected LivewireComponentFinder $livewireComponentFinder,
     ) {
     }
 
     public function findSourcePath(string $path): ?string
     {
-        if (! $this->app->bound('livewire.factory')) {
-            return null;
-        }
-
         $this->buildMap();
 
         foreach ($this->compiledPathMap as $hash => $sourcePath) {
@@ -50,8 +48,6 @@ class LivewireSingleFileComponentFrameMapper
             return;
         }
 
-        $finder = $this->app->make('livewire.finder');
-
         foreach ($resolvedComponents as $name => $class) {
             if (! str_contains($class, "\x00")) {
                 continue;
@@ -63,7 +59,7 @@ class LivewireSingleFileComponentFrameMapper
                 continue;
             }
 
-            $sourcePath = $finder->resolveSingleFileComponentPath($name);
+            $sourcePath = $this->livewireComponentFinder->findSingleFileComponentFile($name);
 
             if ($sourcePath === null) {
                 continue;
