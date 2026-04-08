@@ -44,6 +44,7 @@ class LivewireSingleFileComponentFrameMapper
 
         try {
             $reflection = new ReflectionProperty($factory, 'resolvedComponentCache');
+
             $resolvedComponents = $reflection->getValue($factory);
         } catch (\ReflectionException) {
             return;
