@@ -11,8 +11,6 @@ use Illuminate\Routing\ViewController;
 use Livewire\LivewireManager;
 use ReflectionFunction;
 use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider as BaseRequestAttributesProvider;
-use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
-use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\Enums\LaravelRouteActionType;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
