@@ -18,6 +18,7 @@ use Laravel\Octane\Events\RequestReceived;
 use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
+use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Spatie\FlareClient\Disabled\DisabledApplicationRecorder;
 use Spatie\FlareClient\Disabled\DisabledFlare;
@@ -178,7 +179,7 @@ class FlareServiceProvider extends ServiceProvider
     {
         $this->app->singleton('flare.logger', function ($app) {
             if ($this->config->apiToken === null || $this->config->sendLogsAsEvents === false) {
-                return new Logger('Flare');
+                return (new Logger('Flare'))->pushHandler(new NullHandler());
             }
 
             $handler = new FlareLogHandler(
