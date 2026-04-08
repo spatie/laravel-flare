@@ -37,7 +37,7 @@ class LivewireRecorder extends SpansRecorder
         array $config,
         protected EventBus $eventBus,
         protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
-        protected LivewireComponentFinder $componentFinder,
+        protected LivewireComponentFinder $livewireComponentFinder,
         protected ?ViewRecorder $viewRecorder = null,
     ) {
         parent::__construct($tracer, $backTracer, $config);
@@ -79,7 +79,7 @@ class LivewireRecorder extends SpansRecorder
         string $component,
         ?string $stubbedId,
     ): void {
-        $class = $this->componentFinder->findClass($component);
+        $class = $this->livewireComponentFinder->findClass($component);
 
         if ($class === null) {
             return;
@@ -91,7 +91,7 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $isSingleFileComponent = $this->componentFinder->isSingleFileComponent($component);
+        $isSingleFileComponent = $this->livewireComponentFinder->isSingleFileComponent($component);
 
         $attributes = [
             'flare.span_type' => SpanType::LivewireComponent,
@@ -200,7 +200,7 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $isSingleFileComponent = $this->componentFinder->isSingleFileComponent($component->getName());
+        $isSingleFileComponent = $this->livewireComponentFinder->isSingleFileComponent($component->getName());
 
         $attributes = [
             'flare.span_type' => SpanType::LivewireComponent,
@@ -292,7 +292,7 @@ class LivewireRecorder extends SpansRecorder
             to: LivewireComponentPhase::Rendering,
         );
 
-        if ($componentState->isSingleFileComponent && ($viewFile = $this->componentFinder->findSingleFileComponentFile($component->getName()))) {
+        if ($componentState->isSingleFileComponent && ($viewFile = $this->livewireComponentFinder->findSingleFileComponentFile($component->getName()))) {
             $componentState->span->addAttribute('view.file', str_replace(base_path() . DIRECTORY_SEPARATOR, '', $viewFile));
         }
 

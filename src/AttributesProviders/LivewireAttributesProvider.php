@@ -11,7 +11,7 @@ use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 class LivewireAttributesProvider
 {
     public function __construct(
-        protected LivewireComponentFinder $componentFinder,
+        protected LivewireComponentFinder $livewireComponentFinder,
     ) {
     }
 
@@ -45,7 +45,7 @@ class LivewireAttributesProvider
             foreach ($request->input('components') as $component) {
                 $snapshot = json_decode($component['snapshot'], true);
 
-                $class = $this->componentFinder->findClass($snapshot['memo']['name']);
+                $class = $this->livewireComponentFinder->findClass($snapshot['memo']['name']);
 
                 if (in_array($class, $ignore)) {
                     continue;

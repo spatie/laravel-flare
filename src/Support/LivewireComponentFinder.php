@@ -22,6 +22,12 @@ class LivewireComponentFinder
     /** @var \Livewire\Mechanisms\ComponentRegistry|null */
     protected $componentRegistry;
 
+    /** @var array<string, ?string> */
+    protected array $classCache = [];
+
+    /** @var array<string, ?string> */
+    protected array $singleFileComponentFileCache = [];
+
     public function __construct()
     {
         $this->livewire = app()->bound('livewire')
@@ -45,15 +51,9 @@ class LivewireComponentFinder
 
     public function findClass(string $name): ?string
     {
-        if ($this->factory) {
-            try {
-                return $this->factory->resolveComponentClass($name);
-            } catch (\Throwable) {
-                return null;
-            }
-        }
-
-        return $this->componentRegistry?->getClass($name);
+        return array_key_exists($name, $this->classCache)
+            ? $this->classCache[$name]
+            : $this->classCache[$name] = $this->factory?->resolveComponentClass($name) ?? $this->componentRegistry?->getClass($name);
     }
 
     public function isSingleFileComponent(string $name): bool
@@ -63,7 +63,9 @@ class LivewireComponentFinder
 
     public function findSingleFileComponentFile(string $name): ?string
     {
-        return $this->finder?->resolveSingleFileComponentPath($name);
+        return array_key_exists($name, $this->singleFileComponentFileCache)
+            ? $this->singleFileComponentFileCache[$name]
+            : $this->singleFileComponentFileCache[$name] = $this->finder?->resolveSingleFileComponentPath($name);
     }
 
     public function findCurrentComponentName(): ?string
