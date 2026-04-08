@@ -11,4 +11,4 @@ package-lock.json
 .env
 .phpunit.cache
 /.playwright-mcp/
-/.claude/
+.claude

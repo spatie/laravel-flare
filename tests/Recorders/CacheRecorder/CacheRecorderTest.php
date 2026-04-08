@@ -10,6 +10,10 @@ use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
 
 uses(ConfigureFlare::class);
 
+beforeEach(function () {
+    config()->set('cache.default', 'array');
+});
+
 it('records cache operations', function (
     Closure $preRecording,
     Closure $record,
