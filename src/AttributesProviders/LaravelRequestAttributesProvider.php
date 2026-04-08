@@ -40,7 +40,7 @@ class LaravelRequestAttributesProvider extends BaseRequestAttributesProvider
         }
 
         try {
-            $provider = new LivewireAttributesProvider();
+            $provider = app(LivewireAttributesProvider::class);
 
             $livewireManager = app(LivewireManager::class);
 

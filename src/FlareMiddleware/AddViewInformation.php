@@ -30,7 +30,7 @@ class AddViewInformation implements FlareMiddleware
         }
 
         $report->addAttributes([
-            'view.file' => $viewException->getViewFile(),
+            'view.file' => str_replace(base_path() . DIRECTORY_SEPARATOR, '', $viewException->getViewFile()),
             'view.data' => collect($viewException->getViewData())->map(
                 fn (mixed $value) => (new HtmlDumper())->dumpVariable($value)
             )->all(),

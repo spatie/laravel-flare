@@ -17,7 +17,7 @@ class AddExceptionHandledStatus implements FlareMiddleware
 
     public function handle(ReportFactory $report, Closure $next): ReportFactory
     {
-        $frames = $this->backTracer->frames(40);
+        $frames = $this->backTracer->framesWithoutViewMapping(40);
         $frameCount = count($frames);
 
         try {

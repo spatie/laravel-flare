@@ -166,5 +166,5 @@ function createRequestPayload(array $fingerprint, array $updates = [], array $se
         'updates' => $updates,
     ], ['X-Livewire' => 1])->assertOk();
 
-    return (new LivewireAttributesProvider())->toArray($providedRequest, test()->livewireManager);
+    return app(LivewireAttributesProvider::class)->toArray($providedRequest, test()->livewireManager);
 }

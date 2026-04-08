@@ -18,6 +18,7 @@ use Laravel\Octane\Events\RequestReceived;
 use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
+use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Spatie\FlareClient\Disabled\DisabledApplicationRecorder;
 use Spatie\FlareClient\Disabled\DisabledFlare;
@@ -30,6 +31,7 @@ use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Scopes\Scope;
 use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
 use Spatie\FlareClient\Support\GracefulSpanEnder;
+use Spatie\FlareClient\Support\StacktraceMapper;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelAttributesProvider;
 use Spatie\LaravelFlare\Commands\TestCommand;
@@ -41,8 +43,11 @@ use Spatie\LaravelFlare\Recorders\ContextRecorder\ContextRecorder;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
 use Spatie\LaravelFlare\Support\GracefulSpanEnder as LaravelGracefulSpanEnder;
+use Spatie\LaravelFlare\Support\LaravelStacktraceMapper;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 use Spatie\LaravelFlare\Support\Telemetry;
 use Spatie\LaravelFlare\Support\TracingKernel;
+use Spatie\LaravelFlare\Views\LivewireSingleFileComponentFrameMapper;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
 
@@ -95,12 +100,18 @@ class FlareServiceProvider extends ServiceProvider
 
         $this->app->singleton(GracefulSpanEnder::class, LaravelGracefulSpanEnder::class);
 
+        $this->app->singleton(LivewireComponentFinder::class);
+        $this->app->singleton(LivewireSingleFileComponentFrameMapper::class);
+        $this->app->singleton(ViewFrameMapper::class);
+
         $this->app->singleton(BaseBackTracer::class, fn () => new BackTracer(
             $this->app->make(ViewFrameMapper::class),
             $this->config->applicationPath
         ));
 
-        $this->app->singleton(ViewFrameMapper::class);
+        $this->app->extend(StacktraceMapper::class, fn () => new LaravelStacktraceMapper(
+            $this->app->make(ViewFrameMapper::class),
+        ));
 
         $this->app->singleton(BaseContextRecorder::class, fn () => new ContextRecorder(
             array_key_exists(LaravelCollectType::LaravelContext->value, $this->config->collects)
@@ -168,7 +179,7 @@ class FlareServiceProvider extends ServiceProvider
     {
         $this->app->singleton('flare.logger', function ($app) {
             if ($this->config->apiToken === null || $this->config->sendLogsAsEvents === false) {
-                return new Logger('Flare');
+                return (new Logger('Flare'))->pushHandler(new NullHandler());
             }
 
             $handler = new FlareLogHandler(
