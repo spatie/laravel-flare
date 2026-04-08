@@ -66,14 +66,25 @@ class LivewireComponentFinder
         return $this->finder?->resolveSingleFileComponentPath($name);
     }
 
-    public function findCurrentSingleFileComponentFile(): ?string
+    public function findCurrentComponentName(): ?string
     {
         $component = $this->livewire?->current();
 
-        if (! $component) {
+        if (! $component instanceof \Livewire\Component) {
             return null;
         }
 
-        return $this->findSingleFileComponentFile($component->getName());
+        return $component->getName();
+    }
+
+    public function findCurrentSingleFileComponentFile(): ?string
+    {
+        $name = $this->findCurrentComponentName();
+
+        if ($name === null) {
+            return null;
+        }
+
+        return $this->findSingleFileComponentFile($name);
     }
 }

@@ -94,7 +94,7 @@ class ViewRecorder extends BaseViewRecorder
             $viewName = $view->getName();
 
             if ($viewName === $view->getPath()) {
-                $viewName = $this->resolveFileBasedViewName($viewName);
+                $viewName = $this->livewireComponentFinder->findCurrentComponentName() ?? $viewName;
             }
 
             WrappedViewEngine::$currentView = $viewName;
@@ -112,20 +112,6 @@ class ViewRecorder extends BaseViewRecorder
         }
     }
 
-    protected function resolveFileBasedViewName(string $path): string
-    {
-        if (! $this->app->bound('livewire')) {
-            return $path;
-        }
-
-        $component = $this->app->make('livewire')->current();
-
-        if ($component === null) {
-            return $path;
-        }
-
-        return $component->getName();
-    }
 
     protected function resolveComponentClass(string $componentName): ?string
     {
