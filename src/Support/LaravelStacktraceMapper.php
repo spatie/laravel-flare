@@ -3,32 +3,28 @@
 namespace Spatie\LaravelFlare\Support;
 
 use Spatie\Backtrace\Frame;
-use Spatie\FlareClient\Support\BackTracer as BaseBackTracer;
+use Spatie\FlareClient\Support\StacktraceMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
+use Throwable;
 
-class BackTracer extends BaseBackTracer
+class LaravelStacktraceMapper extends StacktraceMapper
 {
     public function __construct(
         protected ViewFrameMapper $viewFrameMapper,
-        protected ?string $applicationPath,
     ) {
-        parent::__construct($applicationPath);
     }
 
-    public function frames(?int $limit = null): array
+    public function map(array $frames, ?Throwable $throwable): array
     {
-        return array_map(function (Frame $frame) {
+        $frames = array_map(function (Frame $frame) {
             if ($originalPath = $this->viewFrameMapper->findCompiledView($frame->file)) {
                 $frame->file = $originalPath;
                 $frame->lineNumber = $this->viewFrameMapper->getBladeLineNumber($frame->file, $frame->lineNumber);
             }
 
             return $frame;
-        }, parent::frames($limit));
-    }
+        }, $frames);
 
-    public function framesWithoutViewMapping(?int $limit = null): array
-    {
-        return parent::frames($limit);
+        return parent::map($frames, $throwable);
     }
 }

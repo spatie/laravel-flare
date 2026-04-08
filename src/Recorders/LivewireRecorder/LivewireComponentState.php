@@ -20,6 +20,7 @@ class LivewireComponentState
         public array $callingSpans = [],
         public ?string $stubbedId = null,
         public ?int $currentPhaseStartTime = null,
+        public bool $isSingleFileComponent = false,
     ) {
     }
 

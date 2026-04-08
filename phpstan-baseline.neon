@@ -121,6 +121,24 @@ parameters:
 			path: src/Support/CollectsResolver.php
 
 		-
+			message: '#^Call to an undefined method Spatie\\FlareClient\\Support\\BackTracer\:\:framesWithoutViewMapping\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/FlareMiddleware/AddExceptionHandledStatus.php
+
+		-
+			message: '#^Property Spatie\\LaravelFlare\\Support\\LivewireComponentFinder\:\:\$componentRegistry has unknown class Livewire\\Mechanisms\\ComponentRegistry as its type\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Support/LivewireComponentFinder.php
+
+		-
+			message: '#^Call to method getClass\(\) on an unknown class Livewire\\Mechanisms\\ComponentRegistry\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Support/LivewireComponentFinder.php
+
+		-
 			message: '#^Call to an undefined method Illuminate\\Contracts\\View\\Engine\:\:getCompiler\(\)\.$#'
 			identifier: method.notFound
 			count: 1

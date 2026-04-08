@@ -12,6 +12,7 @@ use Spatie\FlareClient\Recorders\ViewRecorder\ViewRecorder as BaseViewRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class ViewRecorder extends BaseViewRecorder
 {
@@ -23,7 +24,8 @@ class ViewRecorder extends BaseViewRecorder
         protected Dispatcher $dispatcher,
         BackTracer $backTracer,
         ArgumentReducers|null $argumentReducers,
-        array $config
+        array $config,
+        protected LivewireComponentFinder $livewireComponentFinder,
     ) {
         parent::__construct($tracer, $backTracer, $argumentReducers, $config);
     }
@@ -66,6 +68,18 @@ class ViewRecorder extends BaseViewRecorder
             $attributes['view.component.class'] = $componentClass;
         }
 
+        $singleFileComponentFile = $this->livewireComponentFinder->findCurrentSingleFileComponentFile();
+
+        if ($singleFileComponentFile) {
+            $file = $singleFileComponentFile;
+
+            $attributes['view.is_livewire_single_file_component'] = true;
+        }
+
+        if ($file !== null) {
+            $file = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $file);
+        }
+
         return parent::recordRendering($viewName, [], $file, $attributes);
     }
 
@@ -77,7 +91,13 @@ class ViewRecorder extends BaseViewRecorder
         $engines = array_values(array_unique($viewFactory->getExtensions()));
 
         $viewFactory->composer('*', function (View $view) {
-            WrappedViewEngine::$currentView = $view->getName();
+            $viewName = $view->getName();
+
+            if ($viewName === $view->getPath()) {
+                $viewName = $this->livewireComponentFinder->findCurrentComponentName() ?? $viewName;
+            }
+
+            WrappedViewEngine::$currentView = $viewName;
 
             return $view;
         });
@@ -91,6 +111,7 @@ class ViewRecorder extends BaseViewRecorder
             ));
         }
     }
+
 
     protected function resolveComponentClass(string $componentName): ?string
     {

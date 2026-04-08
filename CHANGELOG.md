@@ -2,6 +2,15 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 2.8.0 - 2026-04-08
+
+### What's Changed
+
+* Fix Livewire v4 SFC support in traces and stack traces by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/36
+* Group unmatched route 4xx errors under errors::{status_code} by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/37
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/2.7.2...2.8.0
+
 ## 2.7.2 - 2026-02-27
 
 Add support for Laravel 13

@@ -30,7 +30,10 @@ class FlareTracingMiddleware
             'horizon',
         ];
 
-        if (Str::startsWith($request->decodedPath(), $ignorePaths)) {
+        if (
+            Str::startsWith($request->decodedPath(), $ignorePaths)
+            || preg_match('/^livewire(-[a-f0-9]+)?\/livewire(\.min)?\.js/', $request->decodedPath())
+        ) {
             $this->tracer->unsample();
 
             return $next($request);

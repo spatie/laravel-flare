@@ -45,6 +45,7 @@ use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 use Spatie\LaravelFlare\Recorders\LivewireRecorder\LivewireRecorder;
 use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
+use Spatie\LaravelFlare\Recorders\RequestRecorder\RequestRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
 
@@ -112,7 +113,9 @@ class FlareConfig extends BaseFlareConfig
         array $extra = []
     ): array {
         $collects = [
-            CollectType::Requests->value => [],
+            CollectType::Requests->value => [
+                'group_unmatched_route_errors' => RequestRecorder::DEFAULT_GROUP_UNMATCHED_ROUTE_ERRORS,
+            ],
             CollectType::ErrorsWithTraces->value => [
                 'with_traces' => Tracer::DEFAULT_COLLECT_ERRORS_WITH_TRACES,
             ],

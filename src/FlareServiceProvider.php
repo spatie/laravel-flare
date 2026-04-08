@@ -17,6 +17,7 @@ use Laravel\Octane\Events\RequestReceived;
 use Laravel\Octane\Events\RequestTerminated;
 use Laravel\Octane\Events\TaskReceived;
 use Laravel\Octane\Events\TickReceived;
+use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use Spatie\FlareClient\Contracts\Recorders\Recorder;
 use Spatie\FlareClient\Enums\FlareMode;
@@ -41,7 +42,12 @@ use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\CollectsResolver;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
+use Spatie\LaravelFlare\Support\GracefulSpanEnder as LaravelGracefulSpanEnder;
+use Spatie\LaravelFlare\Support\LaravelStacktraceMapper;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 use Spatie\LaravelFlare\Support\Telemetry;
+use Spatie\LaravelFlare\Support\TracingKernel;
+use Spatie\LaravelFlare\Views\LivewireSingleFileComponentFrameMapper;
 use Spatie\LaravelFlare\Views\ViewExceptionMapper;
 use Spatie\LaravelFlare\Views\ViewFrameMapper;
 
@@ -128,12 +134,18 @@ class FlareServiceProvider extends ServiceProvider
 
         $this->provider->register();
 
+        $this->app->singleton(LivewireComponentFinder::class);
+        $this->app->singleton(LivewireSingleFileComponentFrameMapper::class);
+        $this->app->singleton(ViewFrameMapper::class);
+
         $this->app->singleton(BaseBackTracer::class, fn () => new BackTracer(
             $this->app->make(ViewFrameMapper::class),
             $this->config->applicationPath
         ));
 
-        $this->app->singleton(ViewFrameMapper::class);
+        $this->app->extend(StacktraceMapper::class, fn () => new LaravelStacktraceMapper(
+            $this->app->make(ViewFrameMapper::class),
+        ));
 
         $this->app->registered(fn () => $this->registeredTimeUnixNano = $this->app->get(Time::class)->getCurrentTime());
 
@@ -228,7 +240,7 @@ class FlareServiceProvider extends ServiceProvider
 
         Log::extend('flare', function ($app, $config) use ($mode) {
             if ($mode === FlareMode::Disabled) {
-                return new Logger('Flare');
+                return (new Logger('Flare'))->pushHandler(new NullHandler());
             }
 
             $handler = new FlareLogHandler(

@@ -70,7 +70,9 @@ class CollectsResolver extends BaseCollectsResolver
         $this->requestsMiddlewareClass = $middleware;
         $this->addMiddleware($middleware);
 
-        $this->addRecorder(RequestRecorder::class);
+        $this->addRecorder(RequestRecorder::class, $this->only($options, [
+            'group_unmatched_route_errors',
+        ]));
         $this->addRecorder(RoutingRecorder::class);
     }
 
@@ -128,16 +130,18 @@ class CollectsResolver extends BaseCollectsResolver
             return;
         }
 
+        if (! class_exists(Livewire::class)) {
+            return;
+        }
+
         $this->middlewares[$this->requestsMiddlewareClass]['include_livewire_components'] = $options['include_livewire_components'] ?? false;
         $this->middlewares[$this->requestsMiddlewareClass]['ignore_livewire_components'] = $options['ignore'] ?? [];
 
-        if (class_exists(Livewire::class)) {
-            $this->addRecorder($options['middleware'] ?? LivewireRecorder::class, $this->only($options, [
-                'with_traces',
-                'ignore',
-                'split_by_phase',
-            ]));
-        }
+        $this->addRecorder($options['middleware'] ?? LivewireRecorder::class, $this->only($options, [
+            'with_traces',
+            'ignore',
+            'split_by_phase',
+        ]));
     }
 
     protected function views(array $options): void
