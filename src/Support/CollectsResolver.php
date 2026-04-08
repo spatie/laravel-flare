@@ -52,7 +52,9 @@ class CollectsResolver extends BaseCollectsResolver
         $this->requestsMiddlewareClass = $middleware;
         $this->addMiddleware($middleware);
 
-        $this->addRecorder(RequestRecorder::class);
+        $this->addRecorder(RequestRecorder::class, $this->only($options, [
+            'group_unmatched_route_errors',
+        ]));
         $this->addRecorder(RoutingRecorder::class);
     }
 
