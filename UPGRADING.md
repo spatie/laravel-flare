@@ -15,10 +15,20 @@ cover. We accept PRs to improve this guide.
 
 ### Logging setup changed
 
-Flare now has a dedicated logging system available, you enable it as such:
+Flare now has a dedicated logging system available. If you want to use it, configure the daemon sender and route logs to the `flare` channel:
 
-1. **Add** `'log' => true` to your `config/flare.php` to enable the new standalone log shipping feature.
-2. **Route logs to flare**  add the `flare` channel in your `config/logging.php`:
+1. **Enable logging and use the daemon sender** in `config/flare.php`:
+    ```php
+    'log' => true,
+
+    'sender' => [
+        'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
+        'config' => [
+            'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
+        ],
+    ],
+    ```
+2. **Route logs to flare** add the `flare` channel in your `config/logging.php`:
     ```php
     'channels' => [
        'flare' => [
@@ -30,7 +40,11 @@ Flare now has a dedicated logging system available, you enable it as such:
     ```
     LOG_STACK=single,flare
     ```
-   
+
+If you keep the defaults, the daemon sender talks to `http://127.0.0.1:8787` and uses its built-in timeout and fallback behavior. Test payloads still talk directly to the daemon and do not fall back.
+
+> TODO: add proper Laravel-specific instructions for actually running the Flare daemon alongside the app. This likely needs concrete guidance on whether it should be started via a dedicated process manager, an Artisan wrapper command, or another recommended deployment pattern.
+
 ### The base Flare client package
 
 Was also completely rewritten, we recommend you to also check the [upgrade guide](https://github.com/spatie/flare-client-php/blob/main/UPGRADING.md) for that package.
