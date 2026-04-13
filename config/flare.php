@@ -103,7 +103,11 @@ return [
     |--------------------------------------------------------------------------
     |
     | The sender is responsible for sending the error reports and traces to
-    | Flare it can be configured if needed.
+    | Flare. By default, Laravel Flare sends them over HTTP. To use the local
+    | Flare daemon, switch the sender class to
+    | `Spatie\FlareClient\Senders\DaemonSender::class` and set `daemon_url`.
+    | The daemon sender defaults to localhost on port 8787 and uses its own
+    | default timeouts and fallback sender config unless you override them.
     |
     */
 
@@ -113,6 +117,20 @@ return [
             'timeout' => 10,
         ],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Daemon sender example
+    |--------------------------------------------------------------------------
+    |
+    | 'sender' => [
+    |     'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
+    |     'config' => [
+    |         'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
+    |     ],
+    | ],
+    |
+    */
 
     /*
     |--------------------------------------------------------------------------
