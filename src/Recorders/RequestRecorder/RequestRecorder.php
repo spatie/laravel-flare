@@ -7,6 +7,7 @@ use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Recorders\RequestRecorder\RequestRecorder as BaseRequestRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class RequestRecorder extends BaseRequestRecorder
 {
@@ -42,10 +43,11 @@ class RequestRecorder extends BaseRequestRecorder
     }
 
     public function recordEnd(
-        ?int $responseStatusCode = null,
-        ?int $responseBodySize = null,
+        ?Response $response = null,
         array $attributes = [],
     ): ?Span {
+        $responseStatusCode = $response?->getStatusCode();
+
         if (
             $this->groupUnmatchedRouteErrors
             && $responseStatusCode !== null
@@ -56,6 +58,6 @@ class RequestRecorder extends BaseRequestRecorder
             $attributes['http.route'] = "errors::{$responseStatusCode}";
         }
 
-        return parent::recordEnd($responseStatusCode, $responseBodySize, $attributes);
+        return parent::recordEnd($response, $attributes);
     }
 }
