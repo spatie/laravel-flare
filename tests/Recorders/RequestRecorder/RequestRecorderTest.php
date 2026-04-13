@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
+use Symfony\Component\HttpFoundation\Response;
 
 it('groups unmatched 4xx responses when ending a request span', function () {
     $flare = setupFlare(alwaysSampleTraces: true);
