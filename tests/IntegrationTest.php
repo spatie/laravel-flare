@@ -1009,8 +1009,7 @@ describe('Laravel integration', function () {
         $workspace = ExpectSentPayloads::get('/trigger-fail-job-after-response');
 
         // 2 reports: the job exception and a cascading "Cannot modify header
-        // information" error caused by Laravel's SyncQueue re-throwing the exception
-        // during termination, which triggers a 500 response after headers were sent.
+        // information" error when Laravel tries to render after headers were sent.
         $workspace->assertSent(reports: 2, traces: 1);
 
         $httpTrace = $workspace->trace(0);
