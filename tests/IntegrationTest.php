@@ -1008,6 +1008,11 @@ describe('Laravel integration', function () {
     it('can handle a failed job dispatched after response', function () {
         $workspace = ExpectSentPayloads::get('/trigger-fail-job-after-response');
 
+        // When SyncQueue re-throws the job exception during termination, Laravel
+        // tries to render an error response after headers were already sent. On
+        // macOS this produces a second "Cannot modify header information" report,
+        // on Linux the PHP process handles it differently. We only assert the
+        // job exception report is present, not an exact count.
         $workspace->assertSent(reports: null, traces: 1);
         expect(count($workspace->reports))->toBeGreaterThanOrEqual(1);
 
