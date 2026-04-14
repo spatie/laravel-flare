@@ -1414,7 +1414,7 @@ describe('Laravel integration', function () {
         $trace->expectSpan(LaravelSpanType::LivewireComponentDehydrating)
             ->expectParentId($componentSpan)
             ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
-    })->skip();
+    });
 
     // Logs
 
