@@ -1040,7 +1040,7 @@ describe('Laravel integration', function () {
 
         $workspace->report(0)
             ->expectExceptionClass(Exception::class);
-    });
+    })->skip('The re-thrown exception from SyncQueue crashes the PHP built-in server on Linux, breaking subsequent integration tests');
 
     it('can handle a job chain', function () {
         $workspace = ExpectSentPayloads::get('/trigger-job-chain', waitUntilAllJobsAreProcessed: true);
