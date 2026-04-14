@@ -41,9 +41,9 @@ it('can trace jobs failures', function () {
 
     try {
         dispatch(function () {
-            throw new Exception('Failed');
+            throw new \Exception('Failed');
         })->onConnection('sync');
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
         $this->assertNotNull($e);
     }
 
@@ -69,7 +69,7 @@ it('can trace and at the same time report job exceptions', function () {
     $flare->tracer->startTrace();
 
     dispatch(function () {
-        app(Flare::class)->reportHandled(new Exception('Failed'));
+        app(Flare::class)->reportHandled(new \Exception('Failed'));
     })->onConnection('sync');
 
     $flare->tracer->endTrace();
