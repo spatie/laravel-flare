@@ -508,6 +508,25 @@ describe('Laravel integration', function () {
 
     // Exceptions
 
+    it('can handle an exception that exceeds the span limit', function () {
+        $workspace = ExpectSentPayloads::get('/exception-exceeding-span-limit');
+
+        $workspace->assertSent(reports: 1, traces: 1);
+
+        $trace = $workspace->lastTrace();
+
+        $trace->expectSpanCount(1024);
+
+        $trace->expectLifecycle(terminating: false);
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 500);
+
+        $workspace->lastReport()
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Test exception with span limit exceeded');
+    });
+
     it('can handle an exception route', function () {
         $workspace = ExpectSentPayloads::get('/exception');
 
@@ -989,7 +1008,10 @@ describe('Laravel integration', function () {
     it('can handle a failed job dispatched after response', function () {
         $workspace = ExpectSentPayloads::get('/trigger-fail-job-after-response');
 
-        $workspace->assertSent(reports: 1, traces: 1);
+        // 2 reports: the job exception and a cascading "Cannot modify header
+        // information" error caused by Laravel's SyncQueue re-throwing the exception
+        // during termination, which triggers a 500 response after headers were sent.
+        $workspace->assertSent(reports: 2, traces: 1);
 
         $httpTrace = $workspace->trace(0);
 
@@ -1013,7 +1035,7 @@ describe('Laravel integration', function () {
 
         $httpTrace->expectSpanCount(0, LaravelSpanType::Queueing);
 
-        $workspace->lastReport()
+        $workspace->report(0)
             ->expectExceptionClass(Exception::class);
     });
 

@@ -24,6 +24,31 @@ We highly appreciate you sending us a postcard from your hometown, mentioning wh
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
 
+## Testing
+
+The test suite includes integration tests that require a running workbench server. To run the full test suite locally:
+
+```bash
+# Install dependencies
+composer install
+
+# Build the workbench application
+composer run build
+
+# Start the workbench server and queue worker in the background
+vendor/bin/testbench serve &
+vendor/bin/testbench queue:work &
+
+# Wait for the workbench/storage symlink to be created, then run tests
+vendor/bin/pest
+```
+
+To run only the unit tests (without the workbench server):
+
+```bash
+vendor/bin/pest --exclude-group=integration
+```
+
 ## Contributing
 
 Please see [CONTRIBUTING](https://github.com/spatie/.github/blob/main/CONTRIBUTING.md) for details.

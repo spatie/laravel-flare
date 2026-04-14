@@ -226,7 +226,7 @@ return [
     |
     */
     'trace_limits' => [
-        'max_spans' => 512,
+        'max_spans' => 1024,
         'max_attributes_per_span' => 128,
         'max_span_events_per_span' => 128,
         'max_attributes_per_span_event' => 128,

@@ -91,6 +91,19 @@ Route::get('random-status', function () {
 })->name('random-status');
 
 // Exceptions
+Route::get('exception-exceeding-span-limit', function () {
+    $tracer = app(\Spatie\FlareClient\Tracer::class);
+
+    for ($i = 0; $i < 1100; $i++) {
+        $result = $tracer->startSpan("span-{$i}");
+
+        if ($result instanceof \Spatie\FlareClient\Spans\Span) {
+            $tracer->endSpan($result);
+        }
+    }
+
+    throw new Exception('Test exception with span limit exceeded');
+});
 Route::get('exception', fn () => throw new Exception('Test exception'));
 Route::get('handled-exception', function () {
     try {

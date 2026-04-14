@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Spatie\FlareClient\Enums\LifecycleStage;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanStatusCode;
@@ -34,16 +35,6 @@ class JobRecorder extends SpansRecorder
 
     /** @var array<class-string> */
     protected array $ignore = [];
-
-    // TODO: test this on vapor:
-    // 1) Create a job with error
-    // 2) We do all tracing correctly and store some breadcrumbs
-    // 3) The subtask ends, so the error is sent
-    // 4) We're now in limbo
-    // 5) Error handling happens and a report is stored within the API
-    // 6) The shutdown function probably won't run, lifecycle won't flush the latest data
-    // 7) Our error is lost
-    // Also test tracing and exceptions on regular requests and jobs
 
     public function __construct(
         Tracer $tracer,
@@ -181,6 +172,12 @@ class JobRecorder extends SpansRecorder
         }
 
         $this->lifecycle->endSubtask();
+
+        // When using dispatchAfterResponse and the job fails, we never reach the lifecyle terlinated stage
+        // due to Laravel trying to render errors. So when this happens terminate here.
+        if ($this->lifecycle->getStage() === LifecycleStage::Terminating) {
+            $this->lifecycle->terminated();
+        }
     }
 
     protected function shouldIgnore(Job $job): bool
