@@ -1,5 +1,6 @@
 <?php
 
+use Composer\InstalledVersions;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\CallQueuedClosure;
@@ -22,6 +23,7 @@ use Workbench\App\Jobs\NestedJob;
 use Workbench\App\Jobs\ReleaseJob;
 use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\Livewire\Counter;
+use Workbench\App\Livewire\Wired;
 use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\PostFactory;
@@ -1040,7 +1042,7 @@ describe('Laravel integration', function () {
 
         $workspace->report(0)
             ->expectExceptionClass(Exception::class);
-    })->skip('The re-thrown exception from SyncQueue crashes the PHP built-in server on Linux, breaking subsequent integration tests');
+    });
 
     it('can handle a job chain', function () {
         $workspace = ExpectSentPayloads::get('/trigger-job-chain', waitUntilAllJobsAreProcessed: true);
@@ -1370,7 +1372,7 @@ describe('Laravel integration', function () {
 
     // Livewire
 
-    it('can handle a basic livewire component', function () {
+    it('can handle a regular livewire component with mount', function () {
         $workspace = ExpectSentPayloads::get('/livewire');
 
         $workspace->assertSent(traces: 1);
@@ -1384,7 +1386,7 @@ describe('Laravel integration', function () {
             ->expectSpan(LaravelSpanType::LivewireComponent)
             ->expectParentId($requestSpan)
             ->expectAttribute('livewire.component.class', Counter::class)
-            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter')
+            ->expectAttribute('livewire.component.name', 'counter')
             ->expectAttribute('view.name', 'livewire.counter')
             ->expectHasAttribute('livewire.component.phase.mounting')
             ->expectHasAttribute('livewire.component.phase.rendering')
@@ -1392,17 +1394,16 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(LaravelSpanType::LivewireComponentMounting)
             ->expectParentId($componentSpan)
-            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
+            ->expectAttribute('livewire.component.name', 'counter');
 
         $componentRenderingSpan = $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
             ->expectParentId($componentSpan)
-            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
+            ->expectAttribute('livewire.component.name', 'counter');
 
         $trace->expectSpans(
             SpanType::View,
             fn (ExpectSpan $span) => $span
                 ->expectParentId($componentRenderingSpan)
-                ->expectAttribute('view.name', 'livewire.counter')
                 ->expectAttribute('view.name', 'livewire.counter')
                 ->expectHasAttribute('view.file'),
             fn (ExpectSpan $span) => $span
@@ -1413,8 +1414,136 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(LaravelSpanType::LivewireComponentDehydrating)
             ->expectParentId($componentSpan)
-            ->expectAttribute('livewire.component.name', 'workbench.app.livewire.counter');
+            ->expectAttribute('livewire.component.name', 'counter');
     });
+
+    it('can handle an inline livewire component', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-wired');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $requestSpan = $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $componentSpan = $trace
+            ->expectSpan(LaravelSpanType::LivewireComponent)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('livewire.component.class', Wired::class)
+            ->expectAttribute('livewire.component.name', 'wired')
+            ->expectAttribute('livewire.component.single_file_component', false)
+            ->expectHasAttribute('livewire.component.phase.mounting')
+            ->expectHasAttribute('livewire.component.phase.rendering')
+            ->expectHasAttribute('livewire.component.phase.dehydrating');
+    });
+
+    it('can handle a single file component', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-sfc');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $requestSpan = $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $componentSpan = $trace
+            ->expectSpan(LaravelSpanType::LivewireComponent)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('livewire.component.name', 'single-file-counter')
+            ->expectAttribute('livewire.component.single_file_component', true)
+            ->expectHasAttribute('view.file')
+            ->expectHasAttribute('livewire.component.phase.mounting')
+            ->expectHasAttribute('livewire.component.phase.rendering')
+            ->expectHasAttribute('livewire.component.phase.dehydrating');
+    })->skip(
+        version_compare(InstalledVersions::getVersion('livewire/livewire'), '4.0.0', '<'),
+        'Single file components require Livewire 4'
+    );
+
+    it('can handle a nested livewire component', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-nested');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $requestSpan = $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $trace->expectSpans(
+            LaravelSpanType::LivewireComponent,
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($requestSpan)
+                ->expectAttribute('livewire.component.name', 'nested'),
+            fn (ExpectSpan $span) => $span
+                ->expectAttribute('livewire.component.name', 'counter')
+                ->expectAttribute('livewire.component.class', Counter::class),
+        );
+    });
+
+    it('can handle a livewire mount exception', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-mount-exception');
+
+        $workspace->assertSent(reports: null, traces: 1);
+        expect(count($workspace->reports))->toBeGreaterThanOrEqual(1);
+
+        $trace = $workspace->lastTrace();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 500);
+
+        $workspace->report(0)
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('We failed');
+    });
+
+    it('can handle a livewire view exception', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-view-exception');
+
+        $workspace->assertSent(reports: null, traces: 1);
+        expect(count($workspace->reports))->toBeGreaterThanOrEqual(1);
+
+        $trace = $workspace->lastTrace();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 500);
+
+        $workspace->report(0)
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Exception in Livewire view');
+    });
+
+    it('can handle a nested livewire view exception', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-nested-view-exception');
+
+        $workspace->assertSent(reports: null, traces: 1);
+        expect(count($workspace->reports))->toBeGreaterThanOrEqual(1);
+
+        $trace = $workspace->lastTrace();
+
+        $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 500);
+
+        $workspace->report(0)
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('Exception in Livewire view');
+    });
+
+    it('can handle a single file component mount exception', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-sfc-exception');
+
+        $workspace->assertSent(reports: null, traces: 1);
+        expect(count($workspace->reports))->toBeGreaterThanOrEqual(1);
+
+        $workspace->report(0)
+            ->expectExceptionClass(Exception::class)
+            ->expectMessage('SFC exception in mount');
+    })->skip(
+        version_compare(InstalledVersions::getVersion('livewire/livewire'), '4.0.0', '<'),
+        'Single file components require Livewire 4'
+    );
 
     // Logs
 

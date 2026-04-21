@@ -18,7 +18,8 @@ use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Senders\Exceptions\BadResponseCode;
 use Spatie\FlareClient\Support\Tester;
 
-class TestCommand extends Command
+class
+TestCommand extends Command
 {
     protected $signature = 'flare:test {--errors} {--logs} {--traces}';
 
