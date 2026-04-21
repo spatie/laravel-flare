@@ -3,8 +3,6 @@
 namespace Spatie\LaravelFlare\Tests\TestClasses;
 
 use Exception;
-use GuzzleHttp\Exception\ConnectException;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -150,26 +148,11 @@ class ExpectSentPayloads
     ): void {
         $client = Http::timeout(2)->baseUrl($this->url);
 
-        try {
-            $response = match ($this->method) {
-                'get' => $client->get($this->endpoint),
-                'post' => $client->post($this->endpoint, $this->params),
-                default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
-            };
-        } catch (ConnectException|ConnectionException $e) {
-            if (! $this->restartServer()) {
-                throw new Exception('Workbench server is not running. Please start it by running `composer run serve`');
-            }
-
-            try {
-                $response = match ($this->method) {
-                    'get' => $client->get($this->endpoint),
-                    'post' => $client->post($this->endpoint, $this->params),
-                };
-            } catch (ConnectException|ConnectionException $e) {
-                throw new Exception('Workbench server is not running after restart attempt.');
-            }
-        }
+        $response = match ($this->method) {
+            'get' => $client->get($this->endpoint),
+            'post' => $client->post($this->endpoint, $this->params),
+            default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
+        };
 
         $this->wait(
             waitAtLeastMs: $waitAtLeastMs,
@@ -212,27 +195,6 @@ class ExpectSentPayloads
         $this->reports = array_values($this->reports);
         $this->traces = array_values($this->traces);
         $this->logs = array_values($this->logs);
-    }
-
-    protected function restartServer(): bool
-    {
-        $testbench = __DIR__ . '/../../vendor/bin/testbench';
-
-        exec("php {$testbench} serve --port=8000 > /dev/null 2>&1 &");
-        exec("php {$testbench} queue:work > /dev/null 2>&1 &");
-
-        for ($i = 0; $i < 50; $i++) {
-            usleep(100_000);
-
-            try {
-                Http::timeout(1)->baseUrl($this->url)->get('/');
-
-                return true;
-            } catch (ConnectException|ConnectionException) {
-            }
-        }
-
-        return false;
     }
 
     protected function wait(

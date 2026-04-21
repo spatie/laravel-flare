@@ -5,7 +5,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Queue\MaxAttemptsExceededException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\DynamicComponent;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanType;
@@ -14,6 +13,7 @@ use Spatie\FlareClient\Tests\Shared\ExpectSpan;
 use Spatie\FlareClient\Tests\Shared\ExpectSpanEvent;
 use Spatie\LaravelFlare\Enums\SpanType as LaravelSpanType;
 use Spatie\LaravelFlare\Tests\TestClasses\ExpectSentPayloads;
+use Spatie\LaravelFlare\Tests\TestClasses\Workspace;
 use Workbench\App\Http\Controllers\InvokableController;
 use Workbench\App\Http\Controllers\ResourceController;
 use Workbench\App\Jobs\BatchedJob;
@@ -28,13 +28,15 @@ use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\PostFactory;
 
-beforeEach(function () {
-    if (PHP_OS_FAMILY === 'Windows') {
-        return;
-    }
-});
-
 describe('Laravel integration', function () {
+    beforeEach(function () {
+        Workspace::start();
+    });
+
+    afterEach(function () {
+        Workspace::stop();
+    });
+
     // Requests
 
     it('can get a simple welcome page trace', function () {
@@ -159,8 +161,6 @@ describe('Laravel integration', function () {
     });
 
     it('can track a route with model binding missing', function () {
-        DB::table('posts')->delete(); // Cleanup from previous tests
-
         $workspace = ExpectSentPayloads::get('/model-binding-route/1');
 
         $workspace->assertSent(traces: 1);
