@@ -42,6 +42,7 @@ use Spatie\LaravelFlare\Http\RouteDispatchers\ControllerRouteDispatcher;
 use Spatie\LaravelFlare\Support\BackTracer;
 use Spatie\LaravelFlare\Support\CollectsResolver;
 use Spatie\LaravelFlare\Support\FlareLogHandler;
+use Spatie\FlareClient\Support\StacktraceMapper;
 use Spatie\LaravelFlare\Support\LaravelStacktraceMapper;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 use Spatie\LaravelFlare\Support\Telemetry;

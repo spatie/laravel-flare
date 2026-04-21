@@ -41,7 +41,7 @@ class JobRecorder extends SpansRecorder
         BackTracer $backTracer,
         protected Dispatcher $dispatcher,
         protected LaravelJobAttributesProvider $laravelJobAttributesProvider,
-        protected LifeCycle $lifecycle,
+        protected Lifecycle $lifecycle,
         array $config
     ) {
         parent::__construct($tracer, $backTracer, $config);

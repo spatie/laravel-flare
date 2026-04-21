@@ -109,12 +109,6 @@ parameters:
 			path: src/FlareServiceProvider.php
 
 		-
-			message: '#^Parameter \#1 \$response of method Spatie\\LaravelFlare\\Senders\\LaravelHttpSender\:\:handleResponse\(\) expects Illuminate\\Http\\Client\\Response, GuzzleHttp\\Promise\\PromiseInterface\|Illuminate\\Http\\Client\\Response given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/Senders/LaravelHttpSender.php
-
-		-
 			message: '#^Property Spatie\\FlareClient\\Support\\CollectsResolver\:\:\$middlewares \(array\<class\-string\<Spatie\\FlareClient\\FlareMiddleware\\FlareMiddleware\>, array\<string, mixed\>\>\) does not accept array\<string, array\<string, mixed\>\>\.$#'
 			identifier: assign.propertyType
 			count: 2
