@@ -29,7 +29,7 @@
     },
     "require-dev": {
         "laravel/serializable-closure": "^2.0",
-        "livewire/livewire": "^3.6.0|^4.1",
+        "livewire/livewire": "^3.6.0|^4.2",
         "mockery/mockery": "^1.6.12",
         "openai-php/client": "^0.8.5",
         "orchestra/testbench": "^9.14|^10.8|^11.0",
