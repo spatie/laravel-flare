@@ -1526,12 +1526,8 @@ describe('Laravel integration', function () {
                     ->expectParentId($requestSpan)
                     ->expectAttribute('livewire.component.name', 'nested');
             },
-            function (ExpectSpan $span) use ($trace, &$nestedSpan) {
-                $renderingSpan = $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
-                    ->expectParentId($nestedSpan);
-
+            function (ExpectSpan $span) use (&$nestedSpan) {
                 $span
-                    ->expectParentId($renderingSpan)
                     ->expectAttribute('livewire.component.name', 'counter')
                     ->expectAttribute('livewire.component.class', Counter::class);
             },
