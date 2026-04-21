@@ -216,7 +216,7 @@ class ExpectSentPayloads
 
     protected function restartServer(): bool
     {
-        $testbench = base_path('vendor/bin/testbench');
+        $testbench = __DIR__ . '/../../vendor/bin/testbench';
 
         exec("php {$testbench} serve --port=8000 > /dev/null 2>&1 &");
         exec("php {$testbench} queue:work > /dev/null 2>&1 &");
