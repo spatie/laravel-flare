@@ -31,12 +31,11 @@ use Workbench\App\Jobs\NestedJob;
 use Workbench\App\Jobs\ReleaseJob;
 use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\Livewire\Counter;
-use Workbench\App\Livewire\Full;
 use Workbench\App\Livewire\MountException;
 use Workbench\App\Livewire\Nested;
 use Workbench\App\Livewire\NestedViewException;
 use Workbench\App\Livewire\ViewException;
-use Workbench\App\Livewire\Wired;
+use Workbench\App\Livewire\Inline;
 use Workbench\App\Models\Post;
 use Workbench\App\Models\User;
 
@@ -295,22 +294,19 @@ Route::get('trigger-batch', function () {
 
 Route::get('livewire', Counter::class);
 Route::get('livewire-nested', Nested::class);
-Route::get('livewire-full/{name?}', Full::class);
-Route::get('livewire-wired', Wired::class);
-Route::get('livewire-old-route', Counter::class);
+Route::get('livewire-inline', Inline::class);
 Route::get('livewire-mount-exception', MountException::class);
 Route::get('livewire-view-exception', ViewException::class);
 Route::get('livewire-nested-view-exception', NestedViewException::class);
 
 if (version_compare(InstalledVersions::getVersion('livewire/livewire'), '4.0.0', '>=')) {
-    $sfcRoute = function (string $uri, string $component) {
-        return tap(Route::get($uri, \Livewire\Mechanisms\HandleRouting\LivewirePageController::class), function ($route) use ($component) {
-            $route->action['livewire_component'] = $component;
-        });
-    };
+    $livewireRoute = fn (string $uri, string $component) => tap(
+        Route::get($uri, \Livewire\Mechanisms\HandleRouting\LivewirePageController::class),
+        fn ($route) => $route->action['livewire_component'] = $component
+    );
 
-    $sfcRoute('livewire-sfc', 'single-file-counter');
-    $sfcRoute('livewire-sfc-exception', 'sfc-exception');
+    $livewireRoute('livewire-sfc', 'single-file-counter');
+    $livewireRoute('livewire-sfc-exception', 'sfc-exception');
 }
 
 // Logs

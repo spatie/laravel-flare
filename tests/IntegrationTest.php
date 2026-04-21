@@ -23,7 +23,7 @@ use Workbench\App\Jobs\NestedJob;
 use Workbench\App\Jobs\ReleaseJob;
 use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\Livewire\Counter;
-use Workbench\App\Livewire\Wired;
+use Workbench\App\Livewire\Inline;
 use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\PostFactory;
@@ -1387,6 +1387,7 @@ describe('Laravel integration', function () {
             ->expectParentId($requestSpan)
             ->expectAttribute('livewire.component.class', Counter::class)
             ->expectAttribute('livewire.component.name', 'counter')
+            ->expectAttribute('livewire.component.single_file_component', false)
             ->expectAttribute('view.name', 'livewire.counter')
             ->expectHasAttribute('livewire.component.phase.mounting')
             ->expectHasAttribute('livewire.component.phase.rendering')
@@ -1418,7 +1419,7 @@ describe('Laravel integration', function () {
     });
 
     it('can handle an inline livewire component', function () {
-        $workspace = ExpectSentPayloads::get('/livewire-wired');
+        $workspace = ExpectSentPayloads::get('/livewire-inline');
 
         $workspace->assertSent(traces: 1);
 
@@ -1430,12 +1431,33 @@ describe('Laravel integration', function () {
         $componentSpan = $trace
             ->expectSpan(LaravelSpanType::LivewireComponent)
             ->expectParentId($requestSpan)
-            ->expectAttribute('livewire.component.class', Wired::class)
-            ->expectAttribute('livewire.component.name', 'wired')
+            ->expectAttribute('livewire.component.class', Inline::class)
+            ->expectAttribute('livewire.component.name', 'inline')
             ->expectAttribute('livewire.component.single_file_component', false)
+            ->expectMissingAttribute('view.name')
             ->expectHasAttribute('livewire.component.phase.mounting')
             ->expectHasAttribute('livewire.component.phase.rendering')
             ->expectHasAttribute('livewire.component.phase.dehydrating');
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentMounting)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'inline');
+
+        $renderingSpan = $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'inline');
+
+        // Inline components render HTML directly, so no view span under rendering
+        $trace->expectSpans(
+            SpanType::View,
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($requestSpan)
+                ->expectAttribute('view.name', 'components.layouts.app'),
+        );
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentDehydrating)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'inline');
     });
 
     it('can handle a single file component', function () {
@@ -1453,10 +1475,35 @@ describe('Laravel integration', function () {
             ->expectParentId($requestSpan)
             ->expectAttribute('livewire.component.name', 'single-file-counter')
             ->expectAttribute('livewire.component.single_file_component', true)
-            ->expectHasAttribute('view.file')
+            ->expectMissingAttribute('livewire.component.class')
+            ->expectAttribute('view.file', fn (string $value) => expect($value)->toEndWith('single-file-counter.blade.php'))
+            ->expectMissingAttribute('view.name')
             ->expectHasAttribute('livewire.component.phase.mounting')
             ->expectHasAttribute('livewire.component.phase.rendering')
             ->expectHasAttribute('livewire.component.phase.dehydrating');
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentMounting)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'single-file-counter');
+
+        $renderingSpan = $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'single-file-counter');
+
+        $trace->expectSpans(
+            SpanType::View,
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($renderingSpan)
+                ->expectAttribute('view.file', fn (string $value) => expect($value)->toEndWith('single-file-counter.blade.php'))
+                ->expectAttribute('view.is_livewire_single_file_component', true),
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($requestSpan)
+                ->expectAttribute('view.name', 'components.layouts.app'),
+        );
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentDehydrating)
+            ->expectParentId($componentSpan)
+            ->expectAttribute('livewire.component.name', 'single-file-counter');
     })->skip(
         version_compare(InstalledVersions::getVersion('livewire/livewire'), '4.0.0', '<'),
         'Single file components require Livewire 4'
@@ -1474,12 +1521,20 @@ describe('Laravel integration', function () {
 
         $trace->expectSpans(
             LaravelSpanType::LivewireComponent,
-            fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
-                ->expectAttribute('livewire.component.name', 'nested'),
-            fn (ExpectSpan $span) => $span
-                ->expectAttribute('livewire.component.name', 'counter')
-                ->expectAttribute('livewire.component.class', Counter::class),
+            function (ExpectSpan $span) use ($requestSpan, &$nestedSpan) {
+                $nestedSpan = $span
+                    ->expectParentId($requestSpan)
+                    ->expectAttribute('livewire.component.name', 'nested');
+            },
+            function (ExpectSpan $span) use ($trace, &$nestedSpan) {
+                $renderingSpan = $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
+                    ->expectParentId($nestedSpan);
+
+                $span
+                    ->expectParentId($renderingSpan)
+                    ->expectAttribute('livewire.component.name', 'counter')
+                    ->expectAttribute('livewire.component.class', Counter::class);
+            },
         );
     });
 
@@ -1489,10 +1544,21 @@ describe('Laravel integration', function () {
         $workspace->assertSent(reports: null, traces: 1);
         expect(count($workspace->reports))->toBeGreaterThanOrEqual(1);
 
-        $trace = $workspace->lastTrace();
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $trace->expectSpan(SpanType::Request)
+        $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
+
+        $componentSpan = $trace->expectSpan(LaravelSpanType::LivewireComponent)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('livewire.component.name', 'mount-exception')
+            ->expectHasAttribute('livewire.component.phase.mounting');
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentMounting)
+            ->expectParentId($componentSpan);
+
+        $trace->expectSpanCount(0, LaravelSpanType::LivewireComponentRendering);
+        $trace->expectSpanCount(0, LaravelSpanType::LivewireComponentDehydrating);
 
         $workspace->report(0)
             ->expectExceptionClass(Exception::class)
@@ -1505,10 +1571,24 @@ describe('Laravel integration', function () {
         $workspace->assertSent(reports: null, traces: 1);
         expect(count($workspace->reports))->toBeGreaterThanOrEqual(1);
 
-        $trace = $workspace->lastTrace();
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $trace->expectSpan(SpanType::Request)
+        $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
+
+        $componentSpan = $trace->expectSpan(LaravelSpanType::LivewireComponent)
+            ->expectParentId($requestSpan)
+            ->expectAttribute('livewire.component.name', 'view-exception')
+            ->expectAttribute('livewire.component.class', \Workbench\App\Livewire\ViewException::class)
+            ->expectHasAttribute('livewire.component.phase.mounting');
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentMounting)
+            ->expectParentId($componentSpan);
+
+        $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
+            ->expectParentId($componentSpan);
+
+        $trace->expectSpanCount(0, LaravelSpanType::LivewireComponentDehydrating);
 
         $workspace->report(0)
             ->expectExceptionClass(Exception::class)

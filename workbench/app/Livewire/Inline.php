@@ -4,7 +4,7 @@ namespace Workbench\App\Livewire;
 
 use Livewire\Component;
 
-class Wired extends Component
+class Inline extends Component
 {
     public string $name;
 

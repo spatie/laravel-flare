@@ -7,13 +7,11 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Workbench\App\Livewire\Counter;
-use Workbench\App\Livewire\Full;
+use Workbench\App\Livewire\Inline;
 use Workbench\App\Livewire\MountException;
 use Workbench\App\Livewire\Nested;
 use Workbench\App\Livewire\NestedViewException;
-use Workbench\App\Livewire\RandomUser;
 use Workbench\App\Livewire\ViewException;
-use Workbench\App\Livewire\Wired;
 
 class WorkbenchServiceProvider extends ServiceProvider
 {
@@ -47,9 +45,7 @@ class WorkbenchServiceProvider extends ServiceProvider
 
         Livewire::component('counter', Counter::class);
         Livewire::component('nested', Nested::class);
-        Livewire::component('full', Full::class);
-        Livewire::component('wired', Wired::class);
-        Livewire::component('random-user', RandomUser::class);
+        Livewire::component('inline', Inline::class);
         Livewire::component('mount-exception', MountException::class);
         Livewire::component('view-exception', ViewException::class);
         Livewire::component('nested-view-exception', NestedViewException::class);

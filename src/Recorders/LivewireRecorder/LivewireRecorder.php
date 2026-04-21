@@ -269,7 +269,6 @@ class LivewireRecorder extends SpansRecorder
             attributes: [
                 'flare.span_type' => SpanType::LivewireComponentCall,
                 'livewire.component.name' => $component->getName(),
-                'livewire.component.phase' => LivewireComponentPhase::Calling,
                 'livewire.component.call.method' => $method,
                 'livewire.component.call.params' => $params,
             ],
@@ -296,7 +295,7 @@ class LivewireRecorder extends SpansRecorder
             $componentState->span->addAttribute('view.file', str_replace(base_path() . DIRECTORY_SEPARATOR, '', $viewFile));
         }
 
-        if (! $componentState->isSingleFileComponent) {
+        if (! $componentState->isSingleFileComponent && ! str_starts_with($view->getName(), '__components::')) {
             $componentState->span->addAttribute('view.name', $view->getName());
         }
 
@@ -309,7 +308,6 @@ class LivewireRecorder extends SpansRecorder
             attributes: [
                 'flare.span_type' => SpanType::LivewireComponentRendering,
                 'livewire.component.name' => $component->getName(),
-                'livewire.component.phase' => LivewireComponentPhase::Mounting,
             ],
         );
     }
