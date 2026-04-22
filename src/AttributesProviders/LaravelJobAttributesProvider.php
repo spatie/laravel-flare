@@ -209,6 +209,7 @@ class LaravelJobAttributesProvider
             'deleteWhenMissingModels',
             'messageGroup',
             'deduplicator',
+            'debounceOwner',
             'tries',
         ];
 
