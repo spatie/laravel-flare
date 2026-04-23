@@ -40,10 +40,6 @@ class AddExceptionContextInformation implements FlareMiddleware
     private function addUserDefinedContext(
         ReportFactory $report,
     ): void {
-        if ($report->throwable === null) {
-            return;
-        }
-
         if ($report->throwable instanceof ProvidesFlareContext) {
             // ProvidesFlareContext writes directly to context groups and is handled in the flare-client-php package.
             return;

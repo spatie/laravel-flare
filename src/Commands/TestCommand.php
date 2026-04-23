@@ -13,12 +13,14 @@ use Laravel\SerializableClosure\Support\ReflectionClosure;
 use ReflectionException;
 use ReflectionNamedType;
 use ReflectionProperty;
+use Spatie\FlareClient\Enums\FlareEntityType;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Senders\Exceptions\BadResponseCode;
+use Spatie\FlareClient\Support\Tester;
 
 class TestCommand extends Command
 {
-    protected $signature = 'flare:test';
+    protected $signature = 'flare:test {--errors} {--logs} {--traces}';
 
     protected $description = 'Send a test notification to Flare';
 
@@ -30,17 +32,51 @@ class TestCommand extends Command
 
         $hasKey = $this->checkFlareKey();
 
-        $traceEnabled = $this->checkTrace();
-
-        if ($this->checkFlareLogger() === false) {
+        if (! $hasKey) {
             return Command::FAILURE;
         }
 
-        if ($hasKey) {
-            $this->sendTestException($traceEnabled);
+        $this->newLine();
+
+        $tester = app(Tester::class);
+
+        $testAll = ! $this->option('errors') && ! $this->option('logs') && ! $this->option('traces');
+
+        $success = true;
+
+        if ($testAll || $this->option('errors')) {
+            if ($this->checkErrorInfrastructure() === false) {
+                return Command::FAILURE;
+            }
+
+            if ($config['flare.report'] === false) {
+                $this->info('❌ Error reporting is disabled. Please enable it by setting the `flare.report` config value to `true` if you want to test it.');
+            } else {
+                $success = $this->sendTestPayload($tester, FlareEntityType::Errors);
+            }
         }
 
-        return Command::SUCCESS;
+        if ($testAll || $this->option('traces')) {
+            if ($config['flare.trace'] === false) {
+                $this->info('❌ Tracing is disabled. Please enable it by setting the `flare.trace` config value to `true` if you want to test it.');
+            } else {
+                $success = $success && $this->sendTestPayload($tester, FlareEntityType::Traces);
+            }
+        }
+
+        if ($testAll || $this->option('logs')) {
+            if ($this->checkLogInfrastructure() === false) {
+                return Command::FAILURE;
+            }
+
+            if ($config['flare.log'] === false) {
+                $this->info('❌ Logging is disabled. Please enable it by setting the `flare.log` config value to `true` if you want to test it.');
+            } else {
+                $success = $success && $this->sendTestPayload($tester, FlareEntityType::Logs);
+            }
+        }
+
+        return $success ? Command::SUCCESS : Command::FAILURE;
     }
 
     protected function checkFlareKey(): bool
@@ -56,24 +92,20 @@ class TestCommand extends Command
         return $hasKey;
     }
 
-    protected function checkTrace(): bool
+    public function checkErrorInfrastructure(): bool
     {
-        $trace = ! empty($this->config->get('flare.trace'));
+        $hasReportableCallbackFlareLogger = $this->hasReportableFlareCallback();
 
-        $message = $trace
-            ? '✅ Performance monitoring enabled'
-            : '⚠️ To enable performance monitoring, you need to set the trace option to true in the flare.php config file';
+        if (! $hasReportableCallbackFlareLogger) {
+            $this->info('❌ The Flare error callback was not configured correctly.');
+            $this->newLine();
+            $this->info('<fg=default;bg=default>Please ensure the following code is present in your `<fg=green>bootstrap/app.php</>` file:</>');
+            $this->newLine();
+            $this->info('<fg=default;bg=default>-><fg=green>withExceptions</>(<fg=blue>function</> (<fg=red>Exceptions</> $exceptions) {</>');
+            $this->info('<fg=default;bg=default>    <fg=red>Flare</>::<fg=green>handles</>($exceptions);</>');
+            $this->info('<fg=default;bg=default>})-><fg=green>create</>();</>');
 
-        $this->info($message);
 
-        return $trace;
-    }
-
-    public function checkFlareLogger(): bool
-    {
-        $configuredCorrectly = $this->isValidReportableCallbackFlareLogger();
-
-        if ($configuredCorrectly === false) {
             return false;
         }
 
@@ -81,31 +113,45 @@ class TestCommand extends Command
             $this->info('⚠️ The `zend.exception_ignore_args` php ini setting is enabled. This will prevent Flare from showing stack trace arguments.');
         }
 
-        $this->info('✅ The Flare logging driver was configured correctly.');
+        return true;
+    }
+
+
+    protected function checkLogInfrastructure(): bool
+    {
+        $channels = $this->config->get('logging.channels', []);
+
+        $flareChannelName = null;
+
+        foreach ($channels as $name => $channel) {
+            if (($channel['driver'] ?? null) === 'flare') {
+                $flareChannelName = $name;
+
+                break;
+            }
+        }
+
+        if ($flareChannelName === null) {
+            $this->info('❌ No logging channel with the `flare` driver found. Please add a `flare` channel to your `config/logging.php` file.');
+
+            return false;
+        }
+
+        $defaultChannel = $this->config->get('logging.default');
+
+        $isActive = $defaultChannel === $flareChannelName
+            || (($channels[$defaultChannel]['driver'] ?? null) === 'stack' && in_array($flareChannelName, $channels[$defaultChannel]['channels'] ?? []));
+
+        if (! $isActive) {
+            $this->info("❌ The `{$flareChannelName}` log channel exists but is not part of your default logging stack. Please add it to your `{$defaultChannel}` channel in `config/logging.php`.");
+
+            return false;
+        }
 
         return true;
     }
 
-    protected function isValidReportableCallbackFlareLogger(): bool
-    {
-        $hasReportableCallbackFlareLogger = $this->hasReportableCallbackFlareLogger();
-
-        if ($hasReportableCallbackFlareLogger) {
-            return true;
-        }
-
-        $this->info('❌ The Flare logging driver was not configured correctly.');
-        $this->newLine();
-        $this->info('<fg=default;bg=default>Please ensure the following code is present in your `<fg=green>bootstrap/app.php</>` file:</>');
-        $this->newLine();
-        $this->info('<fg=default;bg=default>-><fg=green>withExceptions</>(<fg=blue>function</> (<fg=red>Exceptions</> $exceptions) {</>');
-        $this->info('<fg=default;bg=default>    <fg=red>Flare</>::<fg=green>handles</>($exceptions);</>');
-        $this->info('<fg=default;bg=default>})-><fg=green>create</>();</>');
-
-        return false;
-    }
-
-    protected function hasReportableCallbackFlareLogger(): bool
+    protected function hasReportableFlareCallback(): bool
     {
         try {
             $handler = app(ExceptionHandler::class);
@@ -146,21 +192,30 @@ class TestCommand extends Command
         return false;
     }
 
-    protected function sendTestException(bool $traceEnabled): void
-    {
-        $testException = new Exception('This is an exception to test if the integration with Flare works.');
-
+    protected function sendTestPayload(
+        Tester $tester,
+        FlareEntityType $entityType
+    ): bool {
         try {
-            app(Flare::class)->sendTestReport($testException);
+            match ($entityType) {
+                FlareEntityType::Errors => $tester->report(),
+                FlareEntityType::Logs => $tester->log(),
+                FlareEntityType::Traces => $tester->trace(),
+            };
 
-            if ($traceEnabled) {
-                $testTrace = require __DIR__ . '/../../resources/test-trace-payload.php';
-                app(Flare::class)->sendTestTrace($testTrace);
-            }
+            $emoji = match ($entityType) {
+                FlareEntityType::Errors => '⚠️',
+                FlareEntityType::Logs => '📝',
+                FlareEntityType::Traces => '🔍',
+            };
 
-            $this->info('');
+            $entityName = ucfirst($entityType->singleName());
+
+            $this->info("{$emoji} {$entityName} sent to Flare");
+
+            return true;
         } catch (Exception $exception) {
-            $this->warn('❌ We were unable to send an exception to Flare. ');
+            $this->warn("❌ We were unable to send a {$entityType->singleName()} to Flare. ");
 
             if ($exception instanceof BadResponseCode) {
                 $this->info('');
@@ -200,13 +255,7 @@ class TestCommand extends Command
                 throw $exception;
             }
 
-            return;
+            return false;
         }
-        if ($traceEnabled) {
-            $this->info('We tried to send an exception and performance monitoring data to Flare. Please check if it arrived!');
-
-            return;
-        }
-        $this->info('We tried to send an exception to Flare. Please check if it arrived!');
     }
 }

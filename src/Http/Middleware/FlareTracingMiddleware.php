@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Spatie\FlareClient\Support\Lifecycle;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\Facades\Flare;
@@ -15,6 +16,7 @@ class FlareTracingMiddleware
 {
     public function __construct(
         protected Tracer $tracer,
+        protected Lifecycle $lifecycle,
         protected Application $app,
         protected LaravelRequestAttributesProvider $attributesProvider,
     ) {
@@ -32,7 +34,7 @@ class FlareTracingMiddleware
             Str::startsWith($request->decodedPath(), $ignorePaths)
             || preg_match('/^livewire(-[a-f0-9]+)?\/livewire(\.min)?\.js/', $request->decodedPath())
         ) {
-            $this->tracer->trashCurrentTrace();
+            $this->tracer->unsample();
 
             return $next($request);
         }
@@ -45,10 +47,11 @@ class FlareTracingMiddleware
 
     public function terminate(Request $request, Response $response): void
     {
-        Flare::application()->recordTerminating();
         Flare::request()?->recordEnd(
-            responseStatusCode: $response->getStatusCode(),
+            response: $response,
             attributes: $this->attributesProvider->toArray($request, includeContents: false)
         );
+
+        $this->lifecycle->terminating();
     }
 }

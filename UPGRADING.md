@@ -3,6 +3,52 @@
 Because there are many breaking changes an upgrade is not that easy. There are many edge cases this guide does not
 cover. We accept PRs to improve this guide.
 
+## From v2 to v3
+
+
+### Update your config file
+
+- `send_logs_as_events` - this key no longer exists. Log shipping is now a first-class feature controlled by the `log` key (see below).
+- A `report` key has been added to enable/disable error reporting, it is enabled by default.
+- A `trace` key has been added to enable/disable tracing, it is enabled by default.
+- A `log` key has been added to enable/disable the new standalone log shipping feature, it is disabled by default.
+
+### Logging setup changed
+
+Flare now has a dedicated logging system available. If you want to use it, configure the daemon sender and route logs to the `flare` channel:
+
+1. **Enable logging and use the daemon sender** in `config/flare.php`:
+    ```php
+    'log' => true,
+
+    'sender' => [
+        'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
+        'config' => [
+            'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
+        ],
+    ],
+    ```
+2. **Route logs to flare** add the `flare` channel in your `config/logging.php`:
+    ```php
+    'channels' => [
+       'flare' => [
+           'driver' => 'flare',
+       ],
+    ],
+    ```
+    And add it to your log stack in `.env`:
+    ```
+    LOG_STACK=single,flare
+    ```
+
+If you keep the defaults, the daemon sender talks to `http://127.0.0.1:8787` and uses its built-in timeout and fallback behavior. Test payloads still talk directly to the daemon and do not fall back.
+
+> TODO: add proper Laravel-specific instructions for actually running the Flare daemon alongside the app. This likely needs concrete guidance on whether it should be started via a dedicated process manager, an Artisan wrapper command, or another recommended deployment pattern.
+
+### The base Flare client package
+
+Was also completely rewritten, we recommend you to also check the [upgrade guide](https://github.com/spatie/flare-client-php/blob/main/UPGRADING.md) for that package.
+
 ## From v1 to v2
 
 The second version of the package has been a complete rewrite, we've added some interesting points in this upgrade guide but advise you to read the docs again.

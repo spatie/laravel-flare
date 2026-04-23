@@ -37,7 +37,7 @@ class AddViewInformation implements FlareMiddleware
         ]);
 
         if ($viewException instanceof ViewExceptionWithSolution) {
-            $report->addSolutions($viewException->getSolution());
+            $report->solution($viewException->getSolution());
         }
 
         return $next($report);

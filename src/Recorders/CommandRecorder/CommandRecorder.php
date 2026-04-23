@@ -29,6 +29,8 @@ class CommandRecorder extends BaseCommandRecorder
     public function recordCommandStarting(CommandStarting $event): void
     {
         if ($this->shouldIgnoreCommand($event->command)) {
+            $this->tracer->unsample();
+
             return;
         }
 
@@ -57,6 +59,7 @@ class CommandRecorder extends BaseCommandRecorder
             'octane:reload',
             'vapor:work',
             'serve',
+            'flare:test',
         ]);
     }
 }

@@ -5,8 +5,11 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler;
 use Spatie\LaravelFlare\Facades\Flare;
 
-it('can execute the test command when a flare key is present with a Laravel handler configuration', function () {
-    withFlareKey();
+it('can execute the test command', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'flare');
 
     app()->extend(ExceptionHandler::class, function (Handler $handler) {
         Flare::handles(new Exceptions($handler));
@@ -15,25 +18,33 @@ it('can execute the test command when a flare key is present with a Laravel hand
     });
 
     $this->artisan('flare:test')->assertOk();
-})->skip(fn () => version_compare(app()->version(), '11.0.0', '<'));
-
-it('will fail the test command when config is missing', function () {
-    withFlareKey();
-
-    $this->artisan('flare:test')->assertFailed();
 });
 
-// Helpers
-function withFlareKey(): void
-{
-    test()->withFlareKey = true;
+it('fails when no flare key is set', function () {
+    config()->set('flare.key', null);
 
-    test()->refreshApplication();
-}
+    setupFlare(withoutApiKey: true);
 
-function getEnvironmentSetUp($app)
-{
-    if (test()->withFlareKey) {
-        config()->set('flare.key', 'some-key');
-    }
-}
+    $this->artisan('flare:test')
+        ->expectsOutputToContain('Flare key not specified')
+        ->assertFailed();
+});
+
+it('fails when the log channel is not configured', function () {
+    setupFlare();
+
+    $this->artisan('flare:test --logs')
+        ->expectsOutputToContain('No logging channel')
+        ->assertFailed();
+});
+
+it('fails when the log channel exists but is not in the default stack', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'single');
+
+    $this->artisan('flare:test --logs')
+        ->expectsOutputToContain('is not part of your default logging stack')
+        ->assertFailed();
+});

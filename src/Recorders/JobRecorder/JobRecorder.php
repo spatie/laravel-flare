@@ -7,13 +7,16 @@ use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Spatie\FlareClient\Enums\LifecycleStage;
 use Spatie\FlareClient\Enums\RecorderType;
+use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanStatusCode;
-use Spatie\FlareClient\Recorders\ErrorRecorder\ErrorSpanEvent;
 use Spatie\FlareClient\Recorders\SpansRecorder;
 use Spatie\FlareClient\Spans\Span;
+use Spatie\FlareClient\Spans\SpanEvent;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Ids;
+use Spatie\FlareClient\Support\Lifecycle;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Enums\SpanType;
@@ -38,6 +41,7 @@ class JobRecorder extends SpansRecorder
         BackTracer $backTracer,
         protected Dispatcher $dispatcher,
         protected LaravelJobAttributesProvider $laravelJobAttributesProvider,
+        protected Lifecycle $lifecycle,
         array $config
     ) {
         parent::__construct($tracer, $backTracer, $config);
@@ -68,6 +72,18 @@ class JobRecorder extends SpansRecorder
 
     public function recordProcessing(JobProcessing $event): ?Span
     {
+        AddJobInformation::clearLatestJobInfo();
+
+        $traceparent = $event->job->payload()[Ids::FLARE_TRACE_PARENT] ?? null;
+
+        $shouldIgnore = $this->shouldIgnore($event->job);
+
+        if ($shouldIgnore) {
+            $traceparent = $this->tracer->ids->setTraceparentSampling($traceparent, false);
+        }
+
+        $this->lifecycle->startSubtask(traceparent: $traceparent);
+
         if ($this->shouldIgnore($event->job)) {
             return null;
         }
@@ -78,10 +94,6 @@ class JobRecorder extends SpansRecorder
             $this->maxChainedJobReportingDepth
         );
 
-        AddJobInformation::$currentJob = $attributes;
-
-        $this->potentiallyResumeTrace($event->job->payload()[Ids::FLARE_TRACE_PARENT] ?? null);
-
         $jobName = $attributes['laravel.job.name'] ?? $attributes['laravel.job.class'] ?? 'Unknown';
 
         return $this->startSpan(
@@ -90,38 +102,82 @@ class JobRecorder extends SpansRecorder
                 'flare.span_type' => SpanType::Job,
                 ...$attributes,
             ],
-            canStartTrace: true,
         );
     }
 
     public function recordProcessed(JobProcessed $event): void
     {
         if ($this->shouldIgnore($event->job)) {
+            $this->lifecycle->endSubtask();
+
             return;
         }
 
         $this->endSpan(additionalAttributes: [
             'laravel.job.success' => true,
-        ]);
+            'laravel.job.released' => $event->job->isReleased(),
+            'laravel.job.deleted' => $event->job->isDeleted(),
+        ], includeMemoryUsage: true);
 
-        AddJobInformation::$currentJob = null;
+        $this->lifecycle->endSubtask();
     }
 
     public function recordExceptionOccurred(JobExceptionOccurred $event): void
     {
         if ($this->shouldIgnore($event->job)) {
+            $this->lifecycle->endSubtask();
+
             return;
         }
 
-        $this->endSpan(additionalAttributes: [
-            'laravel.job.success' => false,
-        ], spanCallback: fn (Span $span) => $span
-            ->setStatus(SpanStatusCode::Error, $event->exception->getMessage())
-            ->addEvent(
-                ErrorSpanEvent::fromThrowable($event->exception, $this->tracer->time->getCurrentTime())
-            ));
+        // Error handling is performed after, so leave breadcrumbs
+        // only do this on a queue worker since otherwise it may interfere
+        // with errors on the main request lifecycle
+        $shouldLeaveBreadcrumbs = $this->lifecycle->usesSubtasks;
 
-        AddJobInformation::$currentJob = null;
+        $trackingUuid = null;
+
+        if ($shouldLeaveBreadcrumbs) {
+            AddJobInformation::setUsedTrackingUuid($trackingUuid = $this->tracer->ids->uuid());
+        }
+
+        $throwableClass = $event->exception::class;
+
+        $span = $this->endSpan(
+            additionalAttributes: [
+                'laravel.job.success' => false,
+                'laravel.job.released' => $event->job->isReleased(),
+                'laravel.job.deleted' => $event->job->isDeleted(),
+            ],
+            spanCallback: fn (Span $span) => $span
+                ->setStatus(SpanStatusCode::Error, $event->exception->getMessage())
+                ->addEvent(
+                    new SpanEvent(
+                        name: "Exception - {$throwableClass}",
+                        timestamp: $this->tracer->time->getCurrentTime(),
+                        attributes: [
+                            'flare.span_event_type' => SpanEventType::Exception,
+                            'exception.message' => $event->exception->getMessage(),
+                            'exception.type' => $throwableClass,
+                            'exception.handled' => null,
+                            'exception.id' => $trackingUuid,
+                        ]
+                    )
+                ),
+            includeMemoryUsage: true
+        );
+
+        if ($span !== null && $shouldLeaveBreadcrumbs) {
+            AddJobInformation::setLatestJob($span);
+        }
+
+        $this->lifecycle->endSubtask();
+
+        // When using dispatchAfterResponse and the job fails, we never reach the lifecyle terlinated stage
+        // due to Laravel trying to render errors. So when this happens terminate here.
+        if ($this->lifecycle->getStage() === LifecycleStage::Terminating) {
+            $this->lifecycle->terminated();
+        }
     }
 
     protected function shouldIgnore(Job $job): bool

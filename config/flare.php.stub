@@ -63,15 +63,49 @@ return [
 
         /*
         |--------------------------------------------------------------------------
-        | Reporting log statements
+        | Sender
         |--------------------------------------------------------------------------
         |
-        | If this setting is `false` log statements won't be sent as events to Flare,
-        | no matter which error level you specified in the Flare log channel.
+        | The sender is responsible for sending the error reports and traces to
+        | Flare. By default, Laravel Flare sends them over HTTP. To use the local
+        | Flare daemon, switch the sender class to
+        | `Spatie\FlareClient\Senders\DaemonSender::class` and set `daemon_url`.
+        | The daemon sender defaults to localhost on port 8787 and uses its own
+        | default timeouts and fallback sender config unless you override them.
         |
         */
 
-        'send_logs_as_events' => true,
+        'sender' => [
+            'class' => \Spatie\LaravelFlare\Senders\LaravelHttpSender::class,
+            'config' => [
+                'timeout' => 10,
+            ],
+        ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Daemon sender example
+        |--------------------------------------------------------------------------
+        |
+        | 'sender' => [
+        |     'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
+        |     'config' => [
+        |         'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
+        |     ],
+        | ],
+        |
+        */
+
+        /*
+        |--------------------------------------------------------------------------
+        | Report
+        |--------------------------------------------------------------------------
+        |
+        | Flare reports errors and exceptions happening within your application.
+        |
+        */
+
+        'report' => env('FLARE_REPORT', true),
 
         /*
         |--------------------------------------------------------------------------
@@ -83,19 +117,6 @@ return [
         */
 
         'report_error_levels' => null,
-
-        /*
-        |--------------------------------------------------------------------------
-        | Share button
-        |--------------------------------------------------------------------------
-        |
-        | Flare automatically adds a Share button to the laravel error page. This
-        | button allows you to easily share errors with colleagues or friends. It
-        | is enabled by default, but you can disable it here.
-        |
-        */
-
-        'enable_share_button' => true,
 
         /*
         |--------------------------------------------------------------------------
@@ -116,6 +137,19 @@ return [
 
         /*
         |--------------------------------------------------------------------------
+        | Share button
+        |--------------------------------------------------------------------------
+        |
+        | Flare automatically adds a Share button to the laravel error page. This
+        | button allows you to easily share errors with colleagues or friends. It
+        | is enabled by default, but you can disable it here.
+        |
+        */
+
+        'enable_share_button' => true,
+
+        /*
+        |--------------------------------------------------------------------------
         | Trace
         |--------------------------------------------------------------------------
         |
@@ -124,7 +158,7 @@ return [
         |
         */
 
-        'trace' => false,
+        'trace' => env('FLARE_TRACE', true),
 
         /*
         |--------------------------------------------------------------------------
@@ -137,10 +171,35 @@ return [
         | which means that 10% of the traces will be recorded.
         |
         */
+
         'sampler' => [
             'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
             'config' => [
                 'rate' => env('FLARE_SAMPLER_RATE', 0.1),
             ],
         ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Log
+        |--------------------------------------------------------------------------
+        |
+        | Logging show you an overview of log entries within your application.
+        |
+        */
+
+        'log' => env('FLARE_LOG', false),
+
+        /*
+        |--------------------------------------------------------------------------
+        | Minimal log level
+        |--------------------------------------------------------------------------
+        |
+        | You can specify the minimal (Monolog) log level that should be sent to Flare.
+        | Log levels lower than the specified level will be ignored.
+        | If null all log levels will be sent to Flare.
+        |
+        */
+
+        'minimal_log_level' => null,
 ];

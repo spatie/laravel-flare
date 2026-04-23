@@ -1,14 +1,12 @@
 <?php
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use function Pest\Laravel\get;
 use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\Enums\CacheResult;
 use Spatie\FlareClient\Enums\SpanEventType;
-use Spatie\FlareClient\Tests\Shared\FakeSender;
-use Spatie\LaravelFlare\Tests\Concerns\ConfigureFlare;
-
-uses(ConfigureFlare::class);
+use Spatie\FlareClient\Tests\Shared\FakeApi;
 
 beforeEach(function () {
     config()->set('cache.default', 'array');
@@ -19,6 +17,8 @@ it('records cache operations', function (
     Closure $record,
     Closure $assert,
 ) {
+    Cache::clear();
+
     $preRecording();
 
     setupFlare();
@@ -31,11 +31,7 @@ it('records cache operations', function (
 
     get('exception')->assertStatus(500);
 
-    $fakeSender = FakeSender::instance();
-
-    $fakeSender->assertRequestsSent(1);
-
-    $spanEvents = $fakeSender->getLastPayload()['events'];
+    $spanEvents = FakeApi::lastReport()->toArray()['events'];
 
     $cacheSpanEvents = array_values(array_filter(
         $spanEvents,
@@ -54,7 +50,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Hit);
         },
@@ -66,7 +62,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Miss);
         },
@@ -78,7 +74,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Set);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Success);
         },
@@ -90,7 +86,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe('array');
+            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Forget);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Success);
         },
