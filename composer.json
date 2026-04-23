@@ -22,7 +22,7 @@
         "ext-mbstring": "*",
         "illuminate/support": "^11.47|^12.42|^13.0",
         "spatie/error-solutions": "^2.0",
-        "spatie/flare-client-php": "dev-logging",
+        "spatie/flare-client-php": "dev-main",
         "spatie/laravel-error-share": "^1.0.3",
         "symfony/console": "^7.2.1|^8.0",
         "symfony/var-dumper": "^7.2.3|^8.0"
