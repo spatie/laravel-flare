@@ -78,7 +78,7 @@ it('will call the to flare method on route parameters when it exists', function 
     $route->bind($request);
 
     $request->setRouteResolver(function () use ($route) {
-        $route->setParameter('user', new class () {
+        $route->setParameter('user', new class() {
             public function toFlare(): array
             {
                 return ['stripped'];
@@ -132,7 +132,7 @@ it('returns the authenticated user', function () {
 });
 
 it('the authenticated user model has a to flare method it will be used to collect user data', function () {
-    $user = new class () extends User {
+    $user = new class() extends User {
         public function toFlare()
         {
             return ['role' => 'admin'];
@@ -173,7 +173,7 @@ it('the authenticated user cannot be deduced so no attributes are added', functi
     ]);
 })->with([
     'no user resolver' => fn () => null,
-    'empty class' => fn () => new class () {
+    'empty class' => fn () => new class() {
     },
     'empty user' => fn () => new User(),
     'array' => fn () => [],
@@ -181,7 +181,7 @@ it('the authenticated user cannot be deduced so no attributes are added', functi
 
 function createRequest($method, $uri, $parameters = [], $cookies = [], $files = [], $server = [], $content = null): Request
 {
-    $helper = new class () {
+    $helper = new class() {
         use MakesHttpRequests {
             extractFilesFromDataArray as public;
             prepareUrlForRequest as public;

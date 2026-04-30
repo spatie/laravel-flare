@@ -2,9 +2,7 @@
 
 namespace Spatie\LaravelFlare\FlareMiddleware;
 
-use Closure;
 use Illuminate\Http\Request as LaravelRequest;
-use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\FlareMiddleware\AddRequestInformation as BaseAddRequestInformation;
 use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
