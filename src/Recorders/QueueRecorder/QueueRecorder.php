@@ -5,61 +5,31 @@ namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
-use Spatie\FlareClient\Enums\RecorderType;
-use Spatie\FlareClient\Recorders\SpansRecorder;
+use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
+use Spatie\FlareClient\Recorders\QueueRecorder\QueueRecorder as BaseQueueRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
-use Spatie\LaravelFlare\Enums\SpanType;
+use Spatie\LaravelFlare\AttributesProviders\LaravelQueuedJobAttributesProvider;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
 
-class QueueRecorder extends SpansRecorder
+class QueueRecorder extends BaseQueueRecorder
 {
-    /** @var array<class-string> */
-    protected array $ignore;
-
     public function __construct(
         Tracer $tracer,
         BackTracer $backTracer,
         protected Dispatcher $dispatcher,
-        protected LaravelJobAttributesProvider $laravelJobAttributesProvider,
+        protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
         array $config
     ) {
         parent::__construct($tracer, $backTracer, $config);
     }
 
-    protected function configure(array $config): void
-    {
-        $this->ignore = JobRecorder::INTERNAL_IGNORED_JOBS;
-
-        if (array_key_exists('ignore', $config)) {
-            array_push($this->ignore, ...$config['ignore']);
-        }
-    }
-
-    public static function type(): string|RecorderType
-    {
-        return RecorderType::Queue;
-    }
-
     public function boot(): void
     {
         Queue::createPayloadUsing(function (?string $connection, ?string $queue, ?array $payload): ?array {
-            if ($payload === null
-                || $this->withTraces === false
-                || $this->tracer->disabled === true
-                || $this->tracer->sampling === false
-            ) {
-                return $payload;
-            }
-
-            if ($this->tracer->isSampling() === false || $this->isIgnored($payload)) {
-                $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
-
-                $this->tracer->pauseSampling();
-
+            if ($payload === null) {
                 return $payload;
             }
 
@@ -67,50 +37,40 @@ class QueueRecorder extends SpansRecorder
                 return $payload;
             }
 
-            $jobAttributes = $this->laravelJobAttributesProvider->getJobPropertiesFromPayload($payload);
+            if ($this->withTraces === false
+                || $this->tracer->disabled === true
+                || $this->tracer->isSampling() === false
+            ) {
+                $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
 
-            $this->startSpan(nameAndAttributes: function () use ($jobAttributes, $queue, $connection) {
-                $attributes = [
-                    'flare.span_type' => SpanType::Queueing,
-                    'laravel.job.queue.connection_name' => $connection,
-                    'laravel.job.queue.name' => $queue,
-                    ...$jobAttributes,
-                ];
+                return $payload;
+            }
 
-                $jobName = $attributes['laravel.job.name'] ?? $attributes['laravel.job.class'] ?? 'Unknown';
+            $provider = new LaravelQueuedJobAttributesProvider(
+                $this->reduceArgumentPayloadAction,
+                $payload,
+                $connection,
+                $queue,
+            );
 
-                return [
-                    'name' => "Queueing - {$jobName}",
-                    'attributes' => $attributes,
-                ];
-            });
+            $this->recordStart($provider);
 
             $payload[Ids::FLARE_TRACE_PARENT] = $this->tracer->traceParent();
 
-            if (array_key_exists('laravel.job.batch_id', $jobAttributes)) {
-                // Batched jobs never dispatch a JobQueued event
-
-                $this->tracer->endSpan();
+            // Batched jobs never dispatch a JobQueued event so close the span immediately.
+            if ($provider->isBatched()) {
+                $this->recordEnd();
             }
-
 
             return $payload;
         });
 
-
         $this->dispatcher->listen(JobQueued::class, [$this, 'recordQueued']);
     }
 
-    public function recordQueued(
-        JobQueued $event,
-    ): ?Span {
-        if ($this->isIgnored($event->payload())) {
-            $this->tracer->resumeSampling();
-
-            return null;
-        }
-
-        return $this->endSpan();
+    public function recordQueued(JobQueued $event): ?Span
+    {
+        return $this->recordEnd();
     }
 
     protected function isSyncConnection(?string $connection): bool
@@ -122,14 +82,9 @@ class QueueRecorder extends SpansRecorder
         return config()->get("queue.connections.{$connection}.driver") === 'sync';
     }
 
-    protected function isIgnored(array $payload): bool
+    /** @return array<int, class-string> */
+    protected function defaultIgnoredJobClasses(): array
     {
-        $class = $payload['displayName'] ?? null;
-
-        if ($class === null) {
-            return false;
-        }
-
-        return in_array($class, $this->ignore);
+        return JobRecorder::INTERNAL_IGNORED_JOBS;
     }
 }

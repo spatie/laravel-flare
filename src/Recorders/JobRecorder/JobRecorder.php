@@ -2,65 +2,51 @@
 
 namespace Spatie\LaravelFlare\Recorders\JobRecorder;
 
+use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Queue\Job;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Psr\Container\ContainerInterface;
+use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
+use Spatie\FlareClient\EntryPoint\EntryPointResolver;
 use Spatie\FlareClient\Enums\LifecycleStage;
-use Spatie\FlareClient\Enums\RecorderType;
-use Spatie\FlareClient\Enums\SpanEventType;
-use Spatie\FlareClient\Enums\SpanStatusCode;
-use Spatie\FlareClient\Recorders\SpansRecorder;
+use Spatie\FlareClient\Recorders\JobRecorder\JobRecorder as BaseJobRecorder;
 use Spatie\FlareClient\Spans\Span;
-use Spatie\FlareClient\Spans\SpanEvent;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Support\Lifecycle;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
-use Spatie\LaravelFlare\Enums\SpanType;
-use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\Jobs\SendFlarePayload;
 
-class JobRecorder extends SpansRecorder
+class JobRecorder extends BaseJobRecorder
 {
-    protected int $maxChainedJobReportingDepth = 0;
-
     public const DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH = 2;
 
     public const INTERNAL_IGNORED_JOBS = [
         SendFlarePayload::class,
     ];
 
-    /** @var array<class-string> */
-    protected array $ignore = [];
+    protected int $maxChainedJobReportingDepth = self::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH;
 
     public function __construct(
         Tracer $tracer,
         BackTracer $backTracer,
+        EntryPointResolver $entryPointResolver,
+        Lifecycle $lifecycle,
         protected Dispatcher $dispatcher,
-        protected LaravelJobAttributesProvider $laravelJobAttributesProvider,
-        protected Lifecycle $lifecycle,
-        array $config
+        protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
+        array $config,
     ) {
-        parent::__construct($tracer, $backTracer, $config);
+        parent::__construct($tracer, $backTracer, $entryPointResolver, $lifecycle, $config);
     }
 
     protected function configure(array $config): void
     {
-        $this->maxChainedJobReportingDepth = $config['maxChainedJobReportingDepth'] ?? 2;
+        parent::configure($config);
 
-        $this->ignore = self::INTERNAL_IGNORED_JOBS;
-
-        if (array_key_exists('ignore', $config)) {
-            array_push($this->ignore, ...$config['ignore']);
-        }
-    }
-
-    public static function type(): string|RecorderType
-    {
-        return RecorderType::Job;
+        $this->maxChainedJobReportingDepth = $config['maxChainedJobReportingDepth'] ?? self::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH;
     }
 
     public function boot(): void
@@ -72,118 +58,49 @@ class JobRecorder extends SpansRecorder
 
     public function recordProcessing(JobProcessing $event): ?Span
     {
-        AddJobInformation::clearLatestJobInfo();
-
         $traceparent = $event->job->payload()[Ids::FLARE_TRACE_PARENT] ?? null;
 
-        $shouldIgnore = $this->shouldIgnore($event->job);
-
-        if ($shouldIgnore) {
-            $traceparent = $this->tracer->ids->setTraceparentSampling($traceparent, false);
-        }
-
-        $this->lifecycle->startSubtask(traceparent: $traceparent);
-
-        if ($this->shouldIgnore($event->job)) {
-            return null;
-        }
-
-        $attributes = $this->laravelJobAttributesProvider->toArray(
-            $event->job,
-            $event->connectionName,
-            $this->maxChainedJobReportingDepth
-        );
-
-        $jobName = $attributes['laravel.job.name'] ?? $attributes['laravel.job.class'] ?? 'Unknown';
-
-        return $this->startSpan(
-            name: "Job - {$jobName}",
-            attributes: [
-                'flare.span_type' => SpanType::Job,
-                ...$attributes,
-            ],
+        return $this->recordStart(
+            jobAttributesProvider: new LaravelJobAttributesProvider(
+                $this->reduceArgumentPayloadAction,
+                $event->job,
+                $event->connectionName,
+                $this->maxChainedJobReportingDepth,
+            ),
+            traceparent: $traceparent,
         );
     }
 
-    public function recordProcessed(JobProcessed $event): void
+    public function recordProcessed(JobProcessed $event): ?Span
     {
-        if ($this->shouldIgnore($event->job)) {
-            $this->lifecycle->endSubtask();
-
-            return;
-        }
-
-        $this->endSpan(additionalAttributes: [
+        return $this->recordEnd([
             'laravel.job.success' => true,
             'laravel.job.released' => $event->job->isReleased(),
             'laravel.job.deleted' => $event->job->isDeleted(),
-        ], includeMemoryUsage: true);
-
-        $this->lifecycle->endSubtask();
+        ]);
     }
 
-    public function recordExceptionOccurred(JobExceptionOccurred $event): void
+    public function recordExceptionOccurred(JobExceptionOccurred $event): ?Span
     {
-        if ($this->shouldIgnore($event->job)) {
-            $this->lifecycle->endSubtask();
+        $span = $this->recordFailed($event->exception, [
+            'laravel.job.success' => false,
+            'laravel.job.released' => $event->job->isReleased(),
+            'laravel.job.deleted' => $event->job->isDeleted(),
+        ]);
 
-            return;
-        }
-
-        // Error handling is performed after, so leave breadcrumbs
-        // only do this on a queue worker since otherwise it may interfere
-        // with errors on the main request lifecycle
-        $shouldLeaveBreadcrumbs = $this->lifecycle->usesSubtasks;
-
-        $trackingUuid = null;
-
-        if ($shouldLeaveBreadcrumbs) {
-            AddJobInformation::setUsedTrackingUuid($trackingUuid = $this->tracer->ids->uuid());
-        }
-
-        $throwableClass = $event->exception::class;
-
-        $span = $this->endSpan(
-            additionalAttributes: [
-                'laravel.job.success' => false,
-                'laravel.job.released' => $event->job->isReleased(),
-                'laravel.job.deleted' => $event->job->isDeleted(),
-            ],
-            spanCallback: fn (Span $span) => $span
-                ->setStatus(SpanStatusCode::Error, $event->exception->getMessage())
-                ->addEvent(
-                    new SpanEvent(
-                        name: "Exception - {$throwableClass}",
-                        timestamp: $this->tracer->time->getCurrentTime(),
-                        attributes: [
-                            'flare.span_event_type' => SpanEventType::Exception,
-                            'exception.message' => $event->exception->getMessage(),
-                            'exception.type' => $throwableClass,
-                            'exception.handled' => null,
-                            'exception.id' => $trackingUuid,
-                        ]
-                    )
-                ),
-            includeMemoryUsage: true
-        );
-
-        if ($span !== null && $shouldLeaveBreadcrumbs) {
-            AddJobInformation::setLatestJob($span);
-        }
-
-        $this->lifecycle->endSubtask();
-
-        // When using dispatchAfterResponse and the job fails, we never reach the lifecyle terlinated stage
-        // due to Laravel trying to render errors. So when this happens terminate here.
+        // dispatchAfterResponse runs in the main HTTP lifecycle (Terminating stage). When the
+        // job throws, Laravel renders the error and never reaches `terminated()`, so we force it
+        // here to flush the report.
         if ($this->lifecycle->getStage() === LifecycleStage::Terminating) {
             $this->lifecycle->terminated();
         }
+
+        return $span;
     }
 
-    protected function shouldIgnore(Job $job): bool
+    /** @return array<int, class-string> */
+    protected function defaultIgnoredJobClasses(): array
     {
-        $class = $job->payload()['data']['commandName'] ?? null;
-
-        return in_array($class, $this->ignore);
+        return self::INTERNAL_IGNORED_JOBS;
     }
 }
