@@ -5,32 +5,28 @@ namespace Spatie\LaravelFlare\FlareMiddleware;
 use Closure;
 use Illuminate\Http\Request as LaravelRequest;
 use Psr\Container\ContainerInterface;
-use Spatie\FlareClient\AttributesProviders\RequestAttributesProvider;
 use Spatie\FlareClient\FlareMiddleware\AddRequestInformation as BaseAddRequestInformation;
+use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
+use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
+use Throwable;
 
 class AddRequestInformation extends BaseAddRequestInformation
 {
     protected bool $includeLivewireComponents = false;
 
+    /** @var array<string> */
     protected array $ignoreLivewireComponents = [];
 
-    public static function register(ContainerInterface $container, array $config): Closure
-    {
-        return fn () => new self(
-            $container->get(RequestAttributesProvider::class),
-            $config,
-        );
-    }
-
     public function __construct(
-        RequestAttributesProvider $attributesProvider,
-        array $config
+        Redactor $redactor,
+        protected LaravelRequest $request,
+        array $config = [],
     ) {
         $this->includeLivewireComponents = $config['include_livewire_components'] ?? false;
         $this->ignoreLivewireComponents = $config['ignore_livewire_components'] ?? [];
 
-        parent::__construct($attributesProvider);
+        parent::__construct($redactor);
     }
 
     protected function isRunningInConsole(): bool
@@ -40,20 +36,27 @@ class AddRequestInformation extends BaseAddRequestInformation
 
     protected function getAttributes(): array
     {
-        $request = app(LaravelRequest::class);
+        $attributes = (new LaravelRequestAttributesProvider(
+            $this->redactor,
+            $this->request,
+            includeContents: true,
+            includeLivewireComponents: $this->includeLivewireComponents,
+            ignoreLivewireComponents: $this->ignoreLivewireComponents,
+        ))->toArray();
 
-        if ($this->attributesProvider instanceof LaravelRequestAttributesProvider) {
-            return $this->attributesProvider->toArray(
-                $request,
-                includeContents: true,
-                includeLivewireComponents: $this->includeLivewireComponents,
-                ignoreLivewireComponents: $this->ignoreLivewireComponents
-            );
+        try {
+            $user = $request->user();
+        } catch (Throwable) {
+            $user = null;
         }
 
-        return $this->attributesProvider->toArray(
-            $request,
-            includeContents: true,
-        );
+        if (is_object($user)) {
+            $attributes = [
+                ...$attributes,
+                ...(new LaravelUserAttributesProvider($user))->toArray(),
+            ];
+        }
+
+        return $attributes;
     }
 }

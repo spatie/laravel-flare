@@ -12,6 +12,46 @@ cover. We accept PRs to improve this guide.
 - A `report` key has been added to enable/disable error reporting, it is enabled by default.
 - A `trace` key has been added to enable/disable tracing, it is enabled by default.
 - A `log` key has been added to enable/disable the new standalone log shipping feature, it is disabled by default.
+- If you ignored jobs before, you should update the key to `ignored_classes` instead of `ignored`
+- The `CollectType`for jobs has been renamed to `Spatie\FlareClient\Enums\CollectType::Jobs`
+
+### Entry point attributes were reshaped
+
+The single `flare.entry_point.class` attribute is gone. Reports, traces and log records now carry:
+
+- `flare.entry_point.type` (`web`, `cli`, `queue`)
+- `flare.entry_point.value` (full URL, full command line, or job class)
+- `flare.entry_point.handler.identifier` (groupable: route pattern with method, command name, or job class)
+- `flare.entry_point.handler.name` (controller, view, redirect target, command class, job class, Livewire component)
+- `flare.entry_point.handler.type` (`laravel_controller`, `laravel_view`, `laravel_redirect`, `laravel_closure`, `laravel_command`, `laravel_job`, `livewire_component`, `livewire_sfc`, `php_closure`, ...)
+
+If you read these attributes from custom middleware, code, or filters, update the keys.
+
+### `Sampler` interface
+
+`Sampler::shouldSample(array $context)` is now `Sampler::shouldSample(EntryPoint $entryPoint)`. Custom samplers must update the signature. The `EntryPoint` value object exposes `$entryPoint->type` (EntryPointType enum), `$entryPoint->value`, and handler properties when resolved.
+
+### Dynamic sampling
+
+A new `DynamicSampler` lets you set per-route, per-command and per-job sampling rates via `SamplingRule` patterns. See the example block in `config/flare.php`. To opt in, swap the `sampler.class` to `Spatie\FlareClient\Sampling\DynamicSampler` and provide `base_rate` plus `rules` in `sampler.config`.
+
+### `AddJobInformation` middleware moved
+
+The middleware moved out of `Spatie\LaravelFlare\FlareMiddleware` into `Spatie\FlareClient\FlareMiddleware\AddJobInformation`. Update any imports.
+
+### Custom recorder subclasses
+
+If you extended any of the recorders, the constructor signatures and several `record*` methods changed:
+
+- `RoutingRecorder::recordRoutingEnd()` accepts new `?string $route`, `?string $entryPointHandlerName`, `string $entryPointHandlerType` parameters.
+- `CommandRecorder::recordStart()` accepts `?string $commandClass` and `?string $entryPointHandlerType`. Local ignore logic is delegated to the base; override `defaultIgnoredCommands()` instead.
+- `JobRecorder::recordStart()` accepts `?string $traceparent` and `?string $entryPointHandlerType`. Lifecycle subtask handling lives in the base.
+- `RequestRecorder::recordStart()` no longer accepts `$entryPointClass`.
+- `Lifecycle::start()` and `Lifecycle::startSubtask()` no longer accept a `samplerContext` array. The `EntryPointResolver` is the single source of truth.
+
+### `FlareConfig::collectJobs()`
+
+Signature changed to match the base: `collectJobs(bool $withTraces, bool $withErrors, ?int $maxItemsWithErrors, array $ignoredClasses = [], array $extra = [], int $maxChainedJobReportingDepth = ...)`. If you pass `$maxChainedJobReportingDepth` positionally, switch to a named argument.
 
 ### Logging setup changed
 

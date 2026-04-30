@@ -23,8 +23,6 @@ use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSoluti
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
 use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\FlareClient\Api;
-use Spatie\FlareClient\AttributesProviders\ConsoleAttributesProvider;
-use Spatie\FlareClient\AttributesProviders\ResponseAttributesProvider;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
@@ -35,7 +33,6 @@ use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
-use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
@@ -93,10 +90,6 @@ class FlareConfig extends BaseFlareConfig
             senderConfig: config('flare.sender.config', []),
             sampler: config('flare.sampler.class'),
             samplerConfig: config('flare.sampler.config'),
-            userAttributesProvider: config('flare.attribute_providers.user'),
-            requestAttributesProvider: config('flare.attribute_providers.request', LaravelRequestAttributesProvider::class),
-            responseAttributesProvider: config('flare.attribute_providers.response', ResponseAttributesProvider::class),
-            consoleAttributesProvider: config('flare.attribute_providers.console', ConsoleAttributesProvider::class),
         );
 
         $config->enableShareButton = config('flare.enable_share_button', true);
@@ -159,7 +152,7 @@ class FlareConfig extends BaseFlareConfig
                 'with_errors' => JobRecorder::DEFAULT_WITH_ERRORS,
                 'max_items_with_errors' => JobRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
                 'max_chained_job_reporting_depth' => JobRecorder::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH,
-                'ignore' => [],
+                'ignored_classes' => [],
             ],
             CollectType::Cache->value => [
                 'with_traces' => CacheRecorder::DEFAULT_WITH_TRACES,
@@ -282,7 +275,7 @@ class FlareConfig extends BaseFlareConfig
             ->collectLaravelInfo()
             ->collectLaravelContext()
             ->collectExceptionContext()
-            ->collectJobs()
+            ->collectLaravelJobs()
             ->collectHandledExceptions();
     }
 
@@ -352,23 +345,24 @@ class FlareConfig extends BaseFlareConfig
         return $this->ignoreCollect(LaravelCollectType::HandledExceptions);
     }
 
-    public function collectJobs(
+    /**
+     * @param array<int, class-string> $ignoredClasses
+     */
+    public function collectLaravelJobs(
         bool $withTraces = JobRecorder::DEFAULT_WITH_TRACES,
         bool $withErrors = JobRecorder::DEFAULT_WITH_ERRORS,
         ?int $maxItemsWithErrors = JobRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
-        int $maxChainedJobReportingDepth = JobRecorder::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH
+        int $maxChainedJobReportingDepth = JobRecorder::DEFAULT_MAX_CHAINED_JOB_REPORTING_DEPTH,
+        array $ignoredClasses = [],
+        array $extra = [],
     ): static {
-        return $this->addCollect(CollectType::Jobs, [
-            'with_traces' => $withTraces,
-            'with_errors' => $withErrors,
-            'max_items_with_errors' => $maxItemsWithErrors,
-            'max_chained_job_reporting_depth' => $maxChainedJobReportingDepth,
-        ]);
-    }
-
-    public function ignoreJobs(): static
-    {
-        return $this->ignoreCollect(CollectType::Jobs);
+        return $this->collectJobs(
+            withTraces: $withTraces,
+            withErrors: $withErrors,
+            maxItemsWithErrors: $maxItemsWithErrors,
+            ignoredClasses: $ignoredClasses,
+            extra: ['max_chained_job_reporting_depth' => $maxChainedJobReportingDepth, ...$extra],
+        );
     }
 
     public function collectFilesystemOperations(

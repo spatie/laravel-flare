@@ -2,9 +2,10 @@
 
 namespace Spatie\LaravelFlare\AttributesProviders;
 
+use Spatie\FlareClient\Contracts\AttributesProvider;
 use Spatie\FlareClient\Enums\Framework;
 
-class LaravelAttributesProvider
+class LaravelAttributesProvider implements AttributesProvider
 {
     public function toArray(): array
     {
