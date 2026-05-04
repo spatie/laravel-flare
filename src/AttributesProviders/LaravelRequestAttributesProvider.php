@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Illuminate\Http\Request as LaravelRequest;
-use Livewire\LivewireManager;
 use Spatie\FlareClient\AttributesProviders\SymfonyRequestAttributesProvider;
 use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
@@ -15,6 +14,7 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
     /** @param array<string> $ignoreLivewireComponents */
     public function __construct(
         Redactor $redactor,
+        protected LivewireComponentFinder $livewireComponentFinder,
         ?Request $request = null,
         bool $includeContents = true,
         protected bool $includeLivewireComponents = false,
@@ -36,16 +36,15 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
         }
 
         try {
-            $livewireProvider = new LivewireAttributesProvider(
-                app(LivewireComponentFinder::class),
-                $this->request,
-                app(LivewireManager::class),
-                $this->ignoreLivewireComponents,
+            $livewireAttributesProvider = new LivewireAttributesProvider(
+                livewireComponentFinder: $this->livewireComponentFinder,
+                request: $this->request,
+                ignoreLivewireComponents: $this->ignoreLivewireComponents,
             );
 
             return [
                 ...$attributes,
-                ...$livewireProvider->toArray(),
+                ...$livewireAttributesProvider->toArray(),
             ];
         } catch (Throwable) {
             return $attributes;

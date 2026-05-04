@@ -4,6 +4,7 @@ namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Routing\RedirectController;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\ViewController;
@@ -15,64 +16,61 @@ use Throwable;
 
 class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPointHandlerProvider
 {
+    /** @var array{name: ?string, type: LaravelRouteActionType} */
+    protected array $resolvedAction;
+
+    public static function fromRequest(Request $request): ?self
+    {
+        $route = $request->route();
+
+        if (! $route instanceof Route) {
+            return null;
+        }
+
+        return new self($route, $request->getMethod());
+    }
+
     public function __construct(
-        protected ?Route $route = null,
-        protected ?string $method = null,
+        protected Route $route,
+        protected string $method,
     ) {
+        $this->resolvedAction = $this->resolveAction($this->route);
     }
 
     public function toArray(): array
     {
-        if (! $this->route instanceof Route) {
-            return [];
-        }
-
-        ['name' => $actionName, 'type' => $actionType] = $this->resolveAction($this->route);
-
         return [
             'http.route' => $this->route->uri(),
             'laravel.route.name' => $this->route->getName(),
             'laravel.route.parameters' => $this->getRouteParameters($this->route),
             'laravel.route.middleware' => array_values($this->route->gatherMiddleware()),
-            'laravel.route.action' => $actionName,
-            'laravel.route.action_type' => $actionType,
+            'laravel.route.action' => $this->resolvedAction['name'],
+            'laravel.route.action_type' => $this->resolvedAction['type'],
         ];
     }
 
-    public function route(): ?string
+    public function route(): string
     {
-        return $this->route?->uri();
+        return $this->route->uri();
     }
 
-    public function method(): ?string
+    public function method(): string
     {
         return $this->method;
     }
 
     public function entryPointHandlerName(): ?string
     {
-        if (! $this->route instanceof Route) {
-            return null;
-        }
-
-        return $this->resolveAction($this->route)['name'];
+        return $this->resolvedAction['name'];
     }
 
     public function entryPointHandlerType(): ?string
     {
-        if (! $this->route instanceof Route) {
-            return null;
-        }
-
-        return $this->resolveAction($this->route)['type']->entryPointHandlerType();
+        return $this->resolvedAction['type']->entryPointHandlerType();
     }
 
     public function entryPointHandlerIdentifier(): ?string
     {
-        if (! $this->route instanceof Route) {
-            return null;
-        }
-
         return $this->route->uri();
     }
 
@@ -80,7 +78,6 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
     protected function resolveAction(Route $route): array
     {
         $actionName = $route->getActionName();
-        $type = LaravelRouteActionType::Controller;
 
         if ($actionName === '\\'.ViewController::class
             && ($view = $route->parameter('view'))
@@ -112,7 +109,7 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
             }
         }
 
-        return ['name' => $actionName, 'type' => $type];
+        return ['name' => $actionName, 'type' => LaravelRouteActionType::Controller];
     }
 
     /** @return array<int, mixed> */

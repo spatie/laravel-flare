@@ -5,29 +5,30 @@ namespace Spatie\LaravelFlare\AttributesProviders;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Livewire\LivewireManager;
 use Spatie\FlareClient\Contracts\AttributesProvider;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class LivewireAttributesProvider implements AttributesProvider
 {
-    /** @param array<string> $ignore */
+    /** @param array<string> $ignoreLivewireComponents */
     public function __construct(
         protected LivewireComponentFinder $livewireComponentFinder,
         protected Request $request,
-        protected LivewireManager $livewire,
-        protected array $ignore = [],
+        protected array $ignoreLivewireComponents = [],
     ) {
     }
 
     public function toArray(): array
     {
+        $manager = $this->livewireComponentFinder->manager();
+        $originalUrl = $manager?->originalUrl();
+
         return [
-            'http.request.method' => $this->livewire->originalMethod(),
-            'url.full' => $this->livewire->originalUrl(),
-            'url.scheme' => parse_url($this->livewire->originalUrl(), PHP_URL_SCHEME),
-            'url.path' => parse_url($this->livewire->originalUrl(), PHP_URL_PATH),
-            'url.query' => parse_url($this->livewire->originalUrl(), PHP_URL_QUERY),
+            'http.request.method' => $manager?->originalMethod(),
+            'url.full' => $originalUrl,
+            'url.scheme' => $originalUrl !== null ? parse_url($originalUrl, PHP_URL_SCHEME) : null,
+            'url.path' => $originalUrl !== null ? parse_url($originalUrl, PHP_URL_PATH) : null,
+            'url.query' => $originalUrl !== null ? parse_url($originalUrl, PHP_URL_QUERY) : null,
             'livewire.components' => $this->getLivewire(),
         ];
     }
@@ -42,7 +43,7 @@ class LivewireAttributesProvider implements AttributesProvider
 
                 $class = $this->livewireComponentFinder->findClass($snapshot['memo']['name']);
 
-                if (in_array($class, $this->ignore)) {
+                if (in_array($class, $this->ignoreLivewireComponents)) {
                     continue;
                 }
 
@@ -66,8 +67,8 @@ class LivewireAttributesProvider implements AttributesProvider
         }
 
         try {
-            $componentClass = $this->livewire->getClass($componentAlias);
-        } catch (Exception $e) {
+            $componentClass = $this->livewireComponentFinder->manager()?->getClass($componentAlias);
+        } catch (Exception) {
             $componentClass = null;
         }
 
@@ -105,8 +106,6 @@ class LivewireAttributesProvider implements AttributesProvider
     /** @return array<string, mixed> */
     protected function resolveUpdates(array $updates): array
     {
-        $updates = $this->request->input('updates') ?? [];
-
         return array_map(function (array $update) {
             $update['payload'] = Arr::except($update['payload'] ?? [], ['id']);
 

@@ -3,10 +3,27 @@
 namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
 use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
+use Throwable;
 
 class LaravelUserAttributesProvider extends UserAttributesProvider
 {
+    public static function fromRequest(Request $request): ?self
+    {
+        try {
+            $user = $request->user();
+        } catch (Throwable) {
+            return null;
+        }
+
+        if (! is_object($user)) {
+            return null;
+        }
+
+        return new self($user);
+    }
+
     public function id(): string|int|null
     {
         if ($this->user instanceof Authenticatable) {

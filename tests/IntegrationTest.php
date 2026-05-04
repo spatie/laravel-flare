@@ -53,8 +53,10 @@ describe('Laravel integration', function () {
             ->expectAttribute('url.path', '/')
             ->expectAttribute('url.query', '')
             ->expectAttribute('flare.entry_point.type', 'web')
-            ->expectHasAttribute('flare.entry_point.value')
-            ->expectHasAttribute('flare.entry_point.class')
+            ->expectAttribute('flare.entry_point.value', fn ($value) => expect($value)->toStartWith('http://127.0.0.1:8000/'))
+            ->expectAttribute('flare.entry_point.handler.identifier', '/')
+            ->expectAttribute('flare.entry_point.handler.name', fn ($value) => expect($value)->toStartWith('closure: '))
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure')
             ->expectHasAttribute('server.address')
             ->expectHasAttribute('server.port')
             ->expectAttribute('user_agent.original', 'GuzzleHttp/7')
@@ -100,7 +102,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('flare.entry_point.class', InvokableController::class)
+            ->expectAttribute('flare.entry_point.handler.identifier', 'invokable-controller')
+            ->expectAttribute('flare.entry_point.handler.name', InvokableController::class)
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_controller')
             ->expectAttribute('http.route', 'invokable-controller')
             ->expectAttribute('laravel.route.action', InvokableController::class)
             ->expectAttribute('laravel.route.action_type', 'controller');
@@ -114,7 +118,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('flare.entry_point.class', ResourceController::class.'@index')
+            ->expectAttribute('flare.entry_point.handler.identifier', 'resource-controller')
+            ->expectAttribute('flare.entry_point.handler.name', ResourceController::class.'@index')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_controller')
             ->expectAttribute('http.route', 'resource-controller')
             ->expectAttribute('laravel.route.action', ResourceController::class.'@index')
             ->expectAttribute('laravel.route.action_type', 'controller');
@@ -358,6 +364,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('flare.entry_point.handler.identifier', 'view-response-routed')
+            ->expectAttribute('flare.entry_point.handler.name', 'view: welcome')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_view')
             ->expectAttribute('http.route', 'view-response-routed')
             ->expectAttribute('http.response.headers', function ($value) {
                 expect($value)->toBeArray();
@@ -554,7 +563,10 @@ describe('Laravel integration', function () {
         $workspace->lastReport()
             ->expectExceptionClass(Exception::class)
             ->expectMessage('Test exception')
-            ->expectTrackingUuid($foundTrackingUuid);
+            ->expectTrackingUuid($foundTrackingUuid)
+            ->expectAttribute('flare.entry_point.type', 'web')
+            ->expectAttribute('flare.entry_point.handler.identifier', 'exception')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure');
     });
 
     it('can handle a handled exception route', function () {
@@ -873,6 +885,11 @@ describe('Laravel integration', function () {
         $jobTrace->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('flare.entry_point.type', 'queue')
+            ->expectAttribute('flare.entry_point.value', SuccesJob::class)
+            ->expectAttribute('flare.entry_point.handler.identifier', SuccesJob::class)
+            ->expectAttribute('flare.entry_point.handler.name', SuccesJob::class)
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_job')
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
             ->expectAttribute('laravel.job.name', SuccesJob::class)
@@ -1639,6 +1656,9 @@ describe('Laravel integration', function () {
         $log->expectLog(0)
             ->expectBody('Debug message')
             ->expectAttribute('log.context', [])
+            ->expectAttribute('flare.entry_point.type', 'web')
+            ->expectAttribute('flare.entry_point.handler.identifier', 'logs')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure')
             ->expectSeverityText('debug')
             ->expectSeverityNumber(5)
             ->expectMatchesSpan($responseSpan)

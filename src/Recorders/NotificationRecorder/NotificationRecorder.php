@@ -2,13 +2,11 @@
 
 namespace Spatie\LaravelFlare\Recorders\NotificationRecorder;
 
-use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
-use Psr\Container\ContainerInterface;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Recorders\SpansRecorder;
 use Spatie\FlareClient\Spans\Span;
@@ -18,16 +16,6 @@ use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 
 class NotificationRecorder extends SpansRecorder
 {
-    public static function register(ContainerInterface $container, array $config): Closure
-    {
-        return fn () => new self(
-            $container->get(Tracer::class),
-            $container->get(Dispatcher::class),
-            $container->get(BackTracer::class),
-            $config,
-        );
-    }
-
     public function __construct(
         Tracer $tracer,
         protected Dispatcher $dispatcher,

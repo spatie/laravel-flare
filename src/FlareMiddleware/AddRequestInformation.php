@@ -7,7 +7,7 @@ use Spatie\FlareClient\FlareMiddleware\AddRequestInformation as BaseAddRequestIn
 use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
-use Throwable;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class AddRequestInformation extends BaseAddRequestInformation
 {
@@ -18,7 +18,7 @@ class AddRequestInformation extends BaseAddRequestInformation
 
     public function __construct(
         Redactor $redactor,
-        protected LaravelRequest $request,
+        protected LivewireComponentFinder $livewireComponentFinder,
         array $config = [],
     ) {
         $this->includeLivewireComponents = $config['include_livewire_components'] ?? false;
@@ -34,25 +34,22 @@ class AddRequestInformation extends BaseAddRequestInformation
 
     protected function getAttributes(): array
     {
+        // Resolve the request from the container at call time. This middleware is bound as a
+        // singleton, so a constructor-injected request would go stale between requests under
+        // long-running runtimes (Octane, Vapor, RoadRunner).
+        $request = app(LaravelRequest::class);
+
         $attributes = (new LaravelRequestAttributesProvider(
             $this->redactor,
-            $this->request,
+            $this->livewireComponentFinder,
+            $request,
             includeContents: true,
             includeLivewireComponents: $this->includeLivewireComponents,
             ignoreLivewireComponents: $this->ignoreLivewireComponents,
         ))->toArray();
 
-        try {
-            $user = $request->user();
-        } catch (Throwable) {
-            $user = null;
-        }
-
-        if (is_object($user)) {
-            $attributes = [
-                ...$attributes,
-                ...(new LaravelUserAttributesProvider($user))->toArray(),
-            ];
+        if ($user = LaravelUserAttributesProvider::fromRequest($request)) {
+            $attributes = [...$attributes, ...$user->toArray()];
         }
 
         return $attributes;

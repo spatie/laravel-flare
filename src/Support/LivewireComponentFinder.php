@@ -49,6 +49,12 @@ class LivewireComponentFinder
             : null;
     }
 
+    /** @return \Livewire\LivewireManager|null */
+    public function manager()
+    {
+        return $this->livewire;
+    }
+
     public function findClass(string $name): ?string
     {
         return array_key_exists($name, $this->classCache)

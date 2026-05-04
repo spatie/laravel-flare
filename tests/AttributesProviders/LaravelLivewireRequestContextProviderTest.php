@@ -7,6 +7,8 @@ use Spatie\LaravelFlare\Tests\TestClasses\FakeLivewireManager;
 
 beforeEach(function () {
     $this->livewireManager = resolve(FakeLivewireManager::class);
+
+    app()->instance('livewire', $this->livewireManager);
 });
 
 it('returns the referer url and method', function () {
@@ -75,6 +77,63 @@ it('removes ids from update payloads', function () {
     expect($livewire[0]['component_id'])->toBe($id);
     expect($livewire[0]['component_alias'])->toBe($name);
     expect($livewire[0]['component_class'])->toBeNull();
+});
+
+it('preserves per-component updates for multi-component requests', function () {
+    $providedRequest = null;
+
+    Route::post('livewire', function (Request $request) use (&$providedRequest) {
+        $providedRequest = $request;
+    })->name('livewire.message');
+
+    $componentA = [
+        'snapshot' => json_encode([
+            'data' => ['count' => 1],
+            'memo' => ['name' => 'component-a'],
+        ]),
+        'updates' => [
+            [
+                'type' => 'callMethod',
+                'payload' => ['id' => 'a-id', 'method' => 'increment', 'params' => []],
+            ],
+        ],
+        'calls' => [],
+    ];
+
+    $componentB = [
+        'snapshot' => json_encode([
+            'data' => ['title' => 'hello'],
+            'memo' => ['name' => 'component-b'],
+        ]),
+        'updates' => [
+            [
+                'type' => 'syncInput',
+                'payload' => ['id' => 'b-id', 'name' => 'title', 'value' => 'world'],
+            ],
+        ],
+        'calls' => [],
+    ];
+
+    test()->postJson('livewire', [
+        'components' => [$componentA, $componentB],
+    ], ['X-Livewire' => 1])->assertOk();
+
+    $attributes = (new LivewireAttributesProvider(
+        app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
+        $providedRequest,
+    ))->toArray();
+
+    $components = $attributes['livewire.components'];
+
+    expect($components)->toHaveCount(2);
+
+    expect($components[0]['memo']['name'])->toBe('component-a');
+    expect($components[0]['updates'])->toHaveCount(1);
+    expect($components[0]['updates'][0]['payload'])->toEqual(['method' => 'increment', 'params' => []]);
+
+    expect($components[1]['memo']['name'])->toBe('component-b');
+    expect($components[1]['updates'])->toHaveCount(1);
+    expect($components[1]['updates'][0]['payload'])->toEqual(['name' => 'title', 'value' => 'world']);
 });
 
 it('combines data into one payload', function () {
@@ -169,6 +228,5 @@ function createRequestPayload(array $fingerprint, array $updates = [], array $se
     return (new LivewireAttributesProvider(
         app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
         $providedRequest,
-        test()->livewireManager,
     ))->toArray();
 }
