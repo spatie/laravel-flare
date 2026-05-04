@@ -15,7 +15,7 @@ return [
         ignore: [],
         extra: [
             CollectType::Jobs->value => [
-                'ignore' => [
+                'ignored_classes' => [
                     IgnoredJob::class,
                 ],
             ]
