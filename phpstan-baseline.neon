@@ -37,10 +37,16 @@ parameters:
 			path: src/FlareConfig.php
 
 		-
-			message: '#^Parameter \$collects of class Spatie\\LaravelFlare\\FlareConfig constructor expects array\<string, array\{type\: Spatie\\FlareClient\\Contracts\\FlareCollectType, ignored\: bool\|null, options\: array\}\>, array\<''application''\|''cache''\|''console''\|''context''\|''database…''\|''dumps''\|''errors_with_traces''\|''external_http''\|''filesystem''\|''flare_middleware''\|''git_info''\|''glows''\|''jobs''\|''laravel_context''\|''laravel_exception…''\|''laravel_handled…''\|''laravel_info''\|''laravel_livewire…''\|''logs_with_errors''\|''notifications''\|''queries''\|''recorders''\|''redis_commands''\|''requests''\|''server_info''\|''solutions''\|''stack_frame…''\|''throwables''\|''views'', array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}\> given\.$#'
+			message: '#^Parameter \$collects of class Spatie\\LaravelFlare\\FlareConfig constructor expects array\<string, array\{type\: Spatie\\FlareClient\\Contracts\\FlareCollectType, ignored\: bool\|null, options\: array\}\>, array\{\}\|array\{application\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, dumps\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, requests\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, context\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, console\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, git_info\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, cache\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, glows\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, \.\.\.\} given\.$#'
 			identifier: argument.type
 			count: 1
 			path: src/FlareConfig.php
+
+		-
+			message: '#^Call to an undefined method Spatie\\FlareClient\\Support\\BackTracer\:\:framesWithoutViewMapping\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/FlareMiddleware/AddExceptionHandledStatus.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:registered\(\)\.$#'
@@ -115,19 +121,13 @@ parameters:
 			path: src/Support/CollectsResolver.php
 
 		-
-			message: '#^Call to an undefined method Spatie\\FlareClient\\Support\\BackTracer\:\:framesWithoutViewMapping\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/FlareMiddleware/AddExceptionHandledStatus.php
-
-		-
-			message: '#^Property Spatie\\LaravelFlare\\Support\\LivewireComponentFinder\:\:\$componentRegistry has unknown class Livewire\\Mechanisms\\ComponentRegistry as its type\.$#'
+			message: '#^Call to method getClass\(\) on an unknown class Livewire\\Mechanisms\\ComponentRegistry\.$#'
 			identifier: class.notFound
 			count: 1
 			path: src/Support/LivewireComponentFinder.php
 
 		-
-			message: '#^Call to method getClass\(\) on an unknown class Livewire\\Mechanisms\\ComponentRegistry\.$#'
+			message: '#^Property Spatie\\LaravelFlare\\Support\\LivewireComponentFinder\:\:\$componentRegistry has unknown class Livewire\\Mechanisms\\ComponentRegistry as its type\.$#'
 			identifier: class.notFound
 			count: 1
 			path: src/Support/LivewireComponentFinder.php
