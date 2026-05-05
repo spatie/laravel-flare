@@ -7,9 +7,7 @@ use Illuminate\Support\Arr;
 use Illuminate\View\Engines\PhpEngine;
 use Illuminate\View\ViewException;
 use ReflectionProperty;
-use Spatie\ErrorSolutions\Contracts\ProvidesSolution;
 use Spatie\LaravelFlare\Exceptions\ViewException as FlareViewException;
-use Spatie\LaravelFlare\Exceptions\ViewExceptionWithSolution;
 use Throwable;
 
 class ViewExceptionMapper
@@ -37,11 +35,6 @@ class ViewExceptionMapper
             return $exception;
         }
 
-        if ($baseException instanceof ProvidesSolution) {
-            /** @var ViewExceptionWithSolution $exception */
-            $exception->setSolution($baseException->getSolution());
-        }
-
         $this->modifyViewsInTrace($exception);
 
         $exception->setViewFile($compiledViewPath);
@@ -52,15 +45,11 @@ class ViewExceptionMapper
 
     protected function createException(Throwable $baseException): FlareViewException
     {
-        $viewExceptionClass = $baseException instanceof ProvidesSolution
-            ? ViewExceptionWithSolution::class
-            : FlareViewException::class;
-
         $viewFile = $this->viewFrameMapper->findCompiledView($baseException->getFile());
         $file = $viewFile ?? $baseException->getFile();
         $line = $viewFile ? $this->viewFrameMapper->getBladeLineNumber($file, $baseException->getLine()) : $baseException->getLine();
 
-        return new $viewExceptionClass(
+        return new FlareViewException(
             $baseException->getMessage(),
             0,
             1,
