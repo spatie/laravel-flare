@@ -3,25 +3,6 @@
 namespace Spatie\LaravelFlare;
 
 use BackedEnum;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\DefaultDbNameSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\GenericLaravelExceptionSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\IncorrectValetDbCredentialsSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\InvalidRouteActionSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingAppKeySolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingColumnSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingImportSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingLivewireComponentSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingMixManifestSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\MissingViteManifestSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\OpenAiSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\RunningLaravelDuskInProductionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\SailNetworkSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\TableNotFoundSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UndefinedViewVariableSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMariadbCollationSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownMysql8CollationSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\UnknownValidationSolutionProvider;
-use Spatie\ErrorSolutions\SolutionProviders\Laravel\ViewNotFoundSolutionProvider;
 use Spatie\FlareClient\Api;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
@@ -130,11 +111,6 @@ class FlareConfig extends BaseFlareConfig
                 'use_process' => Resource::DEFAULT_GIT_USE_PROCESS,
                 'entity_types' => Resource::DEFAULT_GIT_ENTITY_TYPES,
             ],
-            CollectType::Solutions->value => [
-                'solution_providers' => [
-                    ...FlareConfig::defaultSolutionProviders(),
-                ],
-            ],
             CollectType::Context->value => [],
             LaravelCollectType::LaravelInfo->value => [],
             LaravelCollectType::LaravelContext->value => [
@@ -231,32 +207,6 @@ class FlareConfig extends BaseFlareConfig
         return $collects;
     }
 
-
-    public static function defaultSolutionProviders(): array
-    {
-        return [
-            ...parent::defaultSolutionProviders(),
-            IncorrectValetDbCredentialsSolutionProvider::class,
-            MissingAppKeySolutionProvider::class,
-            DefaultDbNameSolutionProvider::class,
-            TableNotFoundSolutionProvider::class,
-            MissingImportSolutionProvider::class,
-            InvalidRouteActionSolutionProvider::class,
-            ViewNotFoundSolutionProvider::class,
-            RunningLaravelDuskInProductionProvider::class,
-            MissingColumnSolutionProvider::class,
-            UnknownValidationSolutionProvider::class,
-            MissingMixManifestSolutionProvider::class,
-            MissingViteManifestSolutionProvider::class,
-            MissingLivewireComponentSolutionProvider::class,
-            UndefinedViewVariableSolutionProvider::class,
-            GenericLaravelExceptionSolutionProvider::class,
-            OpenAiSolutionProvider::class,
-            SailNetworkSolutionProvider::class,
-            UnknownMysql8CollationSolutionProvider::class,
-            UnknownMariadbCollationSolutionProvider::class,
-        ];
-    }
 
     public static function defaultArgumentReducers(): array
     {

@@ -27,15 +27,6 @@ if (file_exists(__DIR__.'/../.env')) {
     $dotEnv->load();
 }
 
-function canRunOpenAiTest(): bool
-{
-    if (empty(env('OPEN_API_KEY'))) {
-        return false;
-    }
-
-    return true;
-}
-
 /**
  * @param ?Closure(FlareConfig):void $closure
  */

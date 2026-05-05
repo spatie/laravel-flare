@@ -8,7 +8,6 @@ use Spatie\FlareClient\FlareMiddleware\FlareMiddleware;
 use Spatie\FlareClient\Recorders\DumpRecorder\HtmlDumper;
 use Spatie\FlareClient\ReportFactory;
 use Spatie\LaravelFlare\Exceptions\ViewException;
-use Spatie\LaravelFlare\Exceptions\ViewExceptionWithSolution;
 
 class AddViewInformation implements FlareMiddleware
 {
@@ -35,10 +34,6 @@ class AddViewInformation implements FlareMiddleware
                 fn (mixed $value) => (new HtmlDumper())->dumpVariable($value)
             )->all(),
         ]);
-
-        if ($viewException instanceof ViewExceptionWithSolution) {
-            $report->solution($viewException->getSolution());
-        }
 
         return $next($report);
     }
