@@ -6,6 +6,7 @@ use Livewire\Livewire;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
 use Spatie\FlareClient\FlareMiddleware\AddJobInformation;
+use Spatie\FlareClient\Recorders\ControllerRecorder\ControllerRecorder;
 use Spatie\FlareClient\Support\CollectsResolver as BaseCollectsResolver;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
@@ -78,6 +79,7 @@ class CollectsResolver extends BaseCollectsResolver
             RoutingRecorder::class,
             $this->only($options, ['ignored_routes']),
         );
+        $this->addRecorder(ControllerRecorder::class);
     }
 
     protected function console(array $options): void

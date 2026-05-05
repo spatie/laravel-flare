@@ -7,8 +7,8 @@ use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Support\Facades\Facade;
 use Spatie\FlareClient\Flare as FlareClient;
+use Spatie\FlareClient\Recorders\ControllerRecorder\ControllerRecorder;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
-use Spatie\FlareClient\Recorders\ResponseRecorder\ResponseRecorder;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
@@ -24,7 +24,7 @@ use Throwable;
  * @method static GlowRecorder|null glow()
  * @method static FilesystemRecorder|null filesystem()
  * @method static RoutingRecorder|null routing()
- * @method static ResponseRecorder|null response()
+ * @method static ControllerRecorder|null controller()
  * @method static RequestRecorder|null request()
  * @method static Tracer tracer()
  * @see \Spatie\FlareClient\Flare

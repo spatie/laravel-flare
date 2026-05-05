@@ -10,11 +10,13 @@ trait DispatchesRoutes
     protected function wrapDispatcher(Closure $dispatch): mixed
     {
         Flare::routing()?->recordBeforeMiddlewareEnd();
+        Flare::controller()?->recordStart();
 
-        $dispatched = $dispatch();
-
-        Flare::response()?->recordStart();
-
-        return $dispatched;
+        try {
+            return $dispatch();
+        } finally {
+            Flare::controller()?->recordEnd();
+            Flare::routing()?->recordAfterMiddlewareStart();
+        }
     }
 }

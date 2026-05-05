@@ -138,6 +138,14 @@ public function post(string $endpoint, string $apiKey, array $payload, FlareEnti
 
 `LaravelHttpSender` and `LaravelVaporSender` were updated accordingly. The Vapor sender also gained a `queue_logs` config option and no longer queues test payloads.
 
+#### Routing spans rearranged
+
+The HTTP entry-point trace now records the controller and after-middleware phases explicitly.
+
+* The `Response` span has been renamed to `Controller` and now wraps the controller dispatch itself, not the time after it.
+* A new `Middleware (after)` span covers the time between the controller returning and `RequestHandled` firing.
+* `Flare::response()` is replaced by `Flare::controller()`. If you reference the recorder, recorder-type enum, or span-type enum directly, see the matching `ResponseRecorder` entry in the `flare-client-php` upgrade guide.
+
 #### The base Flare client package
 
 The base `spatie/flare-client-php` package was rewritten. Most laravel-flare users do not touch it directly, but if you do (custom samplers, senders, or recorders, vanilla PHP integrations), read its [upgrade guide](https://github.com/spatie/flare-client-php/blob/main/UPGRADING.md) as well.

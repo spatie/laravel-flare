@@ -43,7 +43,7 @@ describe('Laravel integration', function () {
         $workspace->assertSent(traces: 1);
 
         $trace = $workspace->lastTrace()
-            ->expectSpanCount(9)
+            ->expectSpanCount(11)
             ->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
@@ -88,7 +88,7 @@ describe('Laravel integration', function () {
         $workspace->assertSent(traces: 1);
 
         $trace = $workspace->lastTrace()
-            ->expectSpanCount(10)
+            ->expectSpanCount(12)
             ->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 403);
@@ -548,7 +548,9 @@ describe('Laravel integration', function () {
         $foundTrackingUuid = null;
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('http.response.status_code', 500)
+            ->expectAttribute('http.response.status_code', 500);
+
+        $trace->expectSpan(SpanType::AfterMiddleware)
             ->expectSpanEventCount(1)
             ->expectSpanEvent(0)
             ->expectType(SpanEventType::Exception)
@@ -577,7 +579,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('http.response.status_code', 200)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $trace->expectSpan(SpanType::Controller)
             ->expectSpanEventCount(1)
             ->expectSpanEvent(0)
             ->expectType(SpanEventType::Exception)
@@ -599,8 +603,8 @@ describe('Laravel integration', function () {
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
 
-        $trace->expectSpan(7) // The error page generates a massive amount of view spans
-        ->expectSpanEventCount(1)
+        $trace->expectSpan(SpanType::AfterMiddleware)
+            ->expectSpanEventCount(1)
             ->expectSpanEvent(0)
             ->expectType(SpanEventType::Exception);
 
@@ -618,8 +622,8 @@ describe('Laravel integration', function () {
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
 
-        $trace->expectSpan(7) // The error page generates a massive amount of view spans
-        ->expectSpanEventCount(1)
+        $trace->expectSpan(SpanType::AfterMiddleware)
+            ->expectSpanEventCount(1)
             ->expectSpanEvent(0)
             ->expectType(SpanEventType::Exception);
 
@@ -639,11 +643,13 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $trace->expectSpan(SpanType::Query)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('db.system', 'sqlite')
             ->expectHasAttribute('db.name')
             ->expectAttribute('db.statement', 'select * from "posts" limit 1')
@@ -658,20 +664,22 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
+
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
 
         $trace->expectSpans(
             SpanType::Query,
             fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
+                ->expectParentId($controllerSpan)
                 ->expectAttribute('db.system', 'sqlite')
                 ->expectHasAttribute('db.name')
                 ->expectAttribute('db.statement', 'select * from "posts" where "id" = ? limit 1')
                 ->expectAttribute('db.sql.bindings', [1])
                 ->expectAttribute('laravel.db.connection', 'sqlite'),
             fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
+                ->expectParentId($controllerSpan)
                 ->expectAttribute('db.system', 'sqlite')
                 ->expectHasAttribute('db.name')
                 ->expectAttribute('db.statement', 'select * from "posts" where "name" = ? limit 1')
@@ -687,11 +695,13 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $transactionSpan = $trace->expectSpan(SpanType::Transaction)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.db.connection', 'sqlite')
             ->expectAttribute('db.transaction.status', 'committed');
 
@@ -706,11 +716,13 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $transactionSpan = $trace->expectSpan(SpanType::Transaction)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.db.connection', 'sqlite')
             ->expectAttribute('db.transaction.status', 'rolled_back');
 
@@ -728,7 +740,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('http.response.status_code', 200)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $trace->expectSpan(SpanType::Controller)
             ->expectSpanEvents(
                 SpanEventType::Cache,
                 fn (ExpectSpanEvent $event) => $event
@@ -768,11 +782,13 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $trace->expectSpan(SpanType::HttpRequest)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('http.request.method', 'GET')
             ->expectAttribute('url.full', 'https://jsonplaceholder.typicode.com/posts/1')
             ->expectAttribute('server.address', 'jsonplaceholder.typicode.com')
@@ -790,11 +806,13 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $trace->expectSpan(SpanType::HttpRequest)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('http.request.method', 'POST')
             ->expectAttribute('url.full', 'https://jsonplaceholder.typicode.com/posts')
             ->expectAttribute('server.address', 'jsonplaceholder.typicode.com')
@@ -812,15 +830,18 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
 
-        $requestSpan->expectSpanEventCount(1)
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
+        $trace->expectSpan(SpanType::AfterMiddleware)
+            ->expectSpanEventCount(1)
             ->expectSpanEvent(0)
             ->expectType(SpanEventType::Exception);
 
         $trace->expectSpan(SpanType::HttpRequest)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('http.request.method', 'GET')
             ->expectAttribute('url.full', 'https://does-not-exist-invalid-domain-12345.com')
             ->expectMissingAttribute('http.response.status_code')
@@ -840,19 +861,21 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $requestSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
+
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
 
         $trace->expectSpans(
             SpanType::Filesystem,
             fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
+                ->expectParentId($controllerSpan)
                 ->expectAttribute('filesystem.operation', 'put')
                 ->expectAttribute('filesystem.path', 'example.txt')
                 ->expectAttribute('filesystem.contents.size', '8 B')
                 ->expectAttribute('filesystem.operation.success', true),
             fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
+                ->expectParentId($controllerSpan)
                 ->expectAttribute('filesystem.operation', 'get')
                 ->expectAttribute('filesystem.path', 'example.txt')
                 ->expectAttribute('filesystem.contents.size', '8 B'),
@@ -871,8 +894,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
             ->expectHasAttribute('laravel.job.uuid')
@@ -910,8 +935,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
             ->expectHasAttribute('laravel.job.uuid')
@@ -949,8 +976,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan);
+            ->expectParentId($controllerSpan);
 
         $jobTrace = $workspace->trace(1)
             ->expectSpanCount(5); // Job, transaction: select and remove job, plus the failed attempt
@@ -1071,9 +1100,11 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace
             ->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectTraceId($requestSpan->span['traceId']);
 
         $job1Span = $workspace->trace(1)
@@ -1112,8 +1143,10 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $trace->expectSpan(SpanType::Job)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'sync')
             ->expectAttribute('laravel.job.queue.name', 'sync')
             ->expectAttribute('laravel.job.name', SuccesJob::class)
@@ -1135,8 +1168,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan);
+            ->expectParentId($controllerSpan);
 
         $workspace->trace(1)
             ->expectSpan(SpanType::Job)
@@ -1180,8 +1215,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan);
+            ->expectParentId($controllerSpan);
 
         for ($i = 1; $i <= 4; $i++) {
             $workspace->trace($i)
@@ -1226,8 +1263,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.job.class', NestedJob::class);
 
         $nestedJobTrace = $workspace->trace(1);
@@ -1261,8 +1300,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.job.class', ExitingJob::class);
     })->skip('This kills the queue process, so do not test this');
 
@@ -1276,8 +1317,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.job.class', ReleaseJob::class);
 
         $jobTrace = $workspace->trace(1);
@@ -1313,8 +1356,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('laravel.job.class', DeletedJob::class);
 
         $jobTrace = $workspace->trace(1);
@@ -1337,8 +1382,10 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $httpTrace->expectSpan(SpanType::Controller);
+
         $transactionSpan = $httpTrace->expectSpan(SpanType::Transaction)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('db.transaction.status', 'committed');
 
         $httpTrace->expectSpans(
@@ -1399,9 +1446,11 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $componentSpan = $trace
             ->expectSpan(LaravelSpanType::LivewireComponent)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('livewire.component.class', Counter::class)
             ->expectAttribute('livewire.component.name', 'counter')
             ->expectAttribute('livewire.component.single_file_component', false)
@@ -1425,7 +1474,7 @@ describe('Laravel integration', function () {
                 ->expectAttribute('view.name', 'livewire.counter')
                 ->expectHasAttribute('view.file'),
             fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
+                ->expectParentId($controllerSpan)
                 ->expectAttribute('view.name', 'components.layouts.app')
                 ->expectHasAttribute('view.file'),
         );
@@ -1445,9 +1494,11 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $componentSpan = $trace
             ->expectSpan(LaravelSpanType::LivewireComponent)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('livewire.component.class', Inline::class)
             ->expectAttribute('livewire.component.name', 'inline')
             ->expectAttribute('livewire.component.single_file_component', false)
@@ -1468,7 +1519,7 @@ describe('Laravel integration', function () {
         $trace->expectSpans(
             SpanType::View,
             fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
+                ->expectParentId($controllerSpan)
                 ->expectAttribute('view.name', 'components.layouts.app'),
         );
 
@@ -1487,9 +1538,11 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $componentSpan = $trace
             ->expectSpan(LaravelSpanType::LivewireComponent)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('livewire.component.name', 'single-file-counter')
             ->expectAttribute('livewire.component.single_file_component', true)
             ->expectMissingAttribute('livewire.component.class')
@@ -1514,7 +1567,7 @@ describe('Laravel integration', function () {
                 ->expectAttribute('view.file', fn (string $value) => expect($value)->toEndWith('single-file-counter.blade.php'))
                 ->expectAttribute('view.is_livewire_single_file_component', true),
             fn (ExpectSpan $span) => $span
-                ->expectParentId($requestSpan)
+                ->expectParentId($controllerSpan)
                 ->expectAttribute('view.name', 'components.layouts.app'),
         );
 
@@ -1536,11 +1589,13 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $trace->expectSpans(
             LaravelSpanType::LivewireComponent,
-            function (ExpectSpan $span) use ($requestSpan, &$nestedSpan) {
+            function (ExpectSpan $span) use ($controllerSpan, &$nestedSpan) {
                 $nestedSpan = $span
-                    ->expectParentId($requestSpan)
+                    ->expectParentId($controllerSpan)
                     ->expectAttribute('livewire.component.name', 'nested');
             },
             function (ExpectSpan $span) use (&$nestedSpan) {
@@ -1562,8 +1617,10 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $componentSpan = $trace->expectSpan(LaravelSpanType::LivewireComponent)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('livewire.component.name', 'mount-exception')
             ->expectHasAttribute('livewire.component.phase.mounting');
 
@@ -1589,8 +1646,10 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500);
 
+        $controllerSpan = $trace->expectSpan(SpanType::Controller);
+
         $componentSpan = $trace->expectSpan(LaravelSpanType::LivewireComponent)
-            ->expectParentId($requestSpan)
+            ->expectParentId($controllerSpan)
             ->expectAttribute('livewire.component.name', 'view-exception')
             ->expectAttribute('livewire.component.class', \Workbench\App\Livewire\ViewException::class)
             ->expectHasAttribute('livewire.component.phase.mounting');
@@ -1647,8 +1706,11 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        $responseSpan = $trace->expectSpan(SpanType::Request)
+        $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 500)
+            ->expectSpanEventCount(0, SpanEventType::Log);
+
+        $controllerSpan = $trace->expectSpan(SpanType::Controller)
             ->expectSpanEventCount(0, SpanEventType::Log);
 
         $log = $workspace->log(0)->expectLogCount(8);
@@ -1661,7 +1723,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure')
             ->expectSeverityText('debug')
             ->expectSeverityNumber(5)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $log->expectLog(1)
@@ -1669,7 +1731,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('log.context', [])
             ->expectSeverityText('info')
             ->expectSeverityNumber(9)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $log->expectLog(2)
@@ -1677,7 +1739,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('log.context', [])
             ->expectSeverityText('notice')
             ->expectSeverityNumber(10)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $log->expectLog(3)
@@ -1685,7 +1747,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('log.context', [])
             ->expectSeverityText('warning')
             ->expectSeverityNumber(13)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $log->expectLog(4)
@@ -1693,7 +1755,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('log.context', [])
             ->expectSeverityText('error')
             ->expectSeverityNumber(17)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $log->expectLog(5)
@@ -1701,7 +1763,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('log.context', [])
             ->expectSeverityText('critical')
             ->expectSeverityNumber(18)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $log->expectLog(6)
@@ -1709,7 +1771,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('log.context', [])
             ->expectSeverityText('alert')
             ->expectSeverityNumber(19)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $log->expectLog(7)
@@ -1717,7 +1779,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('log.context', [])
             ->expectSeverityText('emergency')
             ->expectSeverityNumber(21)
-            ->expectMatchesSpan($responseSpan)
+            ->expectMatchesSpan($controllerSpan)
             ->expectSampling();
 
         $workspace->lastReport()
@@ -1772,7 +1834,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('http.response.status_code', 500)
+            ->expectAttribute('http.response.status_code', 500);
+
+        $trace->expectSpan(SpanType::Controller)
             ->expectSpanEvents(
                 SpanEventType::Glow,
                 fn (ExpectSpanEvent $event) => $event

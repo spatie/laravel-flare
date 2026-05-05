@@ -62,8 +62,8 @@ class RoutingRecorder extends BaseRoutingRecorder
             Flare::routing()?->recordGlobalBeforeMiddlewareEnd();
             Flare::routing()?->recordBeforeMiddlewareEnd();
             Flare::routing()?->recordRoutingEnd(FlareTracingMiddleware::$routeAttributesProvider);
-
-            Flare::response()?->recordEnd();
+            Flare::controller()?->recordEnd();
+            Flare::routing()?->recordAfterMiddlewareEnd();
         });
     }
 }
