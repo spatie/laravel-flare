@@ -43,7 +43,7 @@ describe('Laravel integration', function () {
         $workspace->assertSent(traces: 1);
 
         $trace = $workspace->lastTrace()
-            ->expectSpanCount(9)
+            ->expectSpanCount(10)
             ->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
@@ -88,7 +88,7 @@ describe('Laravel integration', function () {
         $workspace->assertSent(traces: 1);
 
         $trace = $workspace->lastTrace()
-            ->expectSpanCount(10)
+            ->expectSpanCount(11)
             ->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 403);
