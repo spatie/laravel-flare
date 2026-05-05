@@ -1,93 +1,146 @@
 # Upgrading
 
-Because there are many breaking changes an upgrade is not that easy. There are many edge cases this guide does not
-cover. We accept PRs to improve this guide.
+There are some breaking changes you should be aware of. We've categorized them so you can prioritize. This guide covers the most common cases. Edge cases may not be covered, and PRs to improve it are welcome.
 
 ## From v2 to v3
 
+Most applications upgrade by editing `config/flare.php` and adding a `flare` log channel. The deeper changes (recorder subclasses, custom senders, custom samplers, custom attribute providers) only matter if you previously extended Flare's internals.
+
+### What's new in v3
+
+A few new concepts are referenced throughout this guide.
+
+* **First class logging.** A dedicated logger sends log entries to Flare in the OpenTelemetry log format. You opt in by enabling `log` in `config/flare.php` and adding a `flare` log channel.
+* **Dynamic sampling.** A new `DynamicSampler` selects a sample rate per entry point (route, command, job) using `SamplingRule` definitions, without requiring a custom sampler.
+* **Lifecycle.** A new `Lifecycle` class manages the application start, subtask boundaries (Octane, queue workers), termination, flushing, and reset behavior. The previous `TracingKernel`, `Flare::reset()`, and `Flare::sendReportsImmediately()` are gone.
+* **Entry points.** A new `EntryPoint` value object resolved by `EntryPointResolver` describes the request, command, or job that initiated a trace. It replaces the loose `entryPointClass` arguments and the array context previously passed to samplers, and feeds the new `flare.entry_point.handler.*` attributes.
+* **Attribute providers.** Recorders now accept dedicated provider contracts (`RequestAttributesProvider`, `ResponseAttributesProvider`, `RouteAttributesProvider`, `CommandAttributesProvider`, `JobAttributesProvider`, `UserAttributesProvider`) instead of loose arguments. Most users do not interact with these directly. Custom subclasses do.
+* **Reorganized recorders.** `RoutingRecorder`, `CommandRecorder`, and `JobRecorder` always boot for entry point detection, regardless of `collects` config. Span creation stays guarded by sampling.
 
 ### Update your config file
 
-- `send_logs_as_events` - this key no longer exists. Log shipping is now a first-class feature controlled by the `log` key (see below).
-- A `report` key has been added to enable/disable error reporting, it is enabled by default.
-- A `trace` key has been added to enable/disable tracing, it is enabled by default.
-- A `log` key has been added to enable/disable the new standalone log shipping feature, it is disabled by default.
-- If you ignored jobs before, you should update the key to `ignored_classes` instead of `ignored`
-- The `CollectType`for jobs has been renamed to `Spatie\FlareClient\Enums\CollectType::Jobs`
+The shape of `config/flare.php` changed. Either republish the config file from the package, or apply the diff manually.
 
-### Entry point attributes were reshaped
+```bash
+php artisan vendor:publish --tag=flare-config --force
+```
 
-The single `flare.entry_point.class` attribute is gone. Reports, traces and log records now carry:
+Notable keys.
 
-- `flare.entry_point.type` (`web`, `cli`, `queue`)
-- `flare.entry_point.value` (full URL, full command line, or job class)
-- `flare.entry_point.handler.identifier` (groupable: route pattern with method, command name, or job class)
-- `flare.entry_point.handler.name` (controller, view, redirect target, command class, job class, Livewire component)
-- `flare.entry_point.handler.type` (`laravel_controller`, `laravel_view`, `laravel_redirect`, `laravel_closure`, `laravel_command`, `laravel_job`, `livewire_component`, `livewire_sfc`, `php_closure`, ...)
+* `send_logs_as_events` was removed. Log shipping is now controlled by the `log` key (see [Logging setup](#logging-setup) below).
+* `attribute_providers` was removed. The user, console, and request providers are wired up automatically. 
+* `trace` defaults to `true` (previously `false`). Set it explicitly if you don't want tracing on by default.
+* `log` was added to enable or disable the new log shipping feature. Defaults to `false`.
+* `minimal_log_level` was added (Monolog `Level` instance, or `null` to send every level).
+* For job collection, the ignore list moved from `ignore` to `ignored_classes`.
 
-If you read these attributes from custom middleware, code, or filters, update the keys.
 
-### `Sampler` interface
+### Logging setup
 
-`Sampler::shouldSample(array $context)` is now `Sampler::shouldSample(EntryPoint $entryPoint)`. Custom samplers must update the signature. The `EntryPoint` value object exposes `$entryPoint->type` (EntryPointType enum), `$entryPoint->value`, and handler properties when resolved.
+Flare now has a dedicated log shipping pipeline. To use it.
 
-### Dynamic sampling
+1. Install the [Flare Daemon](https://github.com/spatie/flare-daemon) (this is not required but recommended).
 
-A new `DynamicSampler` lets you set per-route, per-command and per-job sampling rates via `SamplingRule` patterns. See the example block in `config/flare.php`. To opt in, swap the `sampler.class` to `Spatie\FlareClient\Sampling\DynamicSampler` and provide `base_rate` plus `rules` in `sampler.config`.
+2. Enable logging and switch the sender to the daemon in `config/flare.php`.
 
-### `AddJobInformation` middleware moved
-
-The middleware moved out of `Spatie\LaravelFlare\FlareMiddleware` into `Spatie\FlareClient\FlareMiddleware\AddJobInformation`. Update any imports.
-
-### Custom recorder subclasses
-
-If you extended any of the recorders, the constructor signatures and several `record*` methods changed:
-
-- `RoutingRecorder::recordRoutingEnd()` accepts new `?string $route`, `?string $entryPointHandlerName`, `string $entryPointHandlerType` parameters.
-- `CommandRecorder::recordStart()` accepts `?string $commandClass` and `?string $entryPointHandlerType`. Local ignore logic is delegated to the base; override `defaultIgnoredCommands()` instead.
-- `JobRecorder::recordStart()` accepts `?string $traceparent` and `?string $entryPointHandlerType`. Lifecycle subtask handling lives in the base.
-- `RequestRecorder::recordStart()` no longer accepts `$entryPointClass`.
-- `Lifecycle::start()` and `Lifecycle::startSubtask()` no longer accept a `samplerContext` array. The `EntryPointResolver` is the single source of truth.
-
-### `FlareConfig::collectJobs()`
-
-Signature changed to match the base: `collectJobs(bool $withTraces, bool $withErrors, ?int $maxItemsWithErrors, array $ignoredClasses = [], array $extra = [], int $maxChainedJobReportingDepth = ...)`. If you pass `$maxChainedJobReportingDepth` positionally, switch to a named argument.
-
-### Logging setup changed
-
-Flare now has a dedicated logging system available. If you want to use it, configure the daemon sender and route logs to the `flare` channel:
-
-1. **Enable logging and use the daemon sender** in `config/flare.php`:
     ```php
     'log' => true,
 
+   // Only needed if using the daemon. 
     'sender' => [
         'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
-        'config' => [
-            'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
+    ],
+    ```
+
+3. Add a `flare` log channel in `config/logging.php`.
+
+    ```php
+    'channels' => [
+        'flare' => [
+            'driver' => 'flare',
         ],
     ],
     ```
-2. **Route logs to flare** add the `flare` channel in your `config/logging.php`:
-    ```php
-    'channels' => [
-       'flare' => [
-           'driver' => 'flare',
-       ],
-    ],
-    ```
-    And add it to your log stack in `.env`:
+
+4. Include it in the active stack via your `.env`.
+
     ```
     LOG_STACK=single,flare
     ```
 
-If you keep the defaults, the daemon sender talks to `http://127.0.0.1:8787` and uses its built-in timeout and fallback behavior. Test payloads still talk directly to the daemon and do not fall back.
+If you keep the defaults, the daemon sender talks to `http://127.0.0.1:8787` and uses its built-in timeout and fallback behavior. Test payloads (sent via `php artisan flare:test`) talk directly to the daemon and do not fall back.
 
-> TODO: add proper Laravel-specific instructions for actually running the Flare daemon alongside the app. This likely needs concrete guidance on whether it should be started via a dedicated process manager, an Artisan wrapper command, or another recommended deployment pattern.
+The Flare daemon must be running alongside your application. Refer to the Flare documentation for deployment patterns (process manager, supervisor, systemd, or Octane sidecar).
 
-### The base Flare client package
+### `MessageLevels` enum replaced by Monolog's `Level`
 
-Was also completely rewritten, we recommend you to also check the [upgrade guide](https://github.com/spatie/flare-client-php/blob/main/UPGRADING.md) for that package.
+Anywhere you used `Spatie\FlareClient\Enums\MessageLevels`, switch to `Monolog\Level`.
+
+```php
+// Before
+$flare->glow()->record('Hello', MessageLevels::Debug);
+
+// After
+$flare->glow()->record('Hello', \Monolog\Level::Debug);
+```
+
+### Other changes
+
+If you've never manually called Flare, or configured anything outside the config file, you can skip the rest of this guide. If you have, read on for the details.
+
+#### `Flare::reset()`, `Flare::sendReportsImmediately()`, and `Flare::application()` were removed
+
+All three were removed in favor of `Lifecycle`. Drop direct calls.
+
+```php
+// Before
+Flare::reset();
+Flare::sendReportsImmediately();
+Flare::application()->recordTerminating();
+
+// After
+// Nothing. Lifecycle handles boot, register, terminate, queue boundaries, and Octane resets.
+```
+
+#### Custom recorder subclasses
+
+If you extended any recorder, the constructor signatures and several `record*` methods changed.
+
+* `RoutingRecorder::recordRoutingEnd()` accepts a `RouteAttributesProvider` instead of a route string.
+* `CommandRecorder::recordStart()` accepts a `CommandAttributesProvider` (typically `LaravelCommandAttributesProvider`). Local ignore logic moved to `defaultIgnoredCommands()`.
+* `JobRecorder::recordStart()` accepts a `JobAttributesProvider` and an optional `traceparent`. Lifecycle subtask handling lives in the base. Override `defaultIgnoredJobClasses()` for the ignore list.
+* `RequestRecorder::recordStart()` accepts a `RequestAttributesProvider`. `recordEnd()` accepts request, response, route, and user providers, plus optional attributes.
+* `Lifecycle::start()` and `Lifecycle::startSubtask()` no longer accept a `samplerContext` array. The `EntryPointResolver` is the single source of truth.
+* All recorders that contribute to entry point detection (`RoutingRecorder`, `CommandRecorder`, `JobRecorder`) take an `EntryPointResolver` in their constructor.
+
+#### Custom attribute providers
+
+The classes under `Spatie\LaravelFlare\AttributesProviders` were rewritten around dedicated contracts.
+
+* `LaravelUserAttributesProvider` now takes the user object in the constructor. The `id()`, `fullName()`, `email()`, and `attributes()` methods are parameterless. Use `LaravelUserAttributesProvider::fromRequest($request)` for the typical case.
+* `LaravelRequestAttributesProvider` now takes `Redactor`, `LivewireComponentFinder`, the request, and content/Livewire flags in its constructor. `toArray()` is parameterless.
+* `LaravelJobAttributesProvider` now takes the job in its constructor and exposes `jobName()`, `jobClass()`, and the new `EntryPointHandlerProvider` methods.
+* New: `LaravelCommandAttributesProvider`, `LaravelRouteAttributesProvider`, `LaravelQueuedJobAttributesProvider`, plus the `Concerns\ResolvesJobPayloadAttributes` trait.
+
+If you wired your own provider through the old `attribute_providers` config, point the relevant recorder at your subclass instead. Most subclasses can extend the new Laravel providers and override only the method they need.
+
+#### Custom senders
+
+The `Sender` interface gained a `bool $test` parameter and renames `FlarePayloadType` to `FlareEntityType`. If you ship a custom sender:
+
+```php
+// Before
+public function post(string $endpoint, string $apiToken, array $payload, FlarePayloadType $type, Closure $callback): void;
+
+// After
+public function post(string $endpoint, string $apiKey, array $payload, FlareEntityType $type, bool $test, Closure $callback): void;
+```
+
+`LaravelHttpSender` and `LaravelVaporSender` were updated accordingly. The Vapor sender also gained a `queue_logs` config option and no longer queues test payloads.
+
+#### The base Flare client package
+
+The base `spatie/flare-client-php` package was rewritten. Most laravel-flare users do not touch it directly, but if you do (custom samplers, senders, or recorders, vanilla PHP integrations), read its [upgrade guide](https://github.com/spatie/flare-client-php/blob/main/UPGRADING.md) as well.
 
 ## From v1 to v2
 
