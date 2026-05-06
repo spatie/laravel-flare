@@ -16,8 +16,11 @@ class FileSender implements Sender
             FlareEntityType::Logs => uniqid(),
         };
 
+        // Prefix with a microtime sequence so filename sort matches the order in which entities were sent.
+        $sequence = sprintf('%.6f', microtime(true));
+
         file_put_contents(
-            storage_path("{$type->value}_{$id}.json"),
+            storage_path("{$type->value}_{$sequence}_{$id}.json"),
             json_encode($payload)
         );
     }

@@ -188,7 +188,12 @@ class ExpectSentPayloads
                 continue;
             }
 
-            if (array_key_exists($file->getInode(), match ($entityType) {
+            // Filenames carry a microtime sequence prefix (see FileSender) so sorting by filename
+            // matches the chronological order in which the entities were sent. Inode order is
+            // not reliable across filesystems.
+            $key = $file->getFilename();
+
+            if (array_key_exists($key, match ($entityType) {
                 FlareEntityType::Errors => $this->reports,
                 FlareEntityType::Traces => $this->traces,
                 FlareEntityType::Logs => $this->logs,
@@ -199,9 +204,9 @@ class ExpectSentPayloads
             $content = json_decode(File::get($file->getRealPath()), true);
 
             match ($entityType) {
-                FlareEntityType::Errors => $this->reports[$file->getInode()] = new ExpectReport($content),
-                FlareEntityType::Traces => $this->traces[$file->getInode()] = new ExpectTrace($content),
-                FlareEntityType::Logs => $this->logs[$file->getInode()] = new ExpectLogData($content),
+                FlareEntityType::Errors => $this->reports[$key] = new ExpectReport($content),
+                FlareEntityType::Traces => $this->traces[$key] = new ExpectTrace($content),
+                FlareEntityType::Logs => $this->logs[$key] = new ExpectLogData($content),
             };
         }
 
