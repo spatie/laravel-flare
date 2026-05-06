@@ -275,7 +275,15 @@ class ExpectSentPayloads
             $pendingJobs = DB::table('jobs');
 
             if ($pendingJobs->count() === 0) {
-                return;
+                // The queue worker deletes a job from the `jobs` table before its
+                // JobProcessed handler finishes writing the trace file. Sleep briefly
+                // and re-confirm the queue is still empty so any in-flight flush from
+                // the last job lands in this test's workspace instead of the next one.
+                usleep(100_000);
+
+                if (DB::table('jobs')->count() === 0) {
+                    return;
+                }
             }
 
             $currentBackoffIndex++;
