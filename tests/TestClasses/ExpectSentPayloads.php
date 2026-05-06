@@ -54,7 +54,14 @@ class ExpectSentPayloads
     ) {
         $this->workSpacePath = __DIR__.'/../../workbench/storage';
 
+        // The shared queue worker may still be flushing a trace file from a previous
+        // test (the JobProcessed handler runs after the row is removed from `jobs`).
+        // Clean once, give late writes time to land, then clean again so they don't
+        // leak into this test's workspace.
         $this->cleanupWorkspace();
+        usleep(50_000);
+        $this->cleanupWorkspace();
+
         $this->initializeWorkspace(
             waitAtLeastMs: $waitAtLeastMs,
             waitUntilAllJobsAreProcessed: $waitUntilAllJobsAreProcessed
