@@ -46,7 +46,9 @@ class RoutingRecorder extends BaseRoutingRecorder
         $this->dispatcher->listen(RouteMatched::class, function (RouteMatched $event) {
             FlareTracingMiddleware::$routeAttributesProvider = LaravelRouteAttributesProvider::fromRequest($event->request);
 
-            $this->recordRoutingEnd(FlareTracingMiddleware::$routeAttributesProvider);
+            FlareTracingMiddleware::$routeAttributesProvider !== null
+                ? $this->recordRoutingEnd(FlareTracingMiddleware::$routeAttributesProvider)
+                : $this->recordForcedRoutingEnd();
 
             $this->recordBeforeMiddlewareStart();
         });
@@ -61,7 +63,10 @@ class RoutingRecorder extends BaseRoutingRecorder
             // In some cases when an error happens in one of these stages (or an abort is thrown) the only event to catch this is the RequestHandled event.
             Flare::routing()?->recordGlobalBeforeMiddlewareEnd();
             Flare::routing()?->recordBeforeMiddlewareEnd();
-            Flare::routing()?->recordRoutingEnd(FlareTracingMiddleware::$routeAttributesProvider);
+
+            FlareTracingMiddleware::$routeAttributesProvider !== null
+                ? Flare::routing()?->recordRoutingEnd(FlareTracingMiddleware::$routeAttributesProvider)
+                : $this->recordForcedRoutingEnd();
 
             Flare::response()?->recordEnd();
         });

@@ -121,12 +121,6 @@ parameters:
 			path: src/Recorders/CommandRecorder/CommandRecorder.php
 
 		-
-			message: '#^Parameter \#1 \$routeAttributesProvider of method Spatie\\FlareClient\\Recorders\\RoutingRecorder\\RoutingRecorder\:\:recordRoutingEnd\(\) expects Spatie\\FlareClient\\Contracts\\RouteAttributesProvider, Spatie\\LaravelFlare\\AttributesProviders\\LaravelRouteAttributesProvider\|null given\.$#'
-			identifier: argument.type
-			count: 2
-			path: src/Recorders/RoutingRecorder/RoutingRecorder.php
-
-		-
 			message: '#^Property Spatie\\FlareClient\\Support\\CollectsResolver\:\:\$middlewares \(array\<class\-string\<Spatie\\FlareClient\\FlareMiddleware\\FlareMiddleware\>, array\<string, mixed\>\>\) does not accept array\<string, array\<string, mixed\>\>\.$#'
 			identifier: assign.propertyType
 			count: 2
