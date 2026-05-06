@@ -7,21 +7,19 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Notifications\Events\NotificationFailed;
 use Illuminate\Notifications\Events\NotificationSending;
 use Illuminate\Notifications\Events\NotificationSent;
-use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Recorders\SpansRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 
 class NotificationRecorder extends SpansRecorder
 {
-
     public function __construct(
         Tracer $tracer,
         protected Dispatcher $dispatcher,
         BackTracer $backTracer,
-        protected UserAttributesProvider $userAttributesProvider,
         array $config
     ) {
         parent::__construct($tracer, $backTracer, $config);
@@ -65,12 +63,14 @@ class NotificationRecorder extends SpansRecorder
         return $this->endSpan();
     }
 
-    protected function resolveNotifiable(mixed $notifiable): string|null
+    protected function resolveNotifiable(mixed $notifiable): ?string
     {
-        if ($notifiable instanceof Authenticatable) {
-            return $this->userAttributesProvider->email($notifiable) ?? $this->userAttributesProvider->fullName($notifiable);
+        if (! $notifiable instanceof Authenticatable) {
+            return null;
         }
 
-        return null;
+        $provider = new LaravelUserAttributesProvider($notifiable);
+
+        return $provider->email() ?? $provider->fullName();
     }
 }

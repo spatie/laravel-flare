@@ -38,12 +38,14 @@ it('can report a command', function () {
         ->toHaveKey('endTimeUnixNano', 1546346096000000000)
         ->toHaveKey('type', SpanType::Command);
 
-
     expect($report['events'][0]['attributes'])
-        ->toHaveCount(3)
+        ->toHaveCount(8)
         ->toHaveKey('process.command', 'flare:test-command')
         ->toHaveKey('process.command_args', ["flare:test-command", "with-default"])
-        ->toHaveKey('process.exit_code', 0);
+        ->toHaveKey('process.exit_code', 0)
+        ->toHaveKey('flare.entry_point.type', 'cli')
+        ->toHaveKey('flare.entry_point.handler.type', 'laravel_command')
+        ->toHaveKey('flare.entry_point.handler.identifier', 'flare:test-command');
 });
 
 it('can trace a command', function () {
@@ -59,7 +61,10 @@ it('can trace a command', function () {
         ->expectName('Command - flare:test-command')
         ->expectType(SpanType::Command)
         ->expectMissingParentId()
-        ->expectAttributesCount(5)
+        ->expectAttributesCount(10)
+        ->expectAttribute('flare.entry_point.type', 'cli')
+        ->expectAttribute('flare.entry_point.handler.type', 'laravel_command')
+        ->expectAttribute('flare.entry_point.handler.identifier', 'flare:test-command')
         ->expectAttribute('process.command', 'flare:test-command')
         ->expectAttribute('process.command_args', ["flare:test-command", "with-default"])
         ->expectAttribute('process.exit_code', 0)
@@ -79,7 +84,10 @@ it('can trace a command with options and arguments', function () {
         ->expectName('Command - flare:test-command')
         ->expectType(SpanType::Command)
         ->expectMissingParentId()
-        ->expectAttributesCount(5)
+        ->expectAttributesCount(10)
+        ->expectAttribute('flare.entry_point.type', 'cli')
+        ->expectAttribute('flare.entry_point.handler.type', 'laravel_command')
+        ->expectAttribute('flare.entry_point.handler.identifier', 'flare:test-command')
         ->expectAttribute('process.command', 'flare:test-command')
         ->expectAttribute('process.command_args', ["flare:test-command", "some-argument", "--option=something", "--boolean-option"])
         ->expectAttribute('process.exit_code', 0)
@@ -117,7 +125,10 @@ it('can trace a nested command which will be added to the same trace', function 
         ->expectType(SpanType::Command)
         ->expectMissingParentId()
         ->expectEnded()
-        ->expectAttributesCount(5)
+        ->expectAttributesCount(10)
+        ->expectAttribute('flare.entry_point.type', 'cli')
+        ->expectAttribute('flare.entry_point.handler.type', 'laravel_command')
+        ->expectAttribute('flare.entry_point.handler.identifier', 'flare:test-command')
         ->expectAttribute('process.command', 'flare:test-command')
         ->expectAttribute('process.command_args', ["flare:test-command", "with-default", "--run-nested"])
         ->expectAttribute('process.exit_code', 0)
@@ -128,7 +139,10 @@ it('can trace a nested command which will be added to the same trace', function 
         ->expectType(SpanType::Command)
         ->expectParentId($commandSpan)
         ->expectEnded()
-        ->expectAttributesCount(5)
+        ->expectAttributesCount(10)
+        ->expectAttribute('flare.entry_point.type', 'cli')
+        ->expectAttribute('flare.entry_point.handler.type', 'laravel_command')
+        ->expectAttribute('flare.entry_point.handler.identifier', 'flare:test-command')
         ->expectAttribute('process.command', 'flare:test-command')
         ->expectAttribute('process.command_args', ['nested-argument', "flare:test-command", '--option=nested', '--boolean-option'])
         ->expectAttribute('process.exit_code', 0)

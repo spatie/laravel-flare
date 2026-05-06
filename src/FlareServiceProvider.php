@@ -64,7 +64,6 @@ class FlareServiceProvider extends ServiceProvider
      * @param Closure(\Spatie\FlareClient\Support\Container|IlluminateContainer, class-string<Recorder>, array):void|null $registerRecorderAndMiddlewaresCallback
      * @param class-string<\Spatie\FlareClient\Support\CollectsResolver>|null $collectsResolver
      * @param Closure():bool|null $isUsingSubtasksClosure
-     * @param Closure(bool):bool|null $shouldMakeSamplingDecisionClosure
      * @param Closure(Span):bool|null $gracefulSpanEnderClosure
      */
     public function __construct(
@@ -72,7 +71,6 @@ class FlareServiceProvider extends ServiceProvider
         protected ?string $collectsResolver = null,
         protected ?Closure $registerRecorderAndMiddlewaresCallback = null,
         protected ?Closure $isUsingSubtasksClosure = null,
-        protected ?Closure $shouldMakeSamplingDecisionClosure = null,
         protected ?Closure $gracefulSpanEnderClosure = null,
         protected bool $disableApiQueue = false
     ) {

@@ -7,16 +7,16 @@ parameters:
 			path: src/AttributesProviders/LaravelJobAttributesProvider.php
 
 		-
+			message: '#^Binary operation "\*" between float\|int\|string and 1000000000 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: src/AttributesProviders/LaravelQueuedJobAttributesProvider.php
+
+		-
 			message: '#^Instanceof between Illuminate\\Routing\\Route and Illuminate\\Routing\\Route will always evaluate to true\.$#'
 			identifier: instanceof.alwaysTrue
 			count: 1
-			path: src/AttributesProviders/LaravelRequestAttributesProvider.php
-
-		-
-			message: '#^Dead catch \- Throwable is never thrown in the try block\.$#'
-			identifier: catch.neverThrown
-			count: 3
-			path: src/AttributesProviders/LaravelUserAttributesProvider.php
+			path: src/AttributesProviders/LaravelRouteAttributesProvider.php
 
 		-
 			message: '#^Call to an undefined method Livewire\\LivewireManager\:\:getClass\(\)\.$#'
@@ -113,6 +113,18 @@ parameters:
 			identifier: class.notFound
 			count: 1
 			path: src/FlareServiceProvider.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between string and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: src/Recorders/CommandRecorder/CommandRecorder.php
+
+		-
+			message: '#^Parameter \#1 \$routeAttributesProvider of method Spatie\\FlareClient\\Recorders\\RoutingRecorder\\RoutingRecorder\:\:recordRoutingEnd\(\) expects Spatie\\FlareClient\\Contracts\\RouteAttributesProvider, Spatie\\LaravelFlare\\AttributesProviders\\LaravelRouteAttributesProvider\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: src/Recorders/RoutingRecorder/RoutingRecorder.php
 
 		-
 			message: '#^Property Spatie\\FlareClient\\Support\\CollectsResolver\:\:\$middlewares \(array\<class\-string\<Spatie\\FlareClient\\FlareMiddleware\\FlareMiddleware\>, array\<string, mixed\>\>\) does not accept array\<string, array\<string, mixed\>\>\.$#'

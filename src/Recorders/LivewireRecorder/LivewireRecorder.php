@@ -6,7 +6,9 @@ use Exception;
 use Illuminate\View\View;
 use Livewire\Component;
 use Livewire\EventBus;
+use Livewire\LivewireManager;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
+use Spatie\FlareClient\EntryPoint\EntryPointResolver;
 use Spatie\FlareClient\Enums\RecorderType;
 use Spatie\FlareClient\Recorders\SpansRecorder;
 use Spatie\FlareClient\Support\BackTracer;
@@ -15,6 +17,7 @@ use Spatie\LaravelFlare\Enums\LivewireComponentPhase;
 use Spatie\LaravelFlare\Enums\SpanType;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
+use Throwable;
 
 class LivewireRecorder extends SpansRecorder
 {
@@ -38,6 +41,8 @@ class LivewireRecorder extends SpansRecorder
         protected EventBus $eventBus,
         protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
         protected LivewireComponentFinder $livewireComponentFinder,
+        protected EntryPointResolver $entryPointResolver,
+        protected LivewireManager $livewireManager,
         protected ?ViewRecorder $viewRecorder = null,
     ) {
         parent::__construct($tracer, $backTracer, $config);
@@ -92,6 +97,8 @@ class LivewireRecorder extends SpansRecorder
         }
 
         $isSingleFileComponent = $this->livewireComponentFinder->isSingleFileComponent($component);
+
+        $this->updateEntryPoint($class, $component, $isSingleFileComponent);
 
         $attributes = [
             'flare.span_type' => SpanType::LivewireComponent,
@@ -201,6 +208,8 @@ class LivewireRecorder extends SpansRecorder
         }
 
         $isSingleFileComponent = $this->livewireComponentFinder->isSingleFileComponent($component->getName());
+
+        $this->updateEntryPoint($component::class, $component->getName(), $isSingleFileComponent);
 
         $attributes = [
             'flare.span_type' => SpanType::LivewireComponent,
@@ -364,6 +373,32 @@ class LivewireRecorder extends SpansRecorder
         $this->endSpan();
 
         unset($this->componentStates[$component->id()]);
+    }
+
+    protected function updateEntryPoint(
+        string $componentClass,
+        string $componentName,
+        bool $isSingleFileComponent,
+    ): void {
+        try {
+            $entryPoint = $this->entryPointResolver->get();
+
+            if (in_array($entryPoint->handlerType ?? null, ['livewire_component', 'livewire_sfc'], true)) {
+                return;
+            }
+
+            $url = $this->livewireManager->originalUrl();
+            $method = strtoupper($this->livewireManager->originalMethod());
+
+            $entryPoint->updateValue($url);
+
+            $entryPoint->setHandler(
+                handlerIdentifier: $method.' '.(parse_url($url, PHP_URL_PATH) ?: '/'),
+                handlerName: $isSingleFileComponent ? $componentName : $componentClass,
+                handlerType: $isSingleFileComponent ? 'livewire_sfc' : 'livewire_component',
+            );
+        } catch (Throwable) {
+        }
     }
 
     protected function moveState(

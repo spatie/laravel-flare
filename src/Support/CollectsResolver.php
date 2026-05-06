@@ -5,12 +5,13 @@ namespace Spatie\LaravelFlare\Support;
 use Livewire\Livewire;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
+use Spatie\FlareClient\FlareMiddleware\AddJobInformation;
+use Spatie\FlareClient\Recorders\ResponseRecorder\ResponseRecorder;
 use Spatie\FlareClient\Support\CollectsResolver as BaseCollectsResolver;
 use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\FlareMiddleware\AddConsoleInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionContextInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddExceptionHandledStatus;
-use Spatie\LaravelFlare\FlareMiddleware\AddJobInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddLaravelInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddRequestInformation;
 use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation;
@@ -70,10 +71,15 @@ class CollectsResolver extends BaseCollectsResolver
         $this->requestsMiddlewareClass = $middleware;
         $this->addMiddleware($middleware);
 
-        $this->addRecorder(RequestRecorder::class, $this->only($options, [
-            'group_unmatched_route_errors',
-        ]));
-        $this->addRecorder(RoutingRecorder::class);
+        $this->addRecorder(
+            RequestRecorder::class,
+            $this->only($options, ['group_unmatched_route_errors', 'ignored_urls', 'ignored_paths']),
+        );
+        $this->addRecorder(
+            RoutingRecorder::class,
+            $this->only($options, ['ignored_routes']),
+        );
+        $this->addRecorder(ResponseRecorder::class);
     }
 
     protected function console(array $options): void
@@ -101,23 +107,19 @@ class CollectsResolver extends BaseCollectsResolver
 
     protected function jobs(array $options): void
     {
-        if (array_key_exists('ignore', $options) && is_string($options['ignore'])) {
-            $options['ignore'] = [$options['ignore']];
-        }
-
         $this->addRecorder($options['job_recorder'] ?? JobRecorder::class, $this->only($options, [
             'with_traces',
             'with_errors',
             'max_items_with_errors',
             'max_chained_job_reporting_depth',
-            'ignore',
+            'ignored_classes',
         ]));
 
         $this->addRecorder($options['queue_recorder'] ?? QueueRecorder::class, $this->only($options, [
             'with_traces',
             'with_errors',
             'max_items_with_errors',
-            'ignore',
+            'ignored_classes',
         ]));
 
         $this->addMiddleware($options['middleware'] ?? AddJobInformation::class);

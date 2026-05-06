@@ -11,8 +11,8 @@ it('groups unmatched 4xx responses when ending a request span', function () {
 
     $request = Request::create('https://flare.test/missing-route', 'GET');
 
-    $flare->request()?->recordStart($request);
-    $flare->request()?->recordEnd(new Response('', 404));
+    $flare->request()?->recordStartFromSymfonyRequest($request);
+    $flare->request()?->recordEndFromSymfonyResponse(new Response('', 404));
 
     $flare->tracer->endTrace();
 
@@ -30,10 +30,10 @@ it('does not override an existing route when ending a request span', function ()
 
     $request = Request::create('https://flare.test/users/1', 'GET');
 
-    $flare->request()?->recordStart($request);
-    $flare->request()?->recordEnd(
+    $flare->request()?->recordStartFromSymfonyRequest($request);
+    $flare->request()?->recordEndFromSymfonyResponse(
         new Response('', 404),
-        ['http.route' => 'users/{id}'],
+        attributes: ['http.route' => 'users/{id}'],
     );
 
     $flare->tracer->endTrace();

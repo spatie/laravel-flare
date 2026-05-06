@@ -2,12 +2,12 @@
 
 namespace Spatie\LaravelFlare\Recorders\RequestRecorder;
 
-use Illuminate\Http\Request as LaravelRequest;
-use Spatie\FlareClient\Enums\SpanType;
+use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
+use Spatie\FlareClient\Contracts\RequestAttributesProvider;
+use Spatie\FlareClient\Contracts\ResponseAttributesProvider;
+use Spatie\FlareClient\Contracts\RouteAttributesProvider;
 use Spatie\FlareClient\Recorders\RequestRecorder\RequestRecorder as BaseRequestRecorder;
 use Spatie\FlareClient\Spans\Span;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 class RequestRecorder extends BaseRequestRecorder
 {
@@ -22,42 +22,45 @@ class RequestRecorder extends BaseRequestRecorder
         $this->groupUnmatchedRouteErrors = $config['group_unmatched_route_errors'] ?? self::DEFAULT_GROUP_UNMATCHED_ROUTE_ERRORS;
     }
 
-    public function recordStart(
-        ?Request $request = null,
-        ?string $route = null,
-        ?string $entryPointClass = null,
-        array $attributes = []
-    ): ?Span {
-        if (! $request instanceof LaravelRequest) {
-            return null;
-        }
-
-        return $this->startSpan(nameAndAttributes: fn () => [
-            'name' => "Request - {$request->url()}",
-            'attributes' => [
-                'flare.span_type' => SpanType::Request,
-                'http.request.method' => strtoupper($request->getMethod()),
-                ...$attributes,
-            ],
-        ]);
-    }
-
     public function recordEnd(
-        ?Response $response = null,
+        ?RequestAttributesProvider $requestAttributesProvider = null,
+        ?ResponseAttributesProvider $responseAttributesProvider = null,
+        ?RouteAttributesProvider $routeAttributesProvider = null,
+        ?UserAttributesProvider $userAttributesProvider = null,
         array $attributes = [],
     ): ?Span {
-        $responseStatusCode = $response?->getStatusCode();
+        $statusCode = $responseAttributesProvider?->statusCode();
 
         if (
             $this->groupUnmatchedRouteErrors
-            && $responseStatusCode !== null
-            && $responseStatusCode >= 400
-            && $responseStatusCode < 500
+            && $statusCode !== null
+            && $statusCode >= 400
+            && $statusCode < 500
+            && $routeAttributesProvider?->route() === null
             && ! array_key_exists('http.route', $attributes)
         ) {
-            $attributes['http.route'] = "errors::{$responseStatusCode}";
+            $attributes['http.route'] = "errors::{$statusCode}";
         }
 
-        return parent::recordEnd($response, $attributes);
+        return parent::recordEnd(
+            requestAttributesProvider: $requestAttributesProvider,
+            responseAttributesProvider: $responseAttributesProvider,
+            routeAttributesProvider: $routeAttributesProvider,
+            userAttributesProvider: $userAttributesProvider,
+            attributes: $attributes,
+        );
+    }
+
+    protected function defaultIgnoredPaths(): array
+    {
+        return [
+            '/_debugbar*',
+            '/telescope*',
+            '/horizon*',
+            '/livewire/livewire.js',
+            '/livewire/livewire.min.js',
+            '/livewire-*/livewire.js',
+            '/livewire-*/livewire.min.js',
+        ];
     }
 }

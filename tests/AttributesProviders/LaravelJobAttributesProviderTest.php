@@ -2,24 +2,38 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Container\Container;
+use Illuminate\Contracts\Queue\Job;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\CallQueuedClosure;
 use Illuminate\Queue\Jobs\RedisJob;
-use Illuminate\Queue\Jobs\SyncJob;
 use Illuminate\Queue\RedisQueue;
 use Illuminate\Queue\SyncQueue;
 use function Livewire\invade;
+use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\LaravelFlare\AttributesProviders\LaravelJobAttributesProvider;
 use Spatie\LaravelFlare\Tests\stubs\Jobs\QueueableJob;
+
+function jobAttributes(Job|ShouldQueue $job, ?string $connectionName = null, int $maxChainedJobReportingDepth = 3): array
+{
+    if ($job instanceof ShouldQueue) {
+        $queue = invade(new SyncQueue());
+        $queue->setContainer(app());
+
+        $job = $queue->resolveJob($queue->createPayload($job, null, []), null);
+    }
+
+    return (new LaravelJobAttributesProvider(
+        app(ReduceArgumentPayloadAction::class),
+        $job,
+        $connectionName,
+        $maxChainedJobReportingDepth,
+    ))->toArray();
+}
 
 it('can provide attributes for a job', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(
-        createQueuedJob(new QueueableJob([])),
-    );
+    $attributes = jobAttributes(new QueueableJob([]));
 
     expect($attributes)
         ->toHaveCount(6)
@@ -34,12 +48,7 @@ it('can provide attributes for a job', function () {
 it('can set the connection name from the outside', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(
-        createQueuedJob(new QueueableJob([])),
-        'sync'
-    );
+    $attributes = jobAttributes(new QueueableJob([]), 'sync');
 
     expect($attributes)
         ->toHaveCount(6)
@@ -49,14 +58,10 @@ it('can set the connection name from the outside', function () {
 it('can provide attributes for a job with properties', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(
-        createQueuedJob(new QueueableJob([
-            'int' => 42,
-            'boolean' => true,
-        ])),
-    );
+    $attributes = jobAttributes(new QueueableJob([
+        'int' => 42,
+        'boolean' => true,
+    ]));
 
     expect($attributes['laravel.job.properties']['property'])
         ->toHaveCount(2)
@@ -67,13 +72,9 @@ it('can provide attributes for a job with properties', function () {
 it('can provide attributes for a job with properties which values will be reduced', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(
-        createQueuedJob(new QueueableJob([
-            'object' => new stdClass(),
-        ])),
-    );
+    $attributes = jobAttributes(new QueueableJob([
+        'object' => new stdClass(),
+    ]));
 
     expect($attributes['laravel.job.properties']['property'])
         ->toHaveKey('object', 'object (stdClass)');
@@ -86,15 +87,13 @@ it('can parse job properties set by the user', function () {
 
     $job = new QueueableJob(
         property: [],
-        retryUntilValue: $date,  // retryUntil
-        tries: 5, // tries
-        maxExceptions: 10, // maxExceptions
-        timeout: 120 // timeout
+        retryUntilValue: $date,
+        tries: 5,
+        maxExceptions: 10,
+        timeout: 120
     );
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(createQueuedJob($job));
+    $attributes = jobAttributes($job);
 
     expect($attributes['laravel.job.max_tries'])->toEqual(5);
     expect($attributes['laravel.job.max_exceptions'])->toEqual(10);
@@ -105,31 +104,25 @@ it('can parse job properties set by the user', function () {
 it('can record a closure job', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(
-        createQueuedJob(CallQueuedClosure::create(function () {
-            return 'Hello, World!';
-        })),
-    );
+    $attributes = jobAttributes(CallQueuedClosure::create(function () {
+        return 'Hello, World!';
+    }));
 
     expect($attributes['laravel.job.class'])->toEqual(CallQueuedClosure::class);
-    expect($attributes['laravel.job.name'])->toEqual('Closure (LaravelJobAttributesProviderTest.php:'.(__LINE__ - 6).')');
+    expect($attributes['laravel.job.name'])->toEqual('Closure (LaravelJobAttributesProviderTest.php:'.(__LINE__ - 5).')');
 });
 
 it('can provide attributes for chained jobs', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(createQueuedJob(
+    $attributes = jobAttributes(
         (new QueueableJob(['level-one']))->chain([
             new QueueableJob(['level-two-a']),
             (new QueueableJob(['level-two-b']))->chain([
                 (new QueueableJob(['level-three'])),
             ]),
         ])
-    ));
+    );
 
     $chain = $attributes['laravel.job.chain.jobs'];
 
@@ -165,15 +158,14 @@ it('can provide attributes for chained jobs', function () {
 it('can restrict the chain depth', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(createQueuedJob(
+    $attributes = jobAttributes(
         (new QueueableJob(['level-one']))->chain([
             (new QueueableJob(['level-two-b']))->chain([
                 (new QueueableJob(['level-three'])),
             ]),
-        ])
-    ), maxChainedJobReportingDepth: 1);
+        ]),
+        maxChainedJobReportingDepth: 1
+    );
 
     $chain = $attributes['laravel.job.chain.jobs'];
 
@@ -184,15 +176,14 @@ it('can restrict the chain depth', function () {
 it('can disable including the chain', function () {
     setupFlare();
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray(createQueuedJob(
+    $attributes = jobAttributes(
         (new QueueableJob(['level-one']))->chain([
             (new QueueableJob(['level-two-b']))->chain([
                 (new QueueableJob(['level-three'])),
             ]),
-        ])
-    ), maxChainedJobReportingDepth: 0);
+        ]),
+        maxChainedJobReportingDepth: 0
+    );
 
     expect($attributes)->not()->toHaveKey('laravel.job.chain.jobs');
 });
@@ -213,21 +204,8 @@ it('can handle a job with an unserializeable payload', function () {
         'default'
     );
 
-    $provider = app(LaravelJobAttributesProvider::class);
-
-    $attributes = $provider->toArray($job);
+    $attributes = jobAttributes($job);
 
     expect($attributes['laravel.job.queue.connection_name'])->toEqual('redis');
     expect($attributes['laravel.job.queue.name'])->toEqual('default');
 });
-
-
-function createQueuedJob(
-    ShouldQueue $job
-): SyncJob {
-    $queue = invade(new SyncQueue());
-
-    $queue->setContainer(app());
-
-    return $queue->resolveJob($queue->createPayload($job, null, []), null);
-}

@@ -5,41 +5,49 @@ namespace Spatie\LaravelFlare\Http\Middleware;
 use Closure;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Spatie\FlareClient\AttributesProviders\SymfonyResponseAttributesProvider;
 use Spatie\FlareClient\Support\Lifecycle;
-use Spatie\FlareClient\Tracer;
+use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
+use Spatie\LaravelFlare\AttributesProviders\LaravelRouteAttributesProvider;
+use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
+use Spatie\LaravelFlare\Enums\LaravelCollectType;
 use Spatie\LaravelFlare\Facades\Flare;
+use Spatie\LaravelFlare\FlareConfig;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 use Symfony\Component\HttpFoundation\Response;
 
 class FlareTracingMiddleware
 {
+    public static ?LaravelRouteAttributesProvider $routeAttributesProvider = null;
+
+    private LaravelRequestAttributesProvider $requestAttributesProvider;
+
     public function __construct(
-        protected Tracer $tracer,
         protected Lifecycle $lifecycle,
         protected Application $app,
-        protected LaravelRequestAttributesProvider $attributesProvider,
+        protected Redactor $redactor,
+        protected LivewireComponentFinder $livewireComponentFinder,
+        protected FlareConfig $config,
     ) {
     }
 
     public function handle(Request $request, Closure $next): mixed
     {
-        $ignorePaths = [
-            '_debugbar',
-            'telescope',
-            'horizon',
-        ];
+        self::$routeAttributesProvider = null;
 
-        if (
-            Str::startsWith($request->decodedPath(), $ignorePaths)
-            || preg_match('/^livewire(-[a-f0-9]+)?\/livewire(\.min)?\.js/', $request->decodedPath())
-        ) {
-            $this->tracer->unsample();
+        $livewireOptions = $this->config->collects[LaravelCollectType::LivewireComponents->value]['options'] ?? [];
 
-            return $next($request);
-        }
+        $this->requestAttributesProvider = new LaravelRequestAttributesProvider(
+            $this->redactor,
+            $this->livewireComponentFinder,
+            $request,
+            includeContents: true,
+            includeLivewireComponents: $livewireOptions['include_livewire_components'] ?? false,
+            ignoreLivewireComponents: $livewireOptions['ignore_livewire_components'] ?? [],
+        );
 
-        Flare::request()?->recordStart($request);
+        Flare::request()?->recordStart($this->requestAttributesProvider);
         Flare::routing()?->recordGlobalBeforeMiddlewareStart();
 
         return $next($request);
@@ -48,9 +56,13 @@ class FlareTracingMiddleware
     public function terminate(Request $request, Response $response): void
     {
         Flare::request()?->recordEnd(
-            response: $response,
-            attributes: $this->attributesProvider->toArray($request, includeContents: false)
+            requestAttributesProvider: $this->requestAttributesProvider,
+            responseAttributesProvider: new SymfonyResponseAttributesProvider($this->redactor, $response),
+            routeAttributesProvider: self::$routeAttributesProvider ?? LaravelRouteAttributesProvider::fromRequest($request),
+            userAttributesProvider: LaravelUserAttributesProvider::fromRequest($request),
         );
+
+        self::$routeAttributesProvider = null;
 
         $this->lifecycle->terminating();
     }

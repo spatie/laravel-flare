@@ -43,7 +43,7 @@ describe('Laravel integration', function () {
         $workspace->assertSent(traces: 1);
 
         $trace = $workspace->lastTrace()
-            ->expectSpanCount(9)
+            ->expectSpanCount(10)
             ->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
@@ -53,8 +53,10 @@ describe('Laravel integration', function () {
             ->expectAttribute('url.path', '/')
             ->expectAttribute('url.query', '')
             ->expectAttribute('flare.entry_point.type', 'web')
-            ->expectHasAttribute('flare.entry_point.value')
-            ->expectHasAttribute('flare.entry_point.class')
+            ->expectAttribute('flare.entry_point.value', fn ($value) => expect($value)->toStartWith('http://127.0.0.1:8000/'))
+            ->expectAttribute('flare.entry_point.handler.identifier', '/')
+            ->expectAttribute('flare.entry_point.handler.name', fn ($value) => expect($value)->toStartWith('closure: '))
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure')
             ->expectHasAttribute('server.address')
             ->expectHasAttribute('server.port')
             ->expectAttribute('user_agent.original', 'GuzzleHttp/7')
@@ -100,7 +102,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('flare.entry_point.class', InvokableController::class)
+            ->expectAttribute('flare.entry_point.handler.identifier', 'invokable-controller')
+            ->expectAttribute('flare.entry_point.handler.name', InvokableController::class)
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_controller')
             ->expectAttribute('http.route', 'invokable-controller')
             ->expectAttribute('laravel.route.action', InvokableController::class)
             ->expectAttribute('laravel.route.action_type', 'controller');
@@ -114,7 +118,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
-            ->expectAttribute('flare.entry_point.class', ResourceController::class.'@index')
+            ->expectAttribute('flare.entry_point.handler.identifier', 'resource-controller')
+            ->expectAttribute('flare.entry_point.handler.name', ResourceController::class.'@index')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_controller')
             ->expectAttribute('http.route', 'resource-controller')
             ->expectAttribute('laravel.route.action', ResourceController::class.'@index')
             ->expectAttribute('laravel.route.action_type', 'controller');
@@ -358,6 +364,9 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('flare.entry_point.handler.identifier', 'view-response-routed')
+            ->expectAttribute('flare.entry_point.handler.name', 'view: welcome')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_view')
             ->expectAttribute('http.route', 'view-response-routed')
             ->expectAttribute('http.response.headers', function ($value) {
                 expect($value)->toBeArray();
@@ -554,7 +563,10 @@ describe('Laravel integration', function () {
         $workspace->lastReport()
             ->expectExceptionClass(Exception::class)
             ->expectMessage('Test exception')
-            ->expectTrackingUuid($foundTrackingUuid);
+            ->expectTrackingUuid($foundTrackingUuid)
+            ->expectAttribute('flare.entry_point.type', 'web')
+            ->expectAttribute('flare.entry_point.handler.identifier', 'exception')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure');
     });
 
     it('can handle a handled exception route', function () {
@@ -859,7 +871,7 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
@@ -870,9 +882,14 @@ describe('Laravel integration', function () {
         $jobTrace = $workspace->trace(1)
             ->expectSpanCount(4); // Job, transaction: select and remove job
 
-        $jobTrace->expectSpan(LaravelSpanType::Job)
+        $jobTrace->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
+            ->expectAttribute('flare.entry_point.type', 'queue')
+            ->expectAttribute('flare.entry_point.value', SuccesJob::class)
+            ->expectAttribute('flare.entry_point.handler.identifier', SuccesJob::class)
+            ->expectAttribute('flare.entry_point.handler.name', SuccesJob::class)
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_job')
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
             ->expectAttribute('laravel.job.name', SuccesJob::class)
@@ -893,7 +910,7 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
@@ -907,7 +924,7 @@ describe('Laravel integration', function () {
         $jobTrace = $workspace->trace(1)
             ->expectSpanCount(4);
 
-        $jobTrace->expectSpan(LaravelSpanType::Job)
+        $jobTrace->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
@@ -932,12 +949,12 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan);
 
         $jobTrace = $workspace->trace(1)
             ->expectSpanCount(5); // Job, transaction: select and remove job, plus the failed attempt
-        $jobSpan = $jobTrace->expectSpan(LaravelSpanType::Job)
+        $jobSpan = $jobTrace->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.success', false)
@@ -952,7 +969,7 @@ describe('Laravel integration', function () {
             ->expectTrackingUuid($jobExceptionEvent->attributes()['exception.id'])
             ->expectEventCount(1)
             ->expectEvent(0)
-            ->expectType(LaravelSpanType::Job)
+            ->expectType(SpanType::Job)
             ->expectStart($jobSpan->span['startTimeUnixNano'])
             ->expectEnd($jobSpan->span['endTimeUnixNano'])
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
@@ -977,7 +994,7 @@ describe('Laravel integration', function () {
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $trace->expectSpanCount(0, LaravelSpanType::Job); // No queueing span for sync dispatch
+        $trace->expectSpanCount(0, SpanType::Job); // No queueing span for sync dispatch
     });
 
     it('can handle a job dispatched after response', function () {
@@ -992,7 +1009,7 @@ describe('Laravel integration', function () {
 
             $httpTrace->expectSpan($spanIndex)
                 ->expectParentId($terminatingSpan)
-                ->expectType(LaravelSpanType::Job)
+                ->expectType(SpanType::Job)
                 ->expectAttribute('laravel.job.queue.connection_name', 'sync')
                 ->expectAttribute('laravel.job.queue.name', 'sync')
                 ->expectAttribute('laravel.job.name', SuccesJob::class)
@@ -1004,7 +1021,7 @@ describe('Laravel integration', function () {
 
         $httpTrace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 200);
 
-        $httpTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+        $httpTrace->expectSpanCount(0, SpanType::QueueingJob);
     });
 
     it('can handle a failed job dispatched after response', function () {
@@ -1025,7 +1042,7 @@ describe('Laravel integration', function () {
 
             $httpTrace->expectSpan($spanIndex)
                 ->expectParentId($terminatingSpan)
-                ->expectType(LaravelSpanType::Job)
+                ->expectType(SpanType::Job)
                 ->expectAttribute('laravel.job.queue.connection_name', 'sync')
                 ->expectAttribute('laravel.job.queue.name', 'sync')
                 ->expectAttribute('laravel.job.success', false)
@@ -1038,7 +1055,7 @@ describe('Laravel integration', function () {
 
         $httpTrace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 200);
 
-        $httpTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+        $httpTrace->expectSpanCount(0, SpanType::QueueingJob);
 
         $workspace->report(0)
             ->expectExceptionClass(Exception::class);
@@ -1055,32 +1072,32 @@ describe('Laravel integration', function () {
             ->expectAttribute('http.response.status_code', 200);
 
         $queuingSpan = $httpTrace
-            ->expectSpan(LaravelSpanType::Queueing)
+            ->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan)
             ->expectTraceId($requestSpan->span['traceId']);
 
         $job1Span = $workspace->trace(1)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectTraceId($requestSpan->span['traceId'])
             ->expectParentId($queuingSpan);
 
         $queue1Span = $workspace->trace(1)
-            ->expectSpan(LaravelSpanType::Queueing)
+            ->expectSpan(SpanType::QueueingJob)
             ->expectTraceId($requestSpan->span['traceId'])
             ->expectParentId($job1Span);
 
         $job2Span = $workspace->trace(2)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectParentId($queue1Span);
 
         $queue2Span = $workspace->trace(2)
-            ->expectSpan(LaravelSpanType::Queueing)
+            ->expectSpan(SpanType::QueueingJob)
             ->expectTraceId($requestSpan->span['traceId'])
             ->expectParentId($job2Span);
 
         $workspace->trace(3)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectParentId($queue2Span);
     });
@@ -1095,7 +1112,7 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $trace->expectSpan(LaravelSpanType::Job)
+        $trace->expectSpan(SpanType::Job)
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'sync')
             ->expectAttribute('laravel.job.queue.name', 'sync')
@@ -1105,7 +1122,7 @@ describe('Laravel integration', function () {
             ->expectHasAttribute('laravel.job.uuid')
             ->expectHasAttribute('flare.peak_memory_usage');
 
-        $trace->expectSpanCount(0, LaravelSpanType::Queueing);
+        $trace->expectSpanCount(0, SpanType::QueueingJob);
     });
 
     it('can handle a retrying job', function () {
@@ -1118,11 +1135,11 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan);
 
         $workspace->trace(1)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.success', false)
@@ -1131,7 +1148,7 @@ describe('Laravel integration', function () {
             ->expectType(SpanEventType::Exception);
 
         $workspace->trace(2)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.success', false)
@@ -1140,7 +1157,7 @@ describe('Laravel integration', function () {
             ->expectType(SpanEventType::Exception);
 
         $workspace->trace(3)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.success', false)
@@ -1163,12 +1180,12 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan);
 
         for ($i = 1; $i <= 4; $i++) {
             $workspace->trace($i)
-                ->expectSpan(LaravelSpanType::Job)
+                ->expectSpan(SpanType::Job)
                 ->expectParentId($queuingSpan)
                 ->expectTraceId($queuingSpan->span['traceId'])
                 ->expectAttribute('laravel.job.success', false)
@@ -1178,7 +1195,7 @@ describe('Laravel integration', function () {
         }
 
         $workspace->trace(5)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.success', true);
@@ -1193,7 +1210,7 @@ describe('Laravel integration', function () {
 
         $httpTrace->expectSpan(SpanType::Request)->expectAttribute('http.response.status_code', 200);
 
-        $httpTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+        $httpTrace->expectSpanCount(0, SpanType::QueueingJob);
 
         // Job being stored in database is also ignored
         $httpTrace->expectSpanCount(0, SpanType::Query);
@@ -1209,25 +1226,25 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.class', NestedJob::class);
 
         $nestedJobTrace = $workspace->trace(1);
 
-        $nestedJobSpan = $nestedJobTrace->expectSpan(LaravelSpanType::Job)
+        $nestedJobSpan = $nestedJobTrace->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.class', NestedJob::class)
             ->expectAttribute('laravel.job.success', true);
 
-        $nestedQueuingSpan = $nestedJobTrace->expectSpan(LaravelSpanType::Queueing)
+        $nestedQueuingSpan = $nestedJobTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($nestedJobSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.class', SuccesJob::class);
 
         $workspace->trace(2)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectParentId($nestedQueuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.class', SuccesJob::class)
@@ -1244,7 +1261,7 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.class', ExitingJob::class);
     })->skip('This kills the queue process, so do not test this');
@@ -1259,23 +1276,23 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.class', ReleaseJob::class);
 
         $jobTrace = $workspace->trace(1);
 
-        $jobTrace->expectSpan(LaravelSpanType::Job)
+        $jobTrace->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.class', ReleaseJob::class)
             ->expectAttribute('laravel.job.success', true)
             ->expectAttribute('laravel.job.released', true);
 
-        $jobTrace->expectSpanCount(0, LaravelSpanType::Queueing);
+        $jobTrace->expectSpanCount(0, SpanType::QueueingJob);
 
         $workspace->trace(2)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.class', ReleaseJob::class)
@@ -1296,13 +1313,13 @@ describe('Laravel integration', function () {
         $requestSpan = $httpTrace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $queuingSpan = $httpTrace->expectSpan(LaravelSpanType::Queueing)
+        $queuingSpan = $httpTrace->expectSpan(SpanType::QueueingJob)
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.class', DeletedJob::class);
 
         $jobTrace = $workspace->trace(1);
 
-        $jobTrace->expectSpan(LaravelSpanType::Job)
+        $jobTrace->expectSpan(SpanType::Job)
             ->expectParentId($queuingSpan)
             ->expectTraceId($queuingSpan->span['traceId'])
             ->expectAttribute('laravel.job.class', DeletedJob::class)
@@ -1325,7 +1342,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('db.transaction.status', 'committed');
 
         $httpTrace->expectSpans(
-            LaravelSpanType::Queueing,
+            SpanType::QueueingJob,
             fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
             fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
             fn (ExpectSpan $span) => $span->expectParentId($transactionSpan)->expectAttribute('laravel.job.class', BatchedJob::class),
@@ -1336,14 +1353,14 @@ describe('Laravel integration', function () {
         // Success Job
         foreach ([1, 2, 4, 6] as $successJobTrace) {
             $workspace->trace($successJobTrace)
-                ->expectSpan(LaravelSpanType::Job)
+                ->expectSpan(SpanType::Job)
                 ->expectAttribute('laravel.job.success', true)
                 ->expectAttribute('laravel.job.class', BatchedJob::class);
         }
 
         // Failing Job
         $workspace->trace(3)
-            ->expectSpan(LaravelSpanType::Job)
+            ->expectSpan(SpanType::Job)
             ->expectAttribute('laravel.job.class', BatchedJob::class)
             ->expectAttribute('laravel.job.success', false)
             ->expectHasAttribute('laravel.job.batch_id')
@@ -1355,12 +1372,12 @@ describe('Laravel integration', function () {
 
         $addingJobTrace = $workspace->trace(5);
 
-        $addingJobTrace->expectSpan(LaravelSpanType::Job)
+        $addingJobTrace->expectSpan(SpanType::Job)
             ->expectAttribute('laravel.job.class', BatchedJob::class)
             ->expectAttribute('laravel.job.success', true)
             ->expectAttribute('laravel.job.properties', ['shouldFail' => false, 'shouldAddAnotherJob' => true]);
 
-        $addingJobTrace->expectSpan(LaravelSpanType::Queueing)
+        $addingJobTrace->expectSpan(SpanType::QueueingJob)
             ->expectAttribute('laravel.job.class', BatchedJob::class)
             ->expectAttribute('laravel.job.properties', ['shouldFail' => false, 'shouldAddAnotherJob' => false])
             ->expectHasAttribute('laravel.job.batch_id');
@@ -1639,6 +1656,9 @@ describe('Laravel integration', function () {
         $log->expectLog(0)
             ->expectBody('Debug message')
             ->expectAttribute('log.context', [])
+            ->expectAttribute('flare.entry_point.type', 'web')
+            ->expectAttribute('flare.entry_point.handler.identifier', 'logs')
+            ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure')
             ->expectSeverityText('debug')
             ->expectSeverityNumber(5)
             ->expectMatchesSpan($responseSpan)

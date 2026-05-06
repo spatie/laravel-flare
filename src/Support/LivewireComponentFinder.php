@@ -49,11 +49,24 @@ class LivewireComponentFinder
             : null;
     }
 
+    /** @return \Livewire\LivewireManager|null */
+    public function manager()
+    {
+        return $this->livewire;
+    }
+
     public function findClass(string $name): ?string
     {
-        return array_key_exists($name, $this->classCache)
-            ? $this->classCache[$name]
-            : $this->classCache[$name] = $this->factory?->resolveComponentClass($name) ?? $this->componentRegistry?->getClass($name);
+        if (array_key_exists($name, $this->classCache)) {
+            return $this->classCache[$name];
+        }
+
+        try {
+            return $this->classCache[$name] = $this->factory?->resolveComponentClass($name)
+                ?? $this->componentRegistry?->getClass($name);
+        } catch (\Throwable) {
+            return $this->classCache[$name] = null;
+        }
     }
 
     public function isSingleFileComponent(string $name): bool

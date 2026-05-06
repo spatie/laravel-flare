@@ -3,49 +3,66 @@
 namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
 use Spatie\FlareClient\AttributesProviders\UserAttributesProvider;
+use Throwable;
 
 class LaravelUserAttributesProvider extends UserAttributesProvider
 {
-    public function id(mixed $user): string|int|null
+    public static function fromRequest(Request $request): ?self
     {
-        if ($user instanceof Authenticatable) {
-            return $user->getAuthIdentifier();
+        try {
+            $user = $request->user();
+        } catch (Throwable) {
+            return null;
         }
 
-        if (is_object($user) && method_exists($user, 'getKey')) {
-            return $user->getKey();
+        if (! is_object($user)) {
+            return null;
+        }
+
+        return new self($user);
+    }
+
+    public function id(): string|int|null
+    {
+        if ($this->user instanceof Authenticatable) {
+            return $this->user->getAuthIdentifier();
+        }
+
+        if (is_object($this->user) && method_exists($this->user, 'getKey')) {
+            return $this->user->getKey();
         }
 
         try {
-            return $user->id ?? $user->uuid ?? $user->ulid ?? null;
+            return $this->user->id ?? $this->user->uuid ?? $this->user->ulid ?? null;
         } catch (\Throwable) {
             return null;
         }
     }
 
-    public function fullName(mixed $user): string|null
+    public function fullName(): ?string
     {
         try {
-            return $user->name ?? $user->full_name ?? $user->fullName ?? $user->username ?? null;
+            return $this->user->name ?? $this->user->full_name ?? $this->user->fullName ?? $this->user->username ?? null;
         } catch (\Throwable) {
             return null;
         }
     }
 
-    public function email(mixed $user): string|null
+    public function email(): ?string
     {
         try {
-            return $user->email ?? $user->mail ?? null;
+            return $this->user->email ?? $this->user->mail ?? null;
         } catch (\Throwable) {
             return null;
         }
     }
 
-    public function attributes(mixed $user): array
+    public function attributes(): array
     {
-        if (is_object($user) && method_exists($user, 'toFlare')) {
-            return $user->toFlare();
+        if (is_object($this->user) && method_exists($this->user, 'toFlare')) {
+            return $this->user->toFlare();
         }
 
         return [];

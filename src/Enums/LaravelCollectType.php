@@ -11,4 +11,9 @@ enum LaravelCollectType: string implements FlareCollectType
     case LaravelContext = 'laravel_context';
     case ExceptionContext = 'laravel_exception_context';
     case HandledExceptions = 'laravel_handled_exceptions';
+
+    public function resolvesEntryPoint(): bool
+    {
+        return false;
+    }
 }

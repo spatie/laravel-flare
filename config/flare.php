@@ -1,10 +1,6 @@
 <?php
 
 use Spatie\FlareClient\Api;
-use Spatie\FlareClient\AttributesProviders\ConsoleAttributesProvider;
-use Spatie\FlareClient\AttributesProviders\ResponseAttributesProvider;
-use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
-use Spatie\LaravelFlare\AttributesProviders\LaravelUserAttributesProvider;
 use Spatie\LaravelFlare\FlareConfig;
 
 return [
@@ -47,25 +43,6 @@ return [
         ignore: [],
         extra: []
     ),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Attribute providers
-    |--------------------------------------------------------------------------
-    |
-    | When sending an error report or trace to Flare attributes can be added to
-    | the report or trace for common entries. An example of such an entry is
-    | the currently authenticated user. In an attribute provider you can
-    | specify which attributes should be sent.
-    |
-    */
-
-    'attribute_providers' => [
-        'user' => LaravelUserAttributesProvider::class,
-        'console' => ConsoleAttributesProvider::class,
-        'request' => LaravelRequestAttributesProvider::class,
-        'response' => ResponseAttributesProvider::class,
-    ],
 
     /*
     |--------------------------------------------------------------------------
