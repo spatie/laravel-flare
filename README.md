@@ -4,13 +4,17 @@
 ![Tests](https://github.com/spatie/laravel-flare/workflows/Run%20tests/badge.svg)
 [![Total Downloads](https://img.shields.io/packagist/dt/spatie/laravel-flare.svg?style=flat-square)](https://packagist.org/packages/spatie/laravel-flare)
 
-[Laravel Flare](https://flareapp.io/docs/integration/laravel-customizations/introduction) allows to publicly share your errors on [Flare](https://flareapp.io). If configured with a valid Flare API key, your errors in production applications will be tracked, and you'll get notified when they happen.
+> **Documentation for this version lives in this repository under [`docs/`](docs/).** The latest package documentation is available at [flareapp.io](https://flareapp.io/docs/laravel/general/installation).
+
+[Laravel Flare](https://flareapp.io) allows to publicly share your errors on [Flare](https://flareapp.io). If configured with a valid Flare API key, your errors in production applications will be tracked, and you'll get notified when they happen.
 
 `spatie/laravel-flare` works for Laravel 11 and above applications running on PHP 8.2 and above. Looking for Ignition for Laravel, the most beautiful error page out there? You can still install `spatie/laravel-ignition` and admire it.
 
 ## Official Documentation
 
-The official documentation for Flare can be found on the [Flare website](https://flareapp.io/docs/integration/laravel-customizations/introduction).
+The documentation for this version is bundled with this repository in the [`docs/`](docs/) directory. Start with [`docs/general/installation.md`](docs/general/installation.md).
+
+The latest package documentation lives on the [Flare website](https://flareapp.io/docs/laravel/general/installation).
 
 ## Support us
 
