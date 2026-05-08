@@ -1,8 +1,5 @@
 <?php
 
-use Spatie\FlareClient\Api;
-use Spatie\LaravelFlare\FlareConfig;
-
 return [
     /*
     |
@@ -27,7 +24,8 @@ return [
     | Which server should be used to send the reports/traces to.
     |
     */
-    'base_url' => env('FLARE_BASE_URL', Api::BASE_URL),
+
+    'base_url' => env('FLARE_BASE_URL', \Spatie\FlareClient\Api::BASE_URL),
 
     /*
     |--------------------------------------------------------------------------
@@ -39,7 +37,7 @@ return [
     |
     */
 
-    'collects' => FlareConfig::defaultCollects(
+    'collects' => \Spatie\LaravelFlare\FlareConfig::defaultCollects(
         ignore: [],
         extra: []
     ),
@@ -73,7 +71,6 @@ return [
         'session' => false,
     ],
 
-
     /*
     |--------------------------------------------------------------------------
     | Sender
@@ -95,19 +92,13 @@ return [
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Daemon sender example
-    |--------------------------------------------------------------------------
-    |
-    | 'sender' => [
-    |     'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
-    |     'config' => [
-    |         'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
-    |     ],
-    | ],
-    |
-    */
+    // Daemon sender example
+    // 'sender' => [
+    //     'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
+    //     'config' => [
+    //         'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
+    //     ],
+    // ],
 
     /*
     |--------------------------------------------------------------------------
@@ -159,7 +150,7 @@ return [
     */
 
     'overridden_groupings' => [
-//        Illuminate\Http\Client\ConnectionException::class => Spatie\FlareClient\Enums\OverriddenGrouping::ExceptionMessageAndClass,
+        // Illuminate\Http\Client\ConnectionException::class => Spatie\FlareClient\Enums\OverriddenGrouping::ExceptionMessageAndClass,
     ],
 
 
@@ -186,6 +177,7 @@ return [
    | which means that 10% of the traces will be recorded.
    |
    */
+
     'sampler' => [
         'class' => \Spatie\FlareClient\Sampling\RateSampler::class,
         'config' => [
@@ -202,6 +194,7 @@ return [
     | the tracing data from growing too large.
     |
     */
+
     'trace_limits' => [
         'max_spans' => 1024,
         'max_attributes_per_span' => 128,
