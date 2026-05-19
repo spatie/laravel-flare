@@ -218,31 +218,11 @@ class ExpectSentPayloads
         bool $waitUntilAllJobsAreProcessed,
     ): void {
         // The workbench endpoints can make slow external HTTP calls (e.g. jsonplaceholder).
-        // A short timeout here triggers restartServer for what is really just a slow upstream,
-        // and that restart can clobber the workbench/storage symlink and cascade-fail the rest
-        // of the suite. Give the server room to wait on its own upstream timeouts first.
+        // A short timeout here treats slow upstreams as connection failures and forces a
+        // retry, so give the server room to handle its own upstream timeouts first.
         $client = Http::timeout(30)->baseUrl($this->url);
 
-        try {
-            $response = match ($this->method) {
-                'get' => $client->get($this->endpoint),
-                'post' => $client->post($this->endpoint, $this->params),
-                default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
-            };
-        } catch (ConnectException|ConnectionException $e) {
-            if (! $this->restartServer()) {
-                throw new Exception('Workbench server is not running. Please start it by running `composer run serve`');
-            }
-
-            try {
-                $response = match ($this->method) {
-                    'get' => $client->get($this->endpoint),
-                    'post' => $client->post($this->endpoint, $this->params),
-                };
-            } catch (ConnectException|ConnectionException $e) {
-                throw new Exception('Workbench server is not running after restart attempt.');
-            }
-        }
+        $response = $this->sendRequest($client);
 
         $this->wait(
             waitAtLeastMs: $waitAtLeastMs,
@@ -292,25 +272,33 @@ class ExpectSentPayloads
         $this->logs = array_values($this->logs);
     }
 
-    protected function restartServer(): bool
+    /**
+     * Send the test's HTTP request, retrying briefly if the server momentarily refuses the
+     * connection (common on busy CI runners). We retry the original request directly rather
+     * than pinging "/" as a health check — that ping was being traced and leaked a phantom
+     * welcome-page trace into the workspace, throwing off the assertSent count.
+     */
+    protected function sendRequest($client)
     {
-        $testbench = __DIR__ . '/../../vendor/bin/testbench';
+        $attempts = 30;
 
-        exec("php {$testbench} serve --port=8000 > /dev/null 2>&1 &");
-        exec("php {$testbench} queue:work > /dev/null 2>&1 &");
-
-        for ($i = 0; $i < 50; $i++) {
-            usleep(100_000);
-
+        for ($i = 0; $i < $attempts; $i++) {
             try {
-                Http::timeout(1)->baseUrl($this->url)->get('/');
+                return match ($this->method) {
+                    'get' => $client->get($this->endpoint),
+                    'post' => $client->post($this->endpoint, $this->params),
+                    default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
+                };
+            } catch (ConnectException|ConnectionException $e) {
+                if ($i === $attempts - 1) {
+                    throw new Exception('Workbench server is not responding. Please start it by running `composer run serve`.', previous: $e);
+                }
 
-                return true;
-            } catch (ConnectException|ConnectionException) {
+                usleep(200_000);
             }
         }
 
-        return false;
+        throw new Exception('Unreachable');
     }
 
     protected function wait(
