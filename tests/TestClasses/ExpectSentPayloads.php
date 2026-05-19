@@ -83,17 +83,48 @@ class ExpectSentPayloads
 
     public function assertReportsSent(int $expectedCount): void
     {
+        if (count($this->reports) !== $expectedCount) {
+            $this->dumpEntitiesForDebugging('reports');
+        }
+
         expect(count($this->reports))->toBe($expectedCount, 'Number of reports sent does not match expected count.');
     }
 
     public function assertTracesSent(int $expectedCount): void
     {
+        if (count($this->traces) !== $expectedCount) {
+            $this->dumpEntitiesForDebugging('traces');
+        }
+
         expect(count($this->traces))->toBe($expectedCount, 'Number of traces sent does not match expected count.');
     }
 
     public function assertLogsSent(int $expectedCount): void
     {
+        if (count($this->logs) !== $expectedCount) {
+            $this->dumpEntitiesForDebugging('logs');
+        }
+
         expect(count($this->logs))->toBe($expectedCount, 'Number of logs sent does not match expected count.');
+    }
+
+    protected function dumpEntitiesForDebugging(string $type): void
+    {
+        fwrite(STDERR, "\n--- {$type} captured (count=".count($this->{$type}).") ---\n");
+
+        foreach (File::files($this->workSpacePath) as $file) {
+            $filename = $file->getFilename();
+            $content = json_decode(File::get($file->getRealPath()), true);
+            $summary = match (true) {
+                str_starts_with($filename, 'errors_') => 'error: '.($content['stage'] ?? '?').' / '.($content['exceptionClass'] ?? '?'),
+                str_starts_with($filename, 'traces_') => 'trace: '.implode(', ', array_unique(array_column($content['resourceSpans'][0]['scopeSpans'][0]['spans'] ?? [], 'name'))),
+                str_starts_with($filename, 'logs_') => 'log',
+                default => 'unknown',
+            };
+            fwrite(STDERR, "  {$filename}\n    {$summary}\n");
+        }
+
+        fwrite(STDERR, "--- end ---\n\n");
     }
 
     public function assertNothingSent(): void
