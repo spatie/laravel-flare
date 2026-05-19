@@ -154,7 +154,7 @@ class ExpectSentPayloads
      * window. This protects against in-flight trace file writes from the previous
      * test's queue worker leaking into this test's payloads.
      */
-    protected function drainWorkspace(int $stabilityWindowMs = 1_500, int $maxWaitMs = 6_000): void
+    protected function drainWorkspace(int $stabilityWindowMs = 3_000, int $maxWaitMs = 10_000): void
     {
         $checkIntervalUs = 50_000;
         $requiredStableChecks = max(1, intdiv($stabilityWindowMs * 1_000, $checkIntervalUs));
@@ -343,7 +343,7 @@ class ExpectSentPayloads
      * before the window completes, signalling that the outer wait loop should
      * keep backing off.
      */
-    protected function waitForFileStability(int $stabilityWindowMs = 1_500): bool
+    protected function waitForFileStability(int $stabilityWindowMs = 3_000): bool
     {
         $checkIntervalUs = 50_000;
         $requiredStableChecks = max(1, intdiv($stabilityWindowMs * 1_000, $checkIntervalUs));
