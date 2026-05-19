@@ -1395,6 +1395,7 @@ describe('Laravel integration', function () {
             try {
                 $report->expectExceptionClass(Exception::class)->expectMessage('Batched job failed');
                 $batchedJobReport = $report;
+
                 break;
             } catch (\Throwable) {
             }
