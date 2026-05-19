@@ -273,32 +273,71 @@ class ExpectSentPayloads
     }
 
     /**
-     * Send the test's HTTP request, retrying briefly if the server momentarily refuses the
-     * connection (common on busy CI runners). We retry the original request directly rather
-     * than pinging "/" as a health check — that ping was being traced and leaked a phantom
-     * welcome-page trace into the workspace, throwing off the assertSent count.
+     * Send the test's HTTP request. On the first ConnectException try to bring the server
+     * back up — `dispatchAfterResponse` jobs that throw can take down the PHP built-in
+     * server, and spawning a fresh `testbench serve` claims port 8000 again. We probe
+     * readiness with a raw TCP check so we don't leak a traced HTTP request into the
+     * workspace.
      */
     protected function sendRequest($client)
     {
-        $attempts = 30;
+        try {
+            return $this->performRequest($client);
+        } catch (ConnectException|ConnectionException $e) {
+            if (! $this->ensureServerReachable()) {
+                throw new Exception('Workbench server is not responding. Please start it by running `composer run serve`.', previous: $e);
+            }
 
-        for ($i = 0; $i < $attempts; $i++) {
             try {
-                return match ($this->method) {
-                    'get' => $client->get($this->endpoint),
-                    'post' => $client->post($this->endpoint, $this->params),
-                    default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
-                };
+                return $this->performRequest($client);
             } catch (ConnectException|ConnectionException $e) {
-                if ($i === $attempts - 1) {
-                    throw new Exception('Workbench server is not responding. Please start it by running `composer run serve`.', previous: $e);
-                }
+                throw new Exception('Workbench server is not responding after restart attempt.', previous: $e);
+            }
+        }
+    }
 
-                usleep(200_000);
+    protected function performRequest($client)
+    {
+        return match ($this->method) {
+            'get' => $client->get($this->endpoint),
+            'post' => $client->post($this->endpoint, $this->params),
+            default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
+        };
+    }
+
+    protected function ensureServerReachable(): bool
+    {
+        if ($this->isPortOpen()) {
+            return true;
+        }
+
+        $testbench = __DIR__.'/../../vendor/bin/testbench';
+
+        exec("php {$testbench} serve --port=8000 > /dev/null 2>&1 &");
+        exec("php {$testbench} queue:work > /dev/null 2>&1 &");
+
+        for ($i = 0; $i < 50; $i++) {
+            usleep(100_000);
+
+            if ($this->isPortOpen()) {
+                return true;
             }
         }
 
-        throw new Exception('Unreachable');
+        return false;
+    }
+
+    protected function isPortOpen(): bool
+    {
+        $fp = @fsockopen('127.0.0.1', 8000, $errno, $errstr, 1);
+
+        if ($fp === false) {
+            return false;
+        }
+
+        fclose($fp);
+
+        return true;
     }
 
     protected function wait(
