@@ -286,17 +286,17 @@ class ExpectSentPayloads
         ?int $waitAtLeastMs,
         bool $waitUntilAllJobsAreProcessed,
     ): void {
-        if ($waitAtLeastMs === null && ! $waitUntilAllJobsAreProcessed) {
-            usleep(500); // Just to be sure
-
-            return;
-        }
-
         if ($waitAtLeastMs !== null) {
             usleep($waitAtLeastMs);
         }
 
         if (! $waitUntilAllJobsAreProcessed) {
+            // Even tests that don't drive the queue can have trace writes still in flight
+            // (e.g. dispatchAfterResponse jobs flush after the HTTP response was already
+            // sent back to the client). Wait briefly for file count stability so we don't
+            // read the workspace mid-write.
+            $this->waitForFileStability(stabilityWindowMs: 750);
+
             return;
         }
 
