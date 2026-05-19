@@ -116,6 +116,8 @@ class FlareServiceProvider extends ServiceProvider
             $this->config = $this->app->make(FlareConfig::class);
         }
 
+        $this->app->alias(FlareConfig::class, \Spatie\FlareClient\FlareConfig::class);
+
         $this->provider = new FlareProvider(
             config: $this->config,
             container: $this->app,
