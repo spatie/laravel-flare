@@ -186,7 +186,11 @@ class ExpectSentPayloads
         ?int $waitAtLeastMs,
         bool $waitUntilAllJobsAreProcessed,
     ): void {
-        $client = Http::timeout(2)->baseUrl($this->url);
+        // The workbench endpoints can make slow external HTTP calls (e.g. jsonplaceholder).
+        // A short timeout here triggers restartServer for what is really just a slow upstream,
+        // and that restart can clobber the workbench/storage symlink and cascade-fail the rest
+        // of the suite. Give the server room to wait on its own upstream timeouts first.
+        $client = Http::timeout(30)->baseUrl($this->url);
 
         try {
             $response = match ($this->method) {
