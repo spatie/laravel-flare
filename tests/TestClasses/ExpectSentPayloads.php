@@ -56,11 +56,9 @@ class ExpectSentPayloads
 
         // The shared queue worker may still be flushing a trace file from a previous
         // test (the JobProcessed handler runs after the row is removed from `jobs`).
-        // Clean once, give late writes time to land, then clean again so they don't
-        // leak into this test's workspace.
-        $this->cleanupWorkspace();
-        usleep(50_000);
-        $this->cleanupWorkspace();
+        // Drain the workspace until it stays empty long enough for any in-flight
+        // writes to land and be cleaned up.
+        $this->drainWorkspace();
 
         $this->initializeWorkspace(
             waitAtLeastMs: $waitAtLeastMs,
@@ -149,6 +147,39 @@ class ExpectSentPayloads
             fn (SplFileInfo $file) => $file->getRealPath(),
             File::files($this->workSpacePath),
         ));
+    }
+
+    /**
+     * Repeatedly clean the workspace until it stays empty for a full stability
+     * window. This protects against in-flight trace file writes from the previous
+     * test's queue worker leaking into this test's payloads.
+     */
+    protected function drainWorkspace(int $stabilityWindowMs = 250, int $maxWaitMs = 3_000): void
+    {
+        $checkIntervalUs = 50_000;
+        $requiredStableChecks = max(1, intdiv($stabilityWindowMs * 1_000, $checkIntervalUs));
+        $maxIterations = max($requiredStableChecks, intdiv($maxWaitMs * 1_000, $checkIntervalUs));
+
+        $consecutiveEmpty = 0;
+
+        for ($i = 0; $i < $maxIterations; $i++) {
+            $this->cleanupWorkspace();
+            usleep($checkIntervalUs);
+
+            if (count(File::files($this->workSpacePath)) === 0) {
+                $consecutiveEmpty++;
+
+                if ($consecutiveEmpty >= $requiredStableChecks) {
+                    return;
+                }
+
+                continue;
+            }
+
+            $consecutiveEmpty = 0;
+        }
+
+        $this->cleanupWorkspace();
     }
 
     protected function initializeWorkspace(
@@ -261,6 +292,10 @@ class ExpectSentPayloads
             usleep($waitAtLeastMs);
         }
 
+        if (! $waitUntilAllJobsAreProcessed) {
+            return;
+        }
+
         $backoff = [
             500_000,
             750_000,
@@ -279,21 +314,58 @@ class ExpectSentPayloads
 
             usleep($backoff[$currentBackoffIndex]);
 
-            $pendingJobs = DB::table('jobs');
+            if (DB::table('jobs')->count() !== 0) {
+                $currentBackoffIndex++;
 
-            if ($pendingJobs->count() === 0) {
-                // The queue worker deletes a job from the `jobs` table before its
-                // JobProcessed handler finishes writing the trace file. Sleep briefly
-                // and re-confirm the queue is still empty so any in-flight flush from
-                // the last job lands in this test's workspace instead of the next one.
-                usleep(100_000);
+                continue;
+            }
 
-                if (DB::table('jobs')->count() === 0) {
-                    return;
-                }
+            // The queue worker deletes a job from the `jobs` table before its
+            // JobProcessed handler finishes writing the trace file, and a job
+            // can chain another job after it's already been popped. Wait until
+            // the file count stays put and the queue stays empty across the
+            // stability window before reading the workspace.
+            if ($this->waitForFileStability()) {
+                return;
             }
 
             $currentBackoffIndex++;
         }
+    }
+
+    /**
+     * Wait until the workspace file count stays unchanged and the queue stays
+     * empty for the full stability window. Returns false if a new job appears
+     * before the window completes, signalling that the outer wait loop should
+     * keep backing off.
+     */
+    protected function waitForFileStability(int $stabilityWindowMs = 300): bool
+    {
+        $checkIntervalUs = 50_000;
+        $requiredStableChecks = max(1, intdiv($stabilityWindowMs * 1_000, $checkIntervalUs));
+
+        $previousCount = count(File::files($this->workSpacePath));
+        $consecutiveStable = 0;
+
+        while ($consecutiveStable < $requiredStableChecks) {
+            usleep($checkIntervalUs);
+
+            if (DB::table('jobs')->count() !== 0) {
+                return false;
+            }
+
+            $currentCount = count(File::files($this->workSpacePath));
+
+            if ($currentCount === $previousCount) {
+                $consecutiveStable++;
+
+                continue;
+            }
+
+            $previousCount = $currentCount;
+            $consecutiveStable = 0;
+        }
+
+        return true;
     }
 }
