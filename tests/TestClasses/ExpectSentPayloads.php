@@ -54,11 +54,12 @@ class ExpectSentPayloads
     ) {
         $this->workSpacePath = __DIR__.'/../../workbench/storage';
 
-        // The shared queue worker may still be flushing a trace file from a previous
+        // The shared queue worker may still be flushing a trace file from the previous
         // test (the JobProcessed handler runs after the row is removed from `jobs`).
-        // Drain the workspace until it stays empty long enough for any in-flight
-        // writes to land and be cleaned up.
-        $this->drainWorkspace();
+        // Clean, give late writes time to land, then clean again.
+        $this->cleanupWorkspace();
+        usleep(500_000);
+        $this->cleanupWorkspace();
 
         $this->initializeWorkspace(
             waitAtLeastMs: $waitAtLeastMs,
@@ -149,49 +150,15 @@ class ExpectSentPayloads
         ));
     }
 
-    /**
-     * Repeatedly clean the workspace until it stays empty for a full stability
-     * window. This protects against in-flight trace file writes from the previous
-     * test's queue worker leaking into this test's payloads.
-     */
-    protected function drainWorkspace(int $stabilityWindowMs = 3_000, int $maxWaitMs = 10_000): void
-    {
-        $checkIntervalUs = 50_000;
-        $requiredStableChecks = max(1, intdiv($stabilityWindowMs * 1_000, $checkIntervalUs));
-        $maxIterations = max($requiredStableChecks, intdiv($maxWaitMs * 1_000, $checkIntervalUs));
-
-        $consecutiveEmpty = 0;
-
-        for ($i = 0; $i < $maxIterations; $i++) {
-            $this->cleanupWorkspace();
-            usleep($checkIntervalUs);
-
-            if (count(File::files($this->workSpacePath)) === 0) {
-                $consecutiveEmpty++;
-
-                if ($consecutiveEmpty >= $requiredStableChecks) {
-                    return;
-                }
-
-                continue;
-            }
-
-            $consecutiveEmpty = 0;
-        }
-
-        $this->cleanupWorkspace();
-    }
-
     protected function initializeWorkspace(
         ?int $waitAtLeastMs,
         bool $waitUntilAllJobsAreProcessed,
     ): void {
-        // The workbench endpoints can make slow external HTTP calls (e.g. jsonplaceholder).
-        // A short timeout here treats slow upstreams as connection failures and forces a
-        // retry, so give the server room to handle its own upstream timeouts first.
+        // 30s timeout so slow upstream calls (e.g. jsonplaceholder in /http-post)
+        // don't surface as ConnectExceptions on the client.
         $client = Http::timeout(30)->baseUrl($this->url);
 
-        $response = $this->sendRequest($client);
+        $this->sendRequest($client);
 
         $this->wait(
             waitAtLeastMs: $waitAtLeastMs,
@@ -242,13 +209,13 @@ class ExpectSentPayloads
     }
 
     /**
-     * Send the test's HTTP request. On the first ConnectException try to bring the server
-     * back up — `dispatchAfterResponse` jobs that throw can take down the PHP built-in
-     * server, and spawning a fresh `testbench serve` claims port 8000 again. We probe
-     * readiness with a raw TCP check so we don't leak a traced HTTP request into the
-     * workspace.
+     * Send the request, retrying once if the workbench server has gone away.
+     * dispatchAfterResponse jobs that throw can take down the PHP built-in server,
+     * so spawn a fresh testbench serve and wait for the port to come back. We probe
+     * with a raw TCP socket instead of an HTTP ping so the health check doesn't
+     * leak a traced welcome-page request into the workspace.
      */
-    protected function sendRequest($client)
+    protected function sendRequest($client): mixed
     {
         try {
             return $this->performRequest($client);
@@ -257,15 +224,11 @@ class ExpectSentPayloads
                 throw new Exception('Workbench server is not responding. Please start it by running `composer run serve`.', previous: $e);
             }
 
-            try {
-                return $this->performRequest($client);
-            } catch (ConnectException|ConnectionException $e) {
-                throw new Exception('Workbench server is not responding after restart attempt.', previous: $e);
-            }
+            return $this->performRequest($client);
         }
     }
 
-    protected function performRequest($client)
+    protected function performRequest($client): mixed
     {
         return match ($this->method) {
             'get' => $client->get($this->endpoint),
@@ -276,37 +239,24 @@ class ExpectSentPayloads
 
     protected function ensureServerReachable(): bool
     {
-        if ($this->isPortOpen()) {
-            return true;
-        }
-
         $testbench = __DIR__.'/../../vendor/bin/testbench';
 
         exec("php {$testbench} serve --port=8000 > /dev/null 2>&1 &");
         exec("php {$testbench} queue:work > /dev/null 2>&1 &");
 
         for ($i = 0; $i < 50; $i++) {
-            usleep(100_000);
+            $socket = @fsockopen('127.0.0.1', 8000, $errno, $errstr, 1);
 
-            if ($this->isPortOpen()) {
+            if ($socket !== false) {
+                fclose($socket);
+
                 return true;
             }
+
+            usleep(100_000);
         }
 
         return false;
-    }
-
-    protected function isPortOpen(): bool
-    {
-        $fp = @fsockopen('127.0.0.1', 8000, $errno, $errstr, 1);
-
-        if ($fp === false) {
-            return false;
-        }
-
-        fclose($fp);
-
-        return true;
     }
 
     protected function wait(
@@ -317,86 +267,35 @@ class ExpectSentPayloads
             usleep($waitAtLeastMs);
         }
 
-        if (! $waitUntilAllJobsAreProcessed) {
-            // Even tests that don't drive the queue can have trace writes still in flight
-            // (e.g. dispatchAfterResponse jobs flush after the HTTP response was already
-            // sent back to the client). Wait briefly for file count stability so we don't
-            // read the workspace mid-write.
-            $this->waitForFileStability(stabilityWindowMs: 750);
+        // dispatchAfterResponse jobs and JobProcessed handlers can flush traces
+        // after the response is returned to the client; give the server a moment
+        // before we read the workspace.
+        usleep(500_000);
 
+        if (! $waitUntilAllJobsAreProcessed) {
             return;
         }
 
-        $backoff = [
-            500_000,
-            750_000,
-            1_000_000,
-            1_500_000,
-            2_500_000,
-            4_000_000,
-        ];
+        $backoff = [500_000, 750_000, 1_000_000, 1_500_000, 2_500_000, 4_000_000];
 
-        $currentBackoffIndex = 0;
-
-        while (true) {
-            if (! array_key_exists($currentBackoffIndex, $backoff)) {
-                throw new Exception('Jobs were not executed, either make sure the worker is started by running `vendor/bin/testbench queue:work` or that we waited long enough for the jobs to be processed.');
-            }
-
-            usleep($backoff[$currentBackoffIndex]);
+        foreach ($backoff as $sleep) {
+            usleep($sleep);
 
             if (DB::table('jobs')->count() !== 0) {
-                $currentBackoffIndex++;
-
                 continue;
             }
 
-            // The queue worker deletes a job from the `jobs` table before its
-            // JobProcessed handler finishes writing the trace file, and a job
-            // can chain another job after it's already been popped. Wait until
-            // the file count stays put and the queue stays empty across the
-            // stability window before reading the workspace.
-            if ($this->waitForFileStability()) {
+            // The worker deletes a job from `jobs` before its JobProcessed handler
+            // finishes writing the trace file, and a job can chain another job after
+            // it's already been popped. Hold for a generous window so the next test
+            // doesn't pick up an in-flight write.
+            usleep(1_000_000);
+
+            if (DB::table('jobs')->count() === 0) {
                 return;
             }
-
-            $currentBackoffIndex++;
-        }
-    }
-
-    /**
-     * Wait until the workspace file count stays unchanged and the queue stays
-     * empty for the full stability window. Returns false if a new job appears
-     * before the window completes, signalling that the outer wait loop should
-     * keep backing off.
-     */
-    protected function waitForFileStability(int $stabilityWindowMs = 3_000): bool
-    {
-        $checkIntervalUs = 50_000;
-        $requiredStableChecks = max(1, intdiv($stabilityWindowMs * 1_000, $checkIntervalUs));
-
-        $previousCount = count(File::files($this->workSpacePath));
-        $consecutiveStable = 0;
-
-        while ($consecutiveStable < $requiredStableChecks) {
-            usleep($checkIntervalUs);
-
-            if (DB::table('jobs')->count() !== 0) {
-                return false;
-            }
-
-            $currentCount = count(File::files($this->workSpacePath));
-
-            if ($currentCount === $previousCount) {
-                $consecutiveStable++;
-
-                continue;
-            }
-
-            $previousCount = $currentCount;
-            $consecutiveStable = 0;
         }
 
-        return true;
+        throw new Exception('Jobs were not executed, either make sure the worker is started by running `vendor/bin/testbench queue:work` or that we waited long enough for the jobs to be processed.');
     }
 }
