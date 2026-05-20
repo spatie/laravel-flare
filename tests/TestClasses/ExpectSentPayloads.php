@@ -54,12 +54,13 @@ class ExpectSentPayloads
     ) {
         $this->workSpacePath = __DIR__.'/../../workbench/storage';
 
-        // The shared queue worker may still be flushing a trace file from a previous
+        // The shared queue worker may still be flushing a trace file from the previous
         // test (the JobProcessed handler runs after the row is removed from `jobs`).
-        // Clean once, give late writes time to land, then clean again so they don't
-        // leak into this test's workspace.
+
         $this->cleanupWorkspace();
-        usleep(50_000);
+
+        usleep(500_000);
+
         $this->cleanupWorkspace();
 
         $this->initializeWorkspace(
@@ -155,28 +156,11 @@ class ExpectSentPayloads
         ?int $waitAtLeastMs,
         bool $waitUntilAllJobsAreProcessed,
     ): void {
-        $client = Http::timeout(2)->baseUrl($this->url);
+        // 30s timeout so slow upstream calls (e.g. jsonplaceholder in /http-post)
+        // don't surface as ConnectExceptions on the client.
+        $client = Http::timeout(30)->baseUrl($this->url);
 
-        try {
-            $response = match ($this->method) {
-                'get' => $client->get($this->endpoint),
-                'post' => $client->post($this->endpoint, $this->params),
-                default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
-            };
-        } catch (ConnectException|ConnectionException $e) {
-            if (! $this->restartServer()) {
-                throw new Exception('Workbench server is not running. Please start it by running `composer run serve`');
-            }
-
-            try {
-                $response = match ($this->method) {
-                    'get' => $client->get($this->endpoint),
-                    'post' => $client->post($this->endpoint, $this->params),
-                };
-            } catch (ConnectException|ConnectionException $e) {
-                throw new Exception('Workbench server is not running after restart attempt.');
-            }
-        }
+        $this->sendRequest($client);
 
         $this->wait(
             waitAtLeastMs: $waitAtLeastMs,
@@ -226,22 +210,52 @@ class ExpectSentPayloads
         $this->logs = array_values($this->logs);
     }
 
-    protected function restartServer(): bool
+    /**
+     * Send the request, retrying once if the workbench server has gone away.
+     * dispatchAfterResponse jobs that throw can take down the PHP built-in server,
+     * so spawn a fresh testbench serve and wait for the port to come back. We probe
+     * with a raw TCP socket instead of an HTTP ping so the health check doesn't
+     * leak a traced welcome-page request into the workspace.
+     */
+    protected function sendRequest($client): mixed
     {
-        $testbench = __DIR__ . '/../../vendor/bin/testbench';
+        try {
+            return $this->performRequest($client);
+        } catch (ConnectException|ConnectionException $e) {
+            if (! $this->ensureServerReachable()) {
+                throw new Exception('Workbench server is not responding. Please start it by running `composer run serve`.', previous: $e);
+            }
+
+            return $this->performRequest($client);
+        }
+    }
+
+    protected function performRequest($client): mixed
+    {
+        return match ($this->method) {
+            'get' => $client->get($this->endpoint),
+            'post' => $client->post($this->endpoint, $this->params),
+            default => throw new \InvalidArgumentException("Unsupported method {$this->method}"),
+        };
+    }
+
+    protected function ensureServerReachable(): bool
+    {
+        $testbench = __DIR__.'/../../vendor/bin/testbench';
 
         exec("php {$testbench} serve --port=8000 > /dev/null 2>&1 &");
         exec("php {$testbench} queue:work > /dev/null 2>&1 &");
 
         for ($i = 0; $i < 50; $i++) {
-            usleep(100_000);
+            $socket = @fsockopen('127.0.0.1', 8000, $errno, $errstr, 1);
 
-            try {
-                Http::timeout(1)->baseUrl($this->url)->get('/');
+            if ($socket !== false) {
+                fclose($socket);
 
                 return true;
-            } catch (ConnectException|ConnectionException) {
             }
+
+            usleep(100_000);
         }
 
         return false;
@@ -251,49 +265,39 @@ class ExpectSentPayloads
         ?int $waitAtLeastMs,
         bool $waitUntilAllJobsAreProcessed,
     ): void {
-        if ($waitAtLeastMs === null && ! $waitUntilAllJobsAreProcessed) {
-            usleep(500); // Just to be sure
-
-            return;
-        }
-
         if ($waitAtLeastMs !== null) {
             usleep($waitAtLeastMs);
         }
 
-        $backoff = [
-            500_000,
-            750_000,
-            1_000_000,
-            1_500_000,
-            2_500_000,
-            4_000_000,
-        ];
+        // dispatchAfterResponse jobs and JobProcessed handlers can flush traces
+        // after the response is returned to the client; give the server a moment
+        // before we read the workspace.
+        usleep(500_000);
 
-        $currentBackoffIndex = 0;
-
-        while (true) {
-            if (! array_key_exists($currentBackoffIndex, $backoff)) {
-                throw new Exception('Jobs were not executed, either make sure the worker is started by running `vendor/bin/testbench queue:work` or that we waited long enough for the jobs to be processed.');
-            }
-
-            usleep($backoff[$currentBackoffIndex]);
-
-            $pendingJobs = DB::table('jobs');
-
-            if ($pendingJobs->count() === 0) {
-                // The queue worker deletes a job from the `jobs` table before its
-                // JobProcessed handler finishes writing the trace file. Sleep briefly
-                // and re-confirm the queue is still empty so any in-flight flush from
-                // the last job lands in this test's workspace instead of the next one.
-                usleep(100_000);
-
-                if (DB::table('jobs')->count() === 0) {
-                    return;
-                }
-            }
-
-            $currentBackoffIndex++;
+        if (! $waitUntilAllJobsAreProcessed) {
+            return;
         }
+
+        $backoff = [500_000, 750_000, 1_000_000, 1_500_000, 2_500_000, 4_000_000];
+
+        foreach ($backoff as $sleep) {
+            usleep($sleep);
+
+            if (DB::table('jobs')->count() !== 0) {
+                continue;
+            }
+
+            // The worker deletes a job from `jobs` before its JobProcessed handler
+            // finishes writing the trace file, and a job can chain another job after
+            // it's already been popped. Hold for a generous window so the next test
+            // doesn't pick up an in-flight write.
+            usleep(1_000_000);
+
+            if (DB::table('jobs')->count() === 0) {
+                return;
+            }
+        }
+
+        throw new Exception('Jobs were not executed, either make sure the worker is started by running `vendor/bin/testbench queue:work` or that we waited long enough for the jobs to be processed.');
     }
 }

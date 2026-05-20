@@ -1330,7 +1330,7 @@ describe('Laravel integration', function () {
     it('can handle a batch with some failing jobs', function () {
         $workspace = ExpectSentPayloads::get('/trigger-batch', waitUntilAllJobsAreProcessed: true);
 
-        $workspace->assertSent(reports: 1, traces: 7); // 1 HTTP request + 4 batched jobs
+        $workspace->assertSent(reports: 1, traces: 7); // 1 HTTP request + 6 batched jobs
 
         $httpTrace = $workspace->trace(0)->expectLaravelRequestLifecycle();
 
