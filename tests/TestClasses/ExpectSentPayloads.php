@@ -56,9 +56,11 @@ class ExpectSentPayloads
 
         // The shared queue worker may still be flushing a trace file from the previous
         // test (the JobProcessed handler runs after the row is removed from `jobs`).
-        // Clean, give late writes time to land, then clean again.
+
         $this->cleanupWorkspace();
+
         usleep(500_000);
+
         $this->cleanupWorkspace();
 
         $this->initializeWorkspace(
