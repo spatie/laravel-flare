@@ -92,14 +92,6 @@ return [
         ],
     ],
 
-    // Daemon sender example
-    // 'sender' => [
-    //     'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
-    //     'config' => [
-    //         'daemon_url' => env('FLARE_DAEMON_URL', 'http://127.0.0.1:8787'),
-    //     ],
-    // ],
-
     /*
     |--------------------------------------------------------------------------
     | Report
