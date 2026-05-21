@@ -5,7 +5,6 @@ namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
-use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Recorders\QueueRecorder\QueueRecorder as BaseQueueRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
