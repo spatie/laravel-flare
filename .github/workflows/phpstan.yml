@@ -5,10 +5,13 @@ on:
     paths:
       - '**.php'
       - 'phpstan.neon.dist'
+      - 'composer.json'
   pull_request:
     paths:
       - '**.php'
       - 'phpstan.neon.dist'
+      - 'composer.json'
+  workflow_dispatch:
 
 
 jobs:
