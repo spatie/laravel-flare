@@ -71,8 +71,6 @@
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "scripts": {
         "analyse": "vendor/bin/phpstan analyse",
         "baseline": "vendor/bin/phpstan --generate-baseline",
