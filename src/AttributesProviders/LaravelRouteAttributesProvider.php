@@ -20,9 +20,6 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
     /** @var array{name: ?string, type: LaravelRouteActionType} */
     protected array $resolvedAction;
 
-    /** @var array<string, mixed>|null */
-    protected ?array $cachedAttributes = null;
-
     public static function fromRequest(Request $request): ?self
     {
         $route = $request->route();
@@ -43,7 +40,7 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
 
     public function toArray(): array
     {
-        return $this->cachedAttributes ??= [
+        return [
             'http.route' => $this->route->uri(),
             'laravel.route.name' => $this->route->getName(),
             'laravel.route.parameters' => $this->getRouteParameters($this->route),

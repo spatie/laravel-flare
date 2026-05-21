@@ -9,32 +9,25 @@ use Spatie\FlareClient\Sampling\DeferredSamplerRule;
 use Spatie\FlareClient\Sampling\SamplingRule;
 use Spatie\FlareClient\Support\PatternMatcher;
 
-class RouteActionSamplingRule extends SamplingRule implements DeferredSamplerRule
+class QueueConnectionSamplingRule extends SamplingRule implements DeferredSamplerRule
 {
-    protected string $pattern;
-
-    /**
-     * @param  string|array{class-string, string}  $pattern
-     */
     public function __construct(
-        string|array $pattern,
+        protected string $pattern,
         protected float $rate,
     ) {
         if ($rate < 0 || $rate > 1) {
             throw new InvalidArgumentException('Sampling rate must be between 0 and 1.');
         }
-
-        $this->pattern = is_array($pattern) ? "{$pattern[0]}@{$pattern[1]}" : $pattern;
     }
 
     public function appliesTo(EntryPointType $entryPointType): bool
     {
-        return $entryPointType === EntryPointType::Web;
+        return $entryPointType === EntryPointType::Queue;
     }
 
     public function getMatchedRate(EntryPoint $entryPoint): ?float
     {
-        $value = $entryPoint->samplingAttributes['laravel.route.action'] ?? null;
+        $value = $entryPoint->samplingAttributes['laravel.job.queue.connection_name'] ?? null;
 
         if ($value === null) {
             return null;

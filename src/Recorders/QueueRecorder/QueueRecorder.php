@@ -20,7 +20,6 @@ class QueueRecorder extends BaseQueueRecorder
         Tracer $tracer,
         BackTracer $backTracer,
         protected Dispatcher $dispatcher,
-        protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
         array $config
     ) {
         parent::__construct($tracer, $backTracer, $config);

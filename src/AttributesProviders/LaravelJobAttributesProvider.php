@@ -15,9 +15,10 @@ use ReflectionProperty;
 use RuntimeException;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Contracts\JobAttributesProvider;
+use Spatie\FlareClient\Contracts\SamplingAttributesProvider;
 use Spatie\FlareClient\Time\TimeHelper;
 
-class LaravelJobAttributesProvider implements JobAttributesProvider
+class LaravelJobAttributesProvider implements JobAttributesProvider, SamplingAttributesProvider
 {
     /** @var array<string, mixed>|null */
     protected ?array $resolvedPayload = null;
@@ -64,6 +65,14 @@ class LaravelJobAttributesProvider implements JobAttributesProvider
     public function entryPointHandlerIdentifier(): ?string
     {
         return $this->jobName();
+    }
+
+    public function samplingAttributes(): array
+    {
+        return [
+            'laravel.job.queue.name' => $this->job->getQueue(),
+            'laravel.job.queue.connection_name' => $this->connectionName ?? $this->job->getConnectionName(),
+        ];
     }
 
     /** @return array<string, mixed> */

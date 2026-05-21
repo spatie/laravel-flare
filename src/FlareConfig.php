@@ -52,10 +52,10 @@ class FlareConfig extends BaseFlareConfig
         $samplerConfig = config('flare.sampler.config') ?? [];
 
         if (is_array($samplerConfig['rules'] ?? null)) {
-            $samplerConfig['rules'] = array_map(
+            $samplerConfig['rules'] = array_values(array_filter(array_map(
                 fn (array $rule) => SamplingRule::fromArray($rule),
                 $samplerConfig['rules'],
-            );
+            )));
         }
 
         $config = new self(
