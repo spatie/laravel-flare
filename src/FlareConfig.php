@@ -10,9 +10,7 @@ use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
 use Spatie\FlareClient\FlareMiddleware\AddLogs;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Resources\Resource;
-use Spatie\FlareClient\Sampling\SamplingRule as BaseSamplingRule;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Sampling\SamplingRule;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
@@ -28,6 +26,7 @@ use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\RequestRecorder\RequestRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
+use Spatie\LaravelFlare\Sampling\SamplingRule;
 
 class FlareConfig extends BaseFlareConfig
 {
