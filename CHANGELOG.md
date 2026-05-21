@@ -2,6 +2,20 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.0.0 - 2026-05-21
+
+Logs ship as a first-class signal, traces come along for the ride:
+
+- **Dedicated log channel**: drop `'flare'` into `config/logging.php` and Laravel's logger ships log messages straight to Flare as standalone entities, recorded in the OpenTelemetry log format. Add it to `LOG_STACK` to fan out alongside your existing log targets. See [Logs](https://flareapp.io/docs/flare/laravel/logs/introduction).
+- **Per-level filtering**: `minimal_log_level` in `config/flare.php` (or `MinimalLogLevel` on `FlareConfig`) drops anything below the configured Monolog level before it leaves the application. See [Log levels](https://flareapp.io/docs/flare/laravel/logs/levels).
+- **Sampling**: new `RateSampler` and `DynamicSampler` with Laravel-specific rules for route name, route action, queue name, and queue connection (route-action rules accept `[Controller::class, 'method']` tuples). See [Sampling](https://flareapp.io/docs/flare/laravel/performance/sampling).
+- **New senders**: `LaravelHttpSender` by default, `DaemonSender` to route through the local [Flare daemon](https://flareapp.io/docs/flare/laravel/general/flare-daemon).
+- **Requires** PHP 8.2+, Laravel 11.47+ / 12.42+ / 13+, and `spatie/flare-client-php` ^3.0.
+- **Removed**: error solutions support (`spatie/error-solutions` dependency, `AddSolutions` middleware, solution-related config keys).
+- **Removed**: `reportMessage()` and friends — use the new logging surface instead.
+
+Full upgrade notes in [UPGRADING.md](https://github.com/spatie/laravel-flare/blob/main/UPGRADING.md).
+
 ## 2.8.0 - 2026-04-08
 
 ### What's Changed
