@@ -2,52 +2,52 @@
 
 namespace Spatie\LaravelFlare\AttributesProviders;
 
-use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
-use Spatie\FlareClient\Contracts\JobAttributesProvider;
-use Spatie\LaravelFlare\AttributesProviders\Concerns\ResolvesJobPayloadAttributes;
+use Spatie\FlareClient\Contracts\QueuedJobAttributesProvider;
 
-class LaravelQueuedJobAttributesProvider implements JobAttributesProvider
+class LaravelQueuedJobAttributesProvider implements QueuedJobAttributesProvider
 {
-    use ResolvesJobPayloadAttributes;
-
-    /** @var array<string, mixed> */
-    protected array $payloadAttributes;
-
     /** @param array<string, mixed> $payload */
     public function __construct(
-        protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
         protected array $payload,
         protected ?string $connectionName = null,
         protected ?string $queueName = null,
-        protected int $maxChainedJobReportingDepth = 3,
     ) {
-        $this->payloadAttributes = $this->jobPropertiesFromPayload($payload);
     }
 
     public function toArray(): array
     {
-        return [
+        return array_filter([
+            'laravel.job.name' => $this->jobName(),
+            'laravel.job.class' => $this->jobClass(),
             'laravel.job.queue.connection_name' => $this->connectionName,
             'laravel.job.queue.name' => $this->queueName,
-            ...$this->payloadAttributes,
-        ];
+        ], fn ($value) => $value !== null);
     }
 
     public function jobName(): string
     {
-        return $this->payloadAttributes['laravel.job.name']
-            ?? $this->payloadAttributes['laravel.job.class']
-            ?? $this->payload['displayName']
-            ?? 'Unknown';
+        return $this->payload['displayName'] ?? 'Unknown';
     }
 
     public function jobClass(): ?string
     {
-        return $this->payloadAttributes['laravel.job.class'] ?? null;
+        $command = $this->payload['data']['commandName'] ?? null;
+
+        return match (true) {
+            is_string($command) => $command,
+            is_object($command) => $command::class,
+            default => null,
+        };
     }
 
     public function isBatched(): bool
     {
-        return array_key_exists('laravel.job.batch_id', $this->payloadAttributes);
+        if (! empty($this->payload['data']['batchId'])) {
+            return true;
+        }
+
+        $command = $this->payload['data']['command'] ?? null;
+
+        return is_object($command) && ! empty($command->batchId ?? null);
     }
 }

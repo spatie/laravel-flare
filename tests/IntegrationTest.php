@@ -875,7 +875,6 @@ describe('Laravel integration', function () {
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
-            ->expectHasAttribute('laravel.job.uuid')
             ->expectAttribute('laravel.job.name', SuccesJob::class)
             ->expectAttribute('laravel.job.class', SuccesJob::class);
 
@@ -888,7 +887,6 @@ describe('Laravel integration', function () {
             ->expectAttribute('flare.entry_point.type', 'queue')
             ->expectAttribute('flare.entry_point.value', SuccesJob::class)
             ->expectAttribute('flare.entry_point.handler.identifier', SuccesJob::class)
-            ->expectAttribute('flare.entry_point.handler.name', SuccesJob::class)
             ->expectAttribute('flare.entry_point.handler.type', 'laravel_job')
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
@@ -914,7 +912,6 @@ describe('Laravel integration', function () {
             ->expectParentId($requestSpan)
             ->expectAttribute('laravel.job.queue.connection_name', 'database')
             ->expectAttribute('laravel.job.queue.name', 'default')
-            ->expectHasAttribute('laravel.job.uuid')
             ->expectAttribute(
                 'laravel.job.name',
                 fn (string $value) => expect($value)->toStartWith('Closure (')
@@ -1378,9 +1375,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('laravel.job.properties', ['shouldFail' => false, 'shouldAddAnotherJob' => true]);
 
         $addingJobTrace->expectSpan(SpanType::QueueingJob)
-            ->expectAttribute('laravel.job.class', BatchedJob::class)
-            ->expectAttribute('laravel.job.properties', ['shouldFail' => false, 'shouldAddAnotherJob' => false])
-            ->expectHasAttribute('laravel.job.batch_id');
+            ->expectAttribute('laravel.job.class', BatchedJob::class);
 
         $workspace->lastReport()
             ->expectExceptionClass(Exception::class)

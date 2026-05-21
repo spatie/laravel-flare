@@ -26,6 +26,7 @@ use Spatie\LaravelFlare\Recorders\QueryRecorder\QueryRecorder;
 use Spatie\LaravelFlare\Recorders\RequestRecorder\RequestRecorder;
 use Spatie\LaravelFlare\Recorders\TransactionRecorder\TransactionRecorder;
 use Spatie\LaravelFlare\Recorders\ViewRecorder\ViewRecorder;
+use Spatie\LaravelFlare\Sampling\SamplingRule;
 
 class FlareConfig extends BaseFlareConfig
 {
@@ -46,6 +47,15 @@ class FlareConfig extends BaseFlareConfig
                 'type' => $collectType,
                 'options' => $options,
             ];
+        }
+
+        $samplerConfig = config('flare.sampler.config') ?? [];
+
+        if (is_array($samplerConfig['rules'] ?? null)) {
+            $samplerConfig['rules'] = array_values(array_filter(array_map(
+                fn (array $rule) => SamplingRule::fromArray($rule),
+                $samplerConfig['rules'],
+            )));
         }
 
         $config = new self(
@@ -70,7 +80,7 @@ class FlareConfig extends BaseFlareConfig
             sender: config('flare.sender.class'),
             senderConfig: config('flare.sender.config', []),
             sampler: config('flare.sampler.class'),
-            samplerConfig: config('flare.sampler.config'),
+            samplerConfig: $samplerConfig,
         );
 
         $config->enableShareButton = config('flare.enable_share_button', true);

@@ -5,7 +5,6 @@ namespace Spatie\LaravelFlare\Recorders\QueueRecorder;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobQueued;
 use Illuminate\Queue\Queue;
-use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\Recorders\QueueRecorder\QueueRecorder as BaseQueueRecorder;
 use Spatie\FlareClient\Spans\Span;
 use Spatie\FlareClient\Support\BackTracer;
@@ -20,7 +19,6 @@ class QueueRecorder extends BaseQueueRecorder
         Tracer $tracer,
         BackTracer $backTracer,
         protected Dispatcher $dispatcher,
-        protected ReduceArgumentPayloadAction $reduceArgumentPayloadAction,
         array $config
     ) {
         parent::__construct($tracer, $backTracer, $config);
@@ -47,7 +45,6 @@ class QueueRecorder extends BaseQueueRecorder
             }
 
             $provider = new LaravelQueuedJobAttributesProvider(
-                $this->reduceArgumentPayloadAction,
                 $payload,
                 $connection,
                 $queue,

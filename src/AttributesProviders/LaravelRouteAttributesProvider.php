@@ -11,10 +11,11 @@ use Illuminate\Routing\ViewController;
 use ReflectionFunction;
 use Spatie\FlareClient\Contracts\EntryPointHandlerProvider;
 use Spatie\FlareClient\Contracts\RouteAttributesProvider;
+use Spatie\FlareClient\Contracts\SamplingAttributesProvider;
 use Spatie\LaravelFlare\Enums\LaravelRouteActionType;
 use Throwable;
 
-class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPointHandlerProvider
+class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPointHandlerProvider, SamplingAttributesProvider
 {
     /** @var array{name: ?string, type: LaravelRouteActionType} */
     protected array $resolvedAction;
@@ -72,6 +73,14 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
     public function entryPointHandlerIdentifier(): ?string
     {
         return $this->route->uri();
+    }
+
+    public function samplingAttributes(): array
+    {
+        return [
+            'laravel.route.name' => $this->route->getName(),
+            'laravel.route.action' => $this->resolvedAction['name'],
+        ];
     }
 
     /** @return array{name: ?string, type: LaravelRouteActionType} */

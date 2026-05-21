@@ -7,12 +7,6 @@ parameters:
 			path: src/AttributesProviders/LaravelJobAttributesProvider.php
 
 		-
-			message: '#^Binary operation "\*" between float\|int\|string and 1000000000 results in an error\.$#'
-			identifier: binaryOp.invalid
-			count: 1
-			path: src/AttributesProviders/LaravelQueuedJobAttributesProvider.php
-
-		-
 			message: '#^Instanceof between Illuminate\\Routing\\Route and Illuminate\\Routing\\Route will always evaluate to true\.$#'
 			identifier: instanceof.alwaysTrue
 			count: 1
