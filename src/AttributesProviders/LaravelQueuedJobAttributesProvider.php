@@ -42,6 +42,12 @@ class LaravelQueuedJobAttributesProvider implements QueuedJobAttributesProvider
 
     public function isBatched(): bool
     {
-        return ! empty($this->payload['data']['batchId']);
+        if (! empty($this->payload['data']['batchId'])) {
+            return true;
+        }
+
+        $command = $this->payload['data']['command'] ?? null;
+
+        return is_object($command) && ! empty($command->batchId ?? null);
     }
 }

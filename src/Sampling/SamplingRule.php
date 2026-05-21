@@ -29,9 +29,7 @@ abstract class SamplingRule extends BaseSamplingRule
         return new QueueConnectionSamplingRule($pattern, $rate);
     }
 
-    /**
-     * @param  array{type: class-string<BaseSamplingRule>, pattern: string|array{class-string, string}, rate: float}  $data
-     */
+    /** @param array<array-key, mixed> $data */
     public static function fromArray(array $data): ?BaseSamplingRule
     {
         if (! isset($data['type'], $data['pattern'], $data['rate'])) {
