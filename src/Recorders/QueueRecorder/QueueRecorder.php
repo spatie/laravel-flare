@@ -47,7 +47,6 @@ class QueueRecorder extends BaseQueueRecorder
             }
 
             $provider = new LaravelQueuedJobAttributesProvider(
-                $this->reduceArgumentPayloadAction,
                 $payload,
                 $connection,
                 $queue,

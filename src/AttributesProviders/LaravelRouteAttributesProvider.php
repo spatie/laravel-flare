@@ -11,13 +11,17 @@ use Illuminate\Routing\ViewController;
 use ReflectionFunction;
 use Spatie\FlareClient\Contracts\EntryPointHandlerProvider;
 use Spatie\FlareClient\Contracts\RouteAttributesProvider;
+use Spatie\FlareClient\Contracts\SamplingAttributesProvider;
 use Spatie\LaravelFlare\Enums\LaravelRouteActionType;
 use Throwable;
 
-class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPointHandlerProvider
+class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPointHandlerProvider, SamplingAttributesProvider
 {
     /** @var array{name: ?string, type: LaravelRouteActionType} */
     protected array $resolvedAction;
+
+    /** @var array<string, mixed>|null */
+    protected ?array $cachedAttributes = null;
 
     public static function fromRequest(Request $request): ?self
     {
@@ -39,7 +43,7 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
 
     public function toArray(): array
     {
-        return [
+        return $this->cachedAttributes ??= [
             'http.route' => $this->route->uri(),
             'laravel.route.name' => $this->route->getName(),
             'laravel.route.parameters' => $this->getRouteParameters($this->route),
@@ -72,6 +76,14 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
     public function entryPointHandlerIdentifier(): ?string
     {
         return $this->route->uri();
+    }
+
+    public function samplingAttributes(): array
+    {
+        return [
+            'laravel.route.name' => $this->route->getName(),
+            'laravel.route.action' => $this->resolvedAction['name'],
+        ];
     }
 
     /** @return array{name: ?string, type: LaravelRouteActionType} */

@@ -10,7 +10,9 @@ use Spatie\FlareClient\FlareConfig as BaseFlareConfig;
 use Spatie\FlareClient\FlareMiddleware\AddLogs;
 use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Resources\Resource;
+use Spatie\FlareClient\Sampling\SamplingRule as BaseSamplingRule;
 use Spatie\FlareClient\Tracer;
+use Spatie\LaravelFlare\Sampling\SamplingRule;
 use Spatie\LaravelFlare\ArgumentReducers\CollectionArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ModelArgumentReducer;
 use Spatie\LaravelFlare\ArgumentReducers\ViewArgumentReducer;
@@ -70,12 +72,32 @@ class FlareConfig extends BaseFlareConfig
             sender: config('flare.sender.class'),
             senderConfig: config('flare.sender.config', []),
             sampler: config('flare.sampler.class'),
-            samplerConfig: config('flare.sampler.config'),
+            samplerConfig: self::hydrateSamplerConfig(config('flare.sampler.config')),
         );
 
         $config->enableShareButton = config('flare.enable_share_button', true);
 
         return $config;
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $samplerConfig
+     * @return array<string, mixed>
+     */
+    protected static function hydrateSamplerConfig(?array $samplerConfig): array
+    {
+        $samplerConfig ??= [];
+
+        if (! is_array($samplerConfig['rules'] ?? null)) {
+            return $samplerConfig;
+        }
+
+        $samplerConfig['rules'] = array_map(
+            fn (array $rule) => SamplingRule::fromArray($rule),
+            $samplerConfig['rules'],
+        );
+
+        return $samplerConfig;
     }
 
     /**
