@@ -49,6 +49,15 @@ class FlareConfig extends BaseFlareConfig
             ];
         }
 
+        $samplerConfig = config('flare.sampler.config') ?? [];
+
+        if (is_array($samplerConfig['rules'] ?? null)) {
+            $samplerConfig['rules'] = array_map(
+                fn (array $rule) => SamplingRule::fromArray($rule),
+                $samplerConfig['rules'],
+            );
+        }
+
         $config = new self(
             apiToken: config('flare.key'),
             baseUrl: config('flare.base_url', Api::BASE_URL),
@@ -71,32 +80,12 @@ class FlareConfig extends BaseFlareConfig
             sender: config('flare.sender.class'),
             senderConfig: config('flare.sender.config', []),
             sampler: config('flare.sampler.class'),
-            samplerConfig: self::hydrateSamplerConfig(config('flare.sampler.config')),
+            samplerConfig: $samplerConfig,
         );
 
         $config->enableShareButton = config('flare.enable_share_button', true);
 
         return $config;
-    }
-
-    /**
-     * @param  array<string, mixed>|null  $samplerConfig
-     * @return array<string, mixed>
-     */
-    protected static function hydrateSamplerConfig(?array $samplerConfig): array
-    {
-        $samplerConfig ??= [];
-
-        if (! is_array($samplerConfig['rules'] ?? null)) {
-            return $samplerConfig;
-        }
-
-        $samplerConfig['rules'] = array_map(
-            fn (array $rule) => SamplingRule::fromArray($rule),
-            $samplerConfig['rules'],
-        );
-
-        return $samplerConfig;
     }
 
     /**
