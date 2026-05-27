@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.0.1 - 2026-05-27
+
+### What's Changed
+
+* Quote string bindings in QueryException error messages by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/46
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.0.0...3.0.1
+
 ## 3.0.0 - 2026-05-21
 
 Logs ship as a first-class signal, traces come along for the ride:
