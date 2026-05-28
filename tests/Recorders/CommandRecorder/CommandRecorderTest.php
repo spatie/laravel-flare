@@ -22,12 +22,11 @@ beforeEach(function () {
 });
 
 it('can report a command', function () {
-    /** @var Flare $flare */
-    $flare = test()->flare;
+    test()->flare->tracer->startTrace();
 
     test()->consoleKernel->call('flare:test-command');
 
-    $report = $flare->report(
+    $report = test()->flare->report(
         new ExpectedException('This is a test exception'),
     )->toArray();
 
@@ -39,7 +38,7 @@ it('can report a command', function () {
         ->toHaveKey('type', SpanType::Command);
 
     expect($report['events'][0]['attributes'])
-        ->toHaveCount(8)
+        ->toHaveCount(9)
         ->toHaveKey('process.command', 'flare:test-command')
         ->toHaveKey('process.command_args', ["flare:test-command", "with-default"])
         ->toHaveKey('process.exit_code', 0)
