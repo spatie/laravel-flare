@@ -2,7 +2,6 @@
 
 use Illuminate\Contracts\Console\Kernel;
 use Spatie\FlareClient\Enums\SpanType;
-use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
