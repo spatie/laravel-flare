@@ -31,12 +31,6 @@ parameters:
 			path: src/FlareConfig.php
 
 		-
-			message: '#^Parameter \$collects of class Spatie\\LaravelFlare\\FlareConfig constructor expects array\<string, array\{type\: Spatie\\FlareClient\\Contracts\\FlareCollectType, ignored\: bool\|null, options\: array\}\>, array\{\}\|array\{application\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, dumps\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, requests\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, context\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, console\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, git_info\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, cache\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, glows\?\: array\{type\: Spatie\\FlareClient\\Enums\\CollectType\|Spatie\\LaravelFlare\\Enums\\LaravelCollectType, options\: array\<mixed\>\}, \.\.\.\} given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/FlareConfig.php
-
-		-
 			message: '#^Call to an undefined method Spatie\\FlareClient\\Support\\BackTracer\:\:framesWithoutViewMapping\(\)\.$#'
 			identifier: method.notFound
 			count: 1

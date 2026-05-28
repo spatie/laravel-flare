@@ -45,6 +45,7 @@ class FlareConfig extends BaseFlareConfig
 
             $collects[$collectType->value] = [
                 'type' => $collectType,
+                'ignored' => null,
                 'options' => $options,
             ];
         }
