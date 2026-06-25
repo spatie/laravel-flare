@@ -49,8 +49,10 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
             'laravel.route.action_type' => $this->resolvedAction['type'],
         ];
 
-        if (method_exists($this->route, 'getMetadata')) {
-            $attributes['laravel.route.metadata'] = $this->normalizeValues((array) $this->route->getMetadata());
+        $metadata = $this->route->getAction('metadata');
+
+        if (is_array($metadata)) {
+            $attributes['laravel.route.metadata'] = $this->normalizeValues($metadata);
         }
 
         return $attributes;

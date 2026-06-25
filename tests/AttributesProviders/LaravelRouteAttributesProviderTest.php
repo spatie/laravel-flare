@@ -63,7 +63,7 @@ it('returns the route metadata', function () {
     'Route metadata requires Laravel 13+',
 );
 
-it('returns an empty array when a route has no metadata', function () {
+it('does not add the metadata attribute when a route has no metadata', function () {
     $route = Route::get('/route/', fn () => null);
 
     $request = Request::create('/route', 'GET');
@@ -71,8 +71,5 @@ it('returns an empty array when a route has no metadata', function () {
 
     $attributes = (new LaravelRouteAttributesProvider($route, $request->getMethod()))->toArray();
 
-    expect($attributes['laravel.route.metadata'])->toBe([]);
-})->skip(
-    fn () => ! method_exists(\Illuminate\Routing\Route::class, 'getMetadata'),
-    'Route metadata requires Laravel 13+',
-);
+    expect($attributes)->not->toHaveKey('laravel.route.metadata');
+});
