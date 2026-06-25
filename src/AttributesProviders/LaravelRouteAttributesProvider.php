@@ -43,14 +43,14 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
         $attributes = [
             'http.route' => $this->route->uri(),
             'laravel.route.name' => $this->route->getName(),
-            'laravel.route.parameters' => $this->getRouteParameters($this->route),
+            'laravel.route.parameters' => $this->normalizeValues($this->route->parameters ?? []),
             'laravel.route.middleware' => array_values($this->route->gatherMiddleware()),
             'laravel.route.action' => $this->resolvedAction['name'],
             'laravel.route.action_type' => $this->resolvedAction['type'],
         ];
 
         if (method_exists($this->route, 'getMetadata')) {
-            $attributes['laravel.route.metadata'] = $this->route->getMetadata();
+            $attributes['laravel.route.metadata'] = $this->normalizeValues((array) $this->route->getMetadata());
         }
 
         return $attributes;
@@ -127,16 +127,25 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
         return ['name' => $actionName, 'type' => LaravelRouteActionType::Controller];
     }
 
-    /** @return array<int, mixed> */
-    protected function getRouteParameters(Route $route): array
+    /**
+     * @param array<int|string, mixed> $values
+     *
+     * @return array<int|string, mixed>
+     */
+    protected function normalizeValues(array $values): array
     {
         try {
-            return collect($route->parameters)
-                ->map(fn ($parameter) => $parameter instanceof Model ? $parameter->withoutRelations() : $parameter)
-                ->map(function ($parameter) {
-                    return is_object($parameter) && method_exists($parameter, 'toFlare') ? $parameter->toFlare() : $parameter;
-                })
-                ->toArray();
+            return array_map(function ($value) {
+                if ($value instanceof Model) {
+                    $value = $value->withoutRelations();
+                }
+
+                if (is_object($value) && method_exists($value, 'toFlare')) {
+                    return $value->toFlare();
+                }
+
+                return $value;
+            }, $values);
         } catch (Throwable) {
             return [];
         }
