@@ -25,6 +25,8 @@ it('can report a command', function () {
     /** @var Flare $flare */
     $flare = test()->flare;
 
+    $flare->tracer->startTrace();
+
     test()->consoleKernel->call('flare:test-command');
 
     $report = $flare->report(
@@ -39,13 +41,14 @@ it('can report a command', function () {
         ->toHaveKey('type', SpanType::Command);
 
     expect($report['events'][0]['attributes'])
-        ->toHaveCount(8)
+        ->toHaveCount(9)
         ->toHaveKey('process.command', 'flare:test-command')
         ->toHaveKey('process.command_args', ["flare:test-command", "with-default"])
         ->toHaveKey('process.exit_code', 0)
         ->toHaveKey('flare.entry_point.type', 'cli')
         ->toHaveKey('flare.entry_point.handler.type', 'laravel_command')
-        ->toHaveKey('flare.entry_point.handler.identifier', 'flare:test-command');
+        ->toHaveKey('flare.entry_point.handler.identifier', 'flare:test-command')
+        ->toHaveKey('flare.peak_memory_usage');
 });
 
 it('can trace a command', function () {

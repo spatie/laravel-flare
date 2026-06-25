@@ -48,6 +48,8 @@ it('traces queries', function () {
 it('can report queries', function () {
     $flare = setupFlare();
 
+    $flare->tracer->startTrace();
+
     DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
     $report = $flare->report(new Exception('Report this'))->toArray();
@@ -67,6 +69,8 @@ it('can report queries', function () {
 
 it('can stop recording bindings', function () {
     $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(includeBindings: false));
+
+    $flare->tracer->startTrace();
 
     DB::select('SELECT * FROM users WHERE id = ?', [42]);
 
@@ -93,6 +97,8 @@ it('will add origin attributes when a threshold is met and tracing', function ()
 
 it('will not add origin attributes when a threshold is met and only reporting', function () {
     $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(findOriginThreshold: TimeHelper::milliseconds(300)));
+
+    $flare->tracer->startTrace();
 
     $flare->query()->record('SELECT * FROM users', duration: TimeHelper::milliseconds(400));
 

@@ -21,7 +21,7 @@
         "ext-json": "*",
         "ext-mbstring": "*",
         "illuminate/support": "^11.47|^12.42|^13.0",
-        "spatie/flare-client-php": "^3.0.0",
+        "spatie/flare-client-php": "^3.1.0",
         "spatie/laravel-error-share": "^1.0.3",
         "symfony/console": "^7.2.1|^8.0",
         "symfony/var-dumper": "^7.2.3|^8.0"
@@ -45,6 +45,15 @@
             "phpstan/extension-installer": true,
             "pestphp/pest-plugin": true,
             "php-http/discovery": false
+        },
+        "policy": {
+            "advisories": {
+                "ignore-id": {
+                    "PKSA-mdq4-51ck-6kdq": "Laravel 11 CRLF injection in default email rule. Fixed in 12.60+/13.10+ only, not backported to 11.x (end of life). Ignored so the Laravel 11 test matrix can install.",
+                    "PKSA-m5cs-t1y6-qpcs": "Laravel 11 temporary signed URL path confusion. Fixed in 12.61.1+/13.12+ only, not backported to 11.x (end of life). Ignored so the Laravel 11 test matrix can install.",
+                    "PKSA-3r5d-mb8f-1qw9": "Laravel 11 CRLF injection in default email rule. Fixed in 12.60+/13.10+ only, not backported to 11.x (end of life). Ignored so the Laravel 11 test matrix can install."
+                }
+            }
         }
     },
     "extra": {
