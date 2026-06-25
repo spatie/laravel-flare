@@ -40,7 +40,7 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
 
     public function toArray(): array
     {
-        return [
+        $attributes = [
             'http.route' => $this->route->uri(),
             'laravel.route.name' => $this->route->getName(),
             'laravel.route.parameters' => $this->getRouteParameters($this->route),
@@ -48,6 +48,12 @@ class LaravelRouteAttributesProvider implements RouteAttributesProvider, EntryPo
             'laravel.route.action' => $this->resolvedAction['name'],
             'laravel.route.action_type' => $this->resolvedAction['type'],
         ];
+
+        if (method_exists($this->route, 'getMetadata')) {
+            $attributes['laravel.route.metadata'] = $this->route->getMetadata();
+        }
+
+        return $attributes;
     }
 
     public function route(): string
