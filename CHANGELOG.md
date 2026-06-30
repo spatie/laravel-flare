@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.1.0 - 2026-06-30
+
+### What's Changed
+
+* Add route metadata to Flare route attributes by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/49
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.0.1...3.1.0
+
 ## 3.0.1 - 2026-05-27
 
 ### What's Changed
