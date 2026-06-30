@@ -23,8 +23,6 @@ beforeEach(function () {
 it('can report a command', function () {
     test()->flare->tracer->startTrace();
 
-    $flare->tracer->startTrace();
-
     test()->consoleKernel->call('flare:test-command');
 
     $report = test()->flare->report(
