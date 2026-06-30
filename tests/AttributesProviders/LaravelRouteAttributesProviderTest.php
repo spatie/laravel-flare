@@ -47,3 +47,29 @@ it('calls toFlare on a route parameter when it exists', function () {
         'user' => ['stripped'],
     ]);
 });
+
+it('returns the route metadata', function () {
+    $route = Route::get('/route/', fn () => null)
+        ->metadata(['head' => ['title' => 'Users']]);
+
+    $request = Request::create('/route', 'GET');
+    $route->bind($request);
+
+    $attributes = (new LaravelRouteAttributesProvider($route, $request->getMethod()))->toArray();
+
+    expect($attributes['laravel.route.metadata'])->toBe(['head' => ['title' => 'Users']]);
+})->skip(
+    fn () => ! method_exists(\Illuminate\Routing\Route::class, 'getMetadata'),
+    'Route metadata requires Laravel 13+',
+);
+
+it('does not add the metadata attribute when a route has no metadata', function () {
+    $route = Route::get('/route/', fn () => null);
+
+    $request = Request::create('/route', 'GET');
+    $route->bind($request);
+
+    $attributes = (new LaravelRouteAttributesProvider($route, $request->getMethod()))->toArray();
+
+    expect($attributes)->not->toHaveKey('laravel.route.metadata');
+});
