@@ -2,7 +2,6 @@
 
 use Illuminate\Contracts\Console\Kernel;
 use Spatie\FlareClient\Enums\SpanType;
-use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
@@ -22,14 +21,13 @@ beforeEach(function () {
 });
 
 it('can report a command', function () {
-    /** @var Flare $flare */
-    $flare = test()->flare;
+    test()->flare->tracer->startTrace();
 
     $flare->tracer->startTrace();
 
     test()->consoleKernel->call('flare:test-command');
 
-    $report = $flare->report(
+    $report = test()->flare->report(
         new ExpectedException('This is a test exception'),
     )->toArray();
 
