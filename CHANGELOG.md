@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.1.1 - 2026-07-01
+
+### What's Changed
+
+* Add configuring() hook to mutate FlareConfig before Flare boots by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/52
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.1.0...3.1.1
+
 ## 3.1.0 - 2026-06-30
 
 ### What's Changed
