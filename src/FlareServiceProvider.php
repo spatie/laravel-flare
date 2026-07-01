@@ -52,6 +52,9 @@ use Spatie\LaravelFlare\Views\ViewFrameMapper;
 
 class FlareServiceProvider extends ServiceProvider
 {
+    /** @var array<int, Closure(FlareConfig):void> */
+    protected static array $configurationCallbacks = [];
+
     protected FlareProvider $provider;
 
     protected FlareConfig $config;
@@ -104,12 +107,29 @@ class FlareServiceProvider extends ServiceProvider
         $this->disableApiQueue = $this->disableApiQueue || ($this->app->runningInConsole() && isset($_SERVER['argv']) && in_array('tinker', $_SERVER['argv']));
     }
 
+    /**
+     * @param Closure(FlareConfig):void $callback
+     */
+    public static function configuring(Closure $callback): void
+    {
+        static::$configurationCallbacks[] = $callback;
+    }
+
+    public static function flushConfigurationCallbacks(): void
+    {
+        static::$configurationCallbacks = [];
+    }
+
     public function register(): void
     {
         if (! $this->app->has(FlareConfig::class)) {
             $this->mergeConfigFrom(__DIR__.'/../config/flare.php', 'flare');
 
             $this->config = FlareConfig::fromLaravelConfig();
+
+            foreach (static::$configurationCallbacks as $callback) {
+                $callback($this->config);
+            }
 
             $this->app->singleton(FlareConfig::class, fn () => $this->config);
         } else {
