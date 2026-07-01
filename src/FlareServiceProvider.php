@@ -110,7 +110,7 @@ class FlareServiceProvider extends ServiceProvider
     /**
      * @param Closure(FlareConfig):void $callback
      */
-    public static function configuring(Closure $callback): void
+    public static function configure(Closure $callback): void
     {
         static::$configurationCallbacks[] = $callback;
     }

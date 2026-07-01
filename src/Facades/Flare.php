@@ -40,9 +40,9 @@ class Flare extends Facade
     /**
      * @param Closure(FlareConfig):void $callback
      */
-    public static function configuring(Closure $callback): void
+    public static function configure(Closure $callback): void
     {
-        FlareServiceProvider::configuring($callback);
+        FlareServiceProvider::configure($callback);
     }
 
     /**

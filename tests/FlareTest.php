@@ -63,8 +63,8 @@ it('runs configuring callbacks against the config before it is used to boot Flar
     FlareServiceProvider::flushConfigurationCallbacks();
     config()->set('flare.key', 'some-key');
 
-    FlareServiceProvider::configuring(fn (FlareConfig $config) => $config->applicationName = 'first');
-    FlareFacade::configuring(function (FlareConfig $config) {
+    FlareServiceProvider::configure(fn (FlareConfig $config) => $config->applicationName = 'first');
+    FlareFacade::configure(function (FlareConfig $config) {
         $config->applicationName = 'from-hook';
         $config->configureResource(fn (Resource $resource) => $resource->addAttribute('custom.attribute', 'value'));
     });
