@@ -11,6 +11,7 @@ use Spatie\FlareClient\Recorders\GlowRecorder\GlowRecorder;
 use Spatie\FlareClient\Recorders\ResponseRecorder\ResponseRecorder;
 use Spatie\FlareClient\Tracer;
 use Spatie\LaravelFlare\FlareConfig;
+use Spatie\LaravelFlare\FlareServiceProvider;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\RequestRecorder\RequestRecorder;
 use Spatie\LaravelFlare\Recorders\RoutingRecorder\RoutingRecorder;
@@ -34,6 +35,14 @@ class Flare extends Facade
     protected static function getFacadeAccessor()
     {
         return FlareClient::class;
+    }
+
+    /**
+     * @param Closure(FlareConfig):void $callback
+     */
+    public static function configuring(Closure $callback): void
+    {
+        FlareServiceProvider::configuring($callback);
     }
 
     /**

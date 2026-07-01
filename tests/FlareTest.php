@@ -8,6 +8,7 @@ use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Resources\Resource;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeTime;
+use Spatie\LaravelFlare\Facades\Flare as FlareFacade;
 use Spatie\LaravelFlare\FlareConfig;
 use Spatie\LaravelFlare\FlareServiceProvider;
 
@@ -63,7 +64,7 @@ it('runs configuring callbacks against the config before it is used to boot Flar
     config()->set('flare.key', 'some-key');
 
     FlareServiceProvider::configuring(fn (FlareConfig $config) => $config->applicationName = 'first');
-    FlareServiceProvider::configuring(function (FlareConfig $config) {
+    FlareFacade::configuring(function (FlareConfig $config) {
         $config->applicationName = 'from-hook';
         $config->configureResource(fn (Resource $resource) => $resource->addAttribute('custom.attribute', 'value'));
     });
