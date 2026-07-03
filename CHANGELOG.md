@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.2.1 - 2026-07-03
+
+### What's Changed
+
+* Guard FlareTracingMiddleware::terminate against uninitialized request by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/54
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.2.0...3.2.1
+
 ## 3.2.0 - 2026-07-03
 
 ### What's Changed
