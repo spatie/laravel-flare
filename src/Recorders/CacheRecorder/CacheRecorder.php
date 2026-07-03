@@ -26,22 +26,22 @@ class CacheRecorder extends BaseCacheRecorder
     {
         $this->dispatcher->listen(CacheHit::class, fn (CacheHit $event) => $this->recordHit(
             $event->key,
-            $event->storeName,
+            $event->storeName ?? null,
         ));
 
         $this->dispatcher->listen(CacheMissed::class, fn (CacheMissed $event) => $this->recordMiss(
             $event->key,
-            $event->storeName,
+            $event->storeName ?? null,
         ));
 
         $this->dispatcher->listen(KeyWritten::class, fn (KeyWritten $event) => $this->recordKeyWritten(
             $event->key,
-            $event->storeName,
+            $event->storeName ?? null,
         ));
 
         $this->dispatcher->listen(KeyForgotten::class, fn (KeyForgotten $event) => $this->recordKeyForgotten(
             $event->key,
-            $event->storeName,
+            $event->storeName ?? null,
         ));
     }
 }

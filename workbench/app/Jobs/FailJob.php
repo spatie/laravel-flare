@@ -4,7 +4,7 @@ namespace Workbench\App\Jobs;
 
 use Exception;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Workbench\App\Jobs\Concerns\Queueable;
 use Illuminate\Support\Facades\DB;
 
 class FailJob implements ShouldQueue

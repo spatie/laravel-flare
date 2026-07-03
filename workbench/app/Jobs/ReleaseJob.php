@@ -3,7 +3,7 @@
 namespace Workbench\App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Workbench\App\Jobs\Concerns\Queueable;
 
 class ReleaseJob implements ShouldQueue
 {

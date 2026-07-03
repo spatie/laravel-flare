@@ -12,7 +12,9 @@ it('can execute the test command', function () {
     config()->set('logging.default', 'flare');
 
     app()->extend(ExceptionHandler::class, function (Handler $handler) {
-        Flare::handles(new Exceptions($handler));
+        class_exists(Exceptions::class)
+            ? Flare::handles(new Exceptions($handler))
+            : Flare::handles();
 
         return $handler;
     });

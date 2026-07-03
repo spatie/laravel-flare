@@ -76,7 +76,20 @@ function setupFlare(
 
     $flare = app()->make(Flare::class);
 
-    FlareFacade::handles(new Exceptions(app(ExceptionHandler::class)));
+    class_exists(Exceptions::class)
+        ? FlareFacade::handles(new Exceptions(app(ExceptionHandler::class)))
+        : FlareFacade::handles();
 
     return $flare;
+}
+
+/**
+ * Cache events only expose the store name from Laravel 11 onwards, so the
+ * cache.store attribute is null on Laravel 10.
+ */
+function laravelCacheStore(string $store): ?string
+{
+    return property_exists(\Illuminate\Cache\Events\CacheHit::class, 'storeName')
+        ? $store
+        : null;
 }

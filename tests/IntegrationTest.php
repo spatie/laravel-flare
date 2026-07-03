@@ -757,7 +757,7 @@ describe('Laravel integration', function () {
                     ->expectAttribute('cache.key', 'foo')
                     ->expectAttribute('cache.store', 'database')
             );
-    });
+    })->skip(fn () => ! property_exists(\Illuminate\Cache\Events\CacheHit::class, 'storeName'), 'Cache events only expose the store name from Laravel 11 and up');
 
     // External HTTP
 
@@ -1904,5 +1904,5 @@ describe('Laravel integration', function () {
             ->expectAttribute('context.laravel', [
                 'single_entry' => 'value',
             ]);
-    });
+    })->skip(fn () => ! class_exists(\Illuminate\Support\Facades\Context::class), 'Laravel Context is only available on Laravel 11 and up');
 })->skipOnWindows();

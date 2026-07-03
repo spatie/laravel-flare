@@ -5,7 +5,7 @@ namespace Workbench\App\Jobs;
 use Exception;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Workbench\App\Jobs\Concerns\Queueable;
 
 class BatchedJob implements ShouldQueue
 {

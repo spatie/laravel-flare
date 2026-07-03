@@ -50,7 +50,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
+            expect($event['attributes']['cache.store'])->toBe(laravelCacheStore(config('cache.default')));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Hit);
         },
@@ -62,7 +62,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
+            expect($event['attributes']['cache.store'])->toBe(laravelCacheStore(config('cache.default')));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Get);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Miss);
         },
@@ -74,7 +74,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
+            expect($event['attributes']['cache.store'])->toBe(laravelCacheStore(config('cache.default')));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Set);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Success);
         },
@@ -86,7 +86,7 @@ dataset('cache recorder', function () {
         function (array $event) {
             expect($event['type'])->toBe(SpanEventType::Cache);
             expect($event['attributes']['cache.key'])->toBe('some_key');
-            expect($event['attributes']['cache.store'])->toBe(config('cache.default'));
+            expect($event['attributes']['cache.store'])->toBe(laravelCacheStore(config('cache.default')));
             expect($event['attributes']['cache.operation'])->toBe(CacheOperation::Forget);
             expect($event['attributes']['cache.result'])->toBe(CacheResult::Success);
         },
