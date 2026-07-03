@@ -18,7 +18,7 @@ it('will not add context information with an exception if no context was set', f
     setupFlare()->report(new Exception);
 
     FakeApi::lastReport()->expectMissingAttribute('context.laravel');
-});
+})->skip(fn () => ! class_exists(Context::class), 'Context is only available on Laravel 11 and up');
 
 it('will not add context information with an exception if only hidden context was set', function () {
     Context::addHidden('hidden', 'value');

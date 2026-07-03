@@ -2,11 +2,10 @@
 
 namespace Workbench\App\Providers;
 
-use Illuminate\Foundation\Configuration\Exceptions;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
+use Orchestra\Testbench\Http\Middleware\VerifyCsrfToken;
 use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Workbench\App\Livewire\Counter;
@@ -23,8 +22,7 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Laravel 10 defaults the queue connection to "sync"; Laravel 11+ defaults to
-        // "database". Pin it so jobs are dispatched to the worker on every version.
+        // Laravel 10 defaults the queue connection to "sync".
         config()->set('queue.default', 'database');
 
         config()->set(
@@ -41,16 +39,6 @@ class WorkbenchServiceProvider extends ServiceProvider
             $this->app,
             [],
         );
-
-        // Laravel 11+ disables CSRF for the workbench through bootstrap/app.php. On the
-        // Laravel 10 skeleton that file is not used, so exclude every route here instead.
-        // Testbench's web group resolves its own VerifyCsrfToken subclass, so bind that.
-        if ($this->runningOnLegacySkeleton()) {
-            $this->app->singleton(\Orchestra\Testbench\Http\Middleware\VerifyCsrfToken::class, fn ($app) => new class($app, $app['encrypter']) extends VerifyCsrfToken
-            {
-                protected $except = ['*'];
-            });
-        }
     }
 
     /**
@@ -58,11 +46,12 @@ class WorkbenchServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // On Laravel 11+ exception reporting is wired through bootstrap/app.php's
-        // withExceptions() closure. Laravel 10 uses testbench's default skeleton,
-        // which does not run that file, so register Flare's reportable here.
-        if ($this->runningOnLegacySkeleton()) {
+        if ($this->runningOnLaravel10()) {
+            // Laravel 11+ wires this through bootstrap/app.php.
             Flare::handles();
+
+            // Laravel 11+ disables CSRF through bootstrap/app.php.
+            $this->app['router']->removeMiddlewareFromGroup('web', VerifyCsrfToken::class);
         }
 
         Blade::componentNamespace('Workbench\\App\\View\\Components', 'workbench');
@@ -75,10 +64,8 @@ class WorkbenchServiceProvider extends ServiceProvider
         Livewire::component('nested-view-exception', NestedViewException::class);
     }
 
-    // Laravel 11 replaced the App\Http\Kernel / bootstrap.php skeleton with bootstrap/app.php
-    // and the Configuration\Exceptions object. Its absence means we are on Laravel 10.
-    private function runningOnLegacySkeleton(): bool
+    private function runningOnLaravel10(): bool
     {
-        return ! class_exists(Exceptions::class);
+        return version_compare($this->app->version(), '11.0', '<');
     }
 }

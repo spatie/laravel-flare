@@ -48,9 +48,6 @@ jobs:
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer require "livewire/livewire:${{ matrix.livewire }}" --dev --no-interaction --no-update
 
-                    # serializable-closure 1.x, which Laravel 10 requires, mangles thrown
-                    # exceptions from queued closures on PHP 8.4+. Pin 2.x on the newer
-                    # Laravel lines that support it so prefer-lowest does not resolve 1.x.
                     if [ "${{ matrix.laravel }}" != "10.*" ]; then
                         composer require "laravel/serializable-closure:^2.0" --dev --no-interaction --no-update
                     fi

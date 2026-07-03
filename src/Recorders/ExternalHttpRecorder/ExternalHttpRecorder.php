@@ -40,9 +40,8 @@ class ExternalHttpRecorder extends BaseExternalHttpRecorder
             $event->response->headers(),
         ));
 
-        // The ConnectionFailed event only carries the exception from Laravel 11 onwards.
         $this->dispatcher->listen(ConnectionFailed::class, fn (ConnectionFailed $event) => $this->recordConnectionFailed(
-            isset($event->exception) ? $event->exception::class : ConnectionException::class
+            isset($event->exception) ? $event->exception::class : ConnectionException::class // Only Laravel 11+
         ));
     }
 
