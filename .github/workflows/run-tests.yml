@@ -27,11 +27,6 @@ jobs:
                       php: 8.5
                     - laravel: 10.*
                       livewire: 4.2.*
-                    # testbench 8's workbench tooling (bootstrap/cache, storage sync)
-                    # is unreliable on the oldest releases prefer-lowest resolves; the
-                    # prefer-stable Laravel 10 job covers this EOL version.
-                    - laravel: 10.*
-                      stability: prefer-lowest
 
         name: P${{ matrix.php }} - L${{ matrix.laravel }} - LW${{ matrix.livewire }} -${{ matrix.stability }} - ${{ matrix.os }}
 
