@@ -76,7 +76,9 @@ function setupFlare(
 
     $flare = app()->make(Flare::class);
 
-    FlareFacade::handles(new Exceptions(app(ExceptionHandler::class)));
+    class_exists(Exceptions::class)
+        ? FlareFacade::handles(new Exceptions(app(ExceptionHandler::class)))
+        : FlareFacade::handles();
 
     return $flare;
 }

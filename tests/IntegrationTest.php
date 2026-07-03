@@ -727,6 +727,8 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
+        $hasStoreName = version_compare(app()->version(), '11.0', '>=');
+
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200)
             ->expectSpanEvents(
@@ -735,27 +737,27 @@ describe('Laravel integration', function () {
                     ->expectAttribute('cache.operation', 'get')
                     ->expectAttribute('cache.result', 'miss')
                     ->expectAttribute('cache.key', 'foo')
-                    ->expectAttribute('cache.store', 'database'),
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
                 fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'set')
                     ->expectAttribute('cache.result', 'success')
                     ->expectAttribute('cache.key', 'foo')
-                    ->expectAttribute('cache.store', 'database'),
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
                 fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'get')
                     ->expectAttribute('cache.result', 'hit')
                     ->expectAttribute('cache.key', 'foo')
-                    ->expectAttribute('cache.store', 'database'),
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
                 fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'get')
                     ->expectAttribute('cache.result', 'hit')
                     ->expectAttribute('cache.key', 'foo')
-                    ->expectAttribute('cache.store', 'database'),
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
                 fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'forget')
                     ->expectAttribute('cache.result', 'success')
                     ->expectAttribute('cache.key', 'foo')
-                    ->expectAttribute('cache.store', 'database')
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database')
             );
     });
 
@@ -1904,5 +1906,5 @@ describe('Laravel integration', function () {
             ->expectAttribute('context.laravel', [
                 'single_entry' => 'value',
             ]);
-    });
+    })->skip(fn () => ! class_exists(\Illuminate\Support\Facades\Context::class), 'Laravel Context is only available on Laravel 11 and up');
 })->skipOnWindows();

@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare\Recorders\ExternalHttpRecorder;
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Events\ConnectionFailed;
 use Illuminate\Http\Client\Events\RequestSending;
 use Illuminate\Http\Client\Events\ResponseReceived;
@@ -40,7 +41,7 @@ class ExternalHttpRecorder extends BaseExternalHttpRecorder
         ));
 
         $this->dispatcher->listen(ConnectionFailed::class, fn (ConnectionFailed $event) => $this->recordConnectionFailed(
-            $event->exception::class
+            isset($event->exception) ? $event->exception::class : ConnectionException::class // Only Laravel 11+
         ));
     }
 

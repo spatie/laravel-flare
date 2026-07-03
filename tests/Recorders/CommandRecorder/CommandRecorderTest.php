@@ -13,8 +13,17 @@ beforeEach(function () {
     FakeTime::setup('2019-01-01 12:34:56');
 
     $consoleKernel = app(Kernel::class);
-    $consoleKernel->addCommands([TestCommand::class]);
-    $consoleKernel->rerouteSymfonyCommandEvents(); // make sure events are triggered
+
+    if (method_exists($consoleKernel, 'addCommands')) {
+        $consoleKernel->addCommands([TestCommand::class]);
+        $consoleKernel->rerouteSymfonyCommandEvents(); // make sure events are triggered
+    } else {
+        // On Laravel 10 the Symfony dispatcher is only wired when the Artisan
+        // application is first built, so rerouting must happen before the
+        // command (which resolves Artisan) is registered.
+        $consoleKernel->rerouteSymfonyCommandEvents();
+        $consoleKernel->registerCommand(app(TestCommand::class));
+    }
 
     test()->consoleKernel = $consoleKernel;
     test()->flare = setupFlare(alwaysSampleTraces: true);

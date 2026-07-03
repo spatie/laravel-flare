@@ -7,6 +7,12 @@ parameters:
 			path: src/AttributesProviders/LaravelJobAttributesProvider.php
 
 		-
+			message: '#^Property Illuminate\\Http\\Client\\Events\\ConnectionFailed\:\:\$exception \(Illuminate\\Http\\Client\\ConnectionException\) in isset\(\) is not nullable\.$#'
+			identifier: isset.property
+			count: 1
+			path: src/Recorders/ExternalHttpRecorder/ExternalHttpRecorder.php
+
+		-
 			message: '#^Instanceof between Illuminate\\Routing\\Route and Illuminate\\Routing\\Route will always evaluate to true\.$#'
 			identifier: instanceof.alwaysTrue
 			count: 1
@@ -35,12 +41,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: src/FlareMiddleware/AddExceptionHandledStatus.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:registered\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: src/FlareServiceProvider.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Contracts\\Foundation\\Application\:\:runningConsoleCommand\(\)\.$#'

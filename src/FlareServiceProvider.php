@@ -166,7 +166,11 @@ class FlareServiceProvider extends ServiceProvider
             $this->app->make(ViewFrameMapper::class),
         ));
 
-        $this->app->registered(fn () => $this->registeredTimeUnixNano = $this->app->get(Time::class)->getCurrentTime());
+        $captureRegisteredTime = fn () => $this->registeredTimeUnixNano ??= $this->app->get(Time::class)->getCurrentTime();
+
+        method_exists($this->app, 'registered')
+            ? $this->app->registered($captureRegisteredTime)
+            : $this->app->booting($captureRegisteredTime);
 
         if ($this->config->trace === false) {
             return;

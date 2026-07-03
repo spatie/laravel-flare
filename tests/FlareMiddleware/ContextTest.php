@@ -12,13 +12,13 @@ it('will add context information with an exception', function () {
     $flare->report(new Exception);
 
     FakeApi::lastReport()->expectAttribute('context.laravel', ['foo' => 'bar']);
-});
+})->skip(fn () => ! class_exists(Context::class), 'Context is only available on Laravel 11 and up');
 
 it('will not add context information with an exception if no context was set', function () {
     setupFlare()->report(new Exception);
 
     FakeApi::lastReport()->expectMissingAttribute('context.laravel');
-});
+})->skip(fn () => ! class_exists(Context::class), 'Context is only available on Laravel 11 and up');
 
 it('will not add context information with an exception if only hidden context was set', function () {
     Context::addHidden('hidden', 'value');
@@ -26,4 +26,4 @@ it('will not add context information with an exception if only hidden context wa
     setupFlare()->report(new Exception);
 
     FakeApi::lastReport()->expectMissingAttribute('context.laravel');
-});
+})->skip(fn () => ! class_exists(Context::class), 'Context is only available on Laravel 11 and up');
