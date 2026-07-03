@@ -728,34 +728,37 @@ describe('Laravel integration', function () {
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
         // Cache events only expose the store name on Laravel 11+.
-        $expectStore = fn (ExpectSpanEvent $event) => version_compare(app()->version(), '11.0', '<')
-            ? $event
-            : $event->expectAttribute('cache.store', 'database');
+        $hasStoreName = version_compare(app()->version(), '11.0', '>=');
 
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200)
             ->expectSpanEvents(
                 SpanEventType::Cache,
-                fn (ExpectSpanEvent $event) => $expectStore($event
+                fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'get')
                     ->expectAttribute('cache.result', 'miss')
-                    ->expectAttribute('cache.key', 'foo')),
-                fn (ExpectSpanEvent $event) => $expectStore($event
+                    ->expectAttribute('cache.key', 'foo')
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
+                fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'set')
                     ->expectAttribute('cache.result', 'success')
-                    ->expectAttribute('cache.key', 'foo')),
-                fn (ExpectSpanEvent $event) => $expectStore($event
+                    ->expectAttribute('cache.key', 'foo')
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
+                fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'get')
                     ->expectAttribute('cache.result', 'hit')
-                    ->expectAttribute('cache.key', 'foo')),
-                fn (ExpectSpanEvent $event) => $expectStore($event
+                    ->expectAttribute('cache.key', 'foo')
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
+                fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'get')
                     ->expectAttribute('cache.result', 'hit')
-                    ->expectAttribute('cache.key', 'foo')),
-                fn (ExpectSpanEvent $event) => $expectStore($event
+                    ->expectAttribute('cache.key', 'foo')
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database'),
+                fn (ExpectSpanEvent $event) => $event
                     ->expectAttribute('cache.operation', 'forget')
                     ->expectAttribute('cache.result', 'success')
-                    ->expectAttribute('cache.key', 'foo'))
+                    ->expectAttribute('cache.key', 'foo')
+                    ->expectAttributeIf($hasStoreName, 'cache.store', 'database')
             );
     });
 
