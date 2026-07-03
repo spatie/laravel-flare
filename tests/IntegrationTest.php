@@ -727,7 +727,6 @@ describe('Laravel integration', function () {
 
         $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
 
-        // Cache events only expose the store name on Laravel 11+.
         $hasStoreName = version_compare(app()->version(), '11.0', '>=');
 
         $trace->expectSpan(SpanType::Request)
