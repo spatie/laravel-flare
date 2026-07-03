@@ -55,12 +55,14 @@ class FlareTracingMiddleware
 
     public function terminate(Request $request, Response $response): void
     {
-        Flare::request()?->recordEnd(
-            requestAttributesProvider: $this->requestAttributesProvider,
-            responseAttributesProvider: new SymfonyResponseAttributesProvider($this->redactor, $response),
-            routeAttributesProvider: self::$routeAttributesProvider ?? LaravelRouteAttributesProvider::fromRequest($request),
-            userAttributesProvider: LaravelUserAttributesProvider::fromRequest($request),
-        );
+        if (isset($this->requestAttributesProvider)) {
+            Flare::request()?->recordEnd(
+                requestAttributesProvider: $this->requestAttributesProvider,
+                responseAttributesProvider: new SymfonyResponseAttributesProvider($this->redactor, $response),
+                routeAttributesProvider: self::$routeAttributesProvider ?? LaravelRouteAttributesProvider::fromRequest($request),
+                userAttributesProvider: LaravelUserAttributesProvider::fromRequest($request),
+            );
+        }
 
         self::$routeAttributesProvider = null;
 
