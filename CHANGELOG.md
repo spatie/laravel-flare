@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.2.0 - 2026-07-03
+
+### What's Changed
+
+* Add Laravel 10 support by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/53
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.1.1...3.2.0
+
 ## 3.1.1 - 2026-07-01
 
 ### What's Changed
