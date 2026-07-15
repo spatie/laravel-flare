@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.3.0 - 2026-07-15
+
+### What's Changed
+
+* Add max_attribute_size_in_kb trace limit config by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/55
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.2.1...3.3.0
+
 ## 3.2.1 - 2026-07-03
 
 ### What's Changed
