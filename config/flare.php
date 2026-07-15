@@ -192,6 +192,7 @@ return [
         'max_attributes_per_span' => 128,
         'max_span_events_per_span' => 128,
         'max_attributes_per_span_event' => 128,
+        'max_attribute_size_in_kb' => 32,
     ],
 
     /*
