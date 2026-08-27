@@ -2,6 +2,15 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.4.0 - 2026-08-27
+
+### What's Changed
+
+* Fix test failures caused by Laravel 13 and Guzzle 8 by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/57
+* Ignore framework and vendor cache keys by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/56
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.3.0...3.4.0
+
 ## 3.3.0 - 2026-07-15
 
 ### What's Changed
