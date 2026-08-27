@@ -44,4 +44,21 @@ class CacheRecorder extends BaseCacheRecorder
             $event->storeName ?? null,
         ));
     }
+
+    /** @return array<int, string> */
+    protected function defaultIgnoredKeys(): array
+    {
+        return [
+            '/^illuminate:(?!cache:flexible:created:)/',
+            '/^framework\/schedule/',
+            '/^laravel_vapor_job_attempt?s:/',
+            '/^laravel:pulse:/',
+            '/^laravel:reverb:/',
+            '/^laravel:horizon:/',
+            '/^horizon:/',
+            '/^nova/',
+            '/^telescope:/',
+            '/^livewire-checksum-failures:/',
+        ];
+    }
 }

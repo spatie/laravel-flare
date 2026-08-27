@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use function Pest\Laravel\get;
@@ -7,6 +8,7 @@ use Spatie\FlareClient\Enums\CacheOperation;
 use Spatie\FlareClient\Enums\CacheResult;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
+use Spatie\LaravelFlare\FlareConfig;
 
 beforeEach(function () {
     config()->set('cache.default', 'array');
@@ -42,6 +44,77 @@ it('records cache operations', function (
 
     $assert($cacheSpanEvents[0]);
 })->with('cache recorder');
+
+it('ignores framework and vendor cache keys', function () {
+    Cache::clear();
+
+    setupFlare();
+
+    Route::get('exception', function () {
+        cache()->get('illuminate:queue:restart');
+
+        throw new Exception('This is a failed operation');
+    });
+
+    get('exception')->assertStatus(500);
+
+    $cacheSpanEvents = array_values(array_filter(
+        FakeApi::lastReport()->toArray()['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Cache,
+    ));
+
+    expect($cacheSpanEvents)->toHaveCount(0);
+});
+
+it('does not ignore keys written by flexible since they contain a user defined key', function () {
+    Cache::clear();
+
+    setupFlare();
+
+    Route::get('exception', function () {
+        Cache::flexible('some_key', [5, 10], fn () => 'some_value');
+
+        throw new Exception('This is a failed operation');
+    });
+
+    get('exception')->assertStatus(500);
+
+    $cacheSpanEvents = array_values(array_filter(
+        FakeApi::lastReport()->toArray()['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Cache,
+    ));
+
+    expect(array_column(array_column($cacheSpanEvents, 'attributes'), 'cache.key'))
+        ->toContain('illuminate:cache:flexible:created:some_key');
+})->skip(
+    fn () => ! method_exists(Repository::class, 'flexible'),
+    'Cache::flexible() requires Laravel 11.23 or higher',
+);
+
+it('can ignore additional cache keys', function () {
+    Cache::clear();
+
+    setupFlare(fn (FlareConfig $config) => $config->collectCacheEvents(
+        ignoredKeys: ['/^internal:/'],
+    ));
+
+    Route::get('exception', function () {
+        cache()->get('internal:some_key');
+        cache()->get('some_key');
+
+        throw new Exception('This is a failed operation');
+    });
+
+    get('exception')->assertStatus(500);
+
+    $cacheSpanEvents = array_values(array_filter(
+        FakeApi::lastReport()->toArray()['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Cache,
+    ));
+
+    expect($cacheSpanEvents)->toHaveCount(1);
+    expect($cacheSpanEvents[0]['attributes']['cache.key'])->toBe('some_key');
+});
 
 dataset('cache recorder', function () {
     yield 'cache hit' => [
