@@ -146,6 +146,7 @@ class FlareConfig extends BaseFlareConfig
                 'with_errors' => CacheRecorder::DEFAULT_WITH_ERRORS,
                 'max_items_with_errors' => CacheRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
                 'operations' => CacheRecorder::DEFAULT_OPERATIONS,
+                'ignored_keys' => [],
             ],
             CollectType::LogsWithErrors->value => [
                 'max_items' => AddLogs::DEFAULT_MAX_LOGS_WITH_ERRORS,
