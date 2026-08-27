@@ -2,13 +2,15 @@
 
 namespace Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\Guzzle;
 
+use GuzzleHttp\HandlerStack;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\Recorders\ExternalHttpRecorder\Guzzle\FlareHandlerStack as BaseFlareHandlerStack;
 
-class FlareHandlerStack extends BaseFlareHandlerStack
+class FlareHandlerStack
 {
-    public function __construct(?callable $handler = null)
+    /** @return HandlerStack<callable> */
+    public static function create(?callable $handler = null): HandlerStack
     {
-        parent::__construct(app(Flare::class), $handler);
+        return BaseFlareHandlerStack::create(app(Flare::class), $handler);
     }
 }

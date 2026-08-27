@@ -1,6 +1,7 @@
 <?php
 
 use Composer\InstalledVersions;
+use GuzzleHttp\ClientInterface;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\CallQueuedClosure;
@@ -59,7 +60,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('flare.entry_point.handler.type', 'laravel_closure')
             ->expectHasAttribute('server.address')
             ->expectHasAttribute('server.port')
-            ->expectAttribute('user_agent.original', 'GuzzleHttp/7')
+            ->expectAttribute('user_agent.original', 'GuzzleHttp/'.ClientInterface::MAJOR_VERSION)
             ->expectAttribute('http.request.body.size', 0)
             ->expectHasAttribute('client.address')
             ->expectHasAttribute('http.request.headers')
