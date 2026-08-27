@@ -254,6 +254,7 @@ class LaravelJobAttributesProvider implements JobAttributesProvider, SamplingAtt
             'messageGroup',
             'deduplicator',
             'debounceOwner',
+            'uniqueLockOwner',
             'tries',
         ];
 
