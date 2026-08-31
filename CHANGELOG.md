@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.4.1 - 2026-08-31
+
+### What's Changed
+
+* Fix Livewire lazy components leaving spans unclosed by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/58
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.4.0...3.4.1
+
 ## 3.4.0 - 2026-08-27
 
 ### What's Changed
