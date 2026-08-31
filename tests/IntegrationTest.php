@@ -25,6 +25,8 @@ use Workbench\App\Jobs\ReleaseJob;
 use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\Livewire\Counter;
 use Workbench\App\Livewire\Inline;
+use Workbench\App\Livewire\LazyComponent;
+use Workbench\App\Livewire\LazyNesting;
 use Workbench\App\View\Components\Deeper\DeeperComponent;
 use Workbench\App\View\Components\TestInlineComponent;
 use Workbench\Database\Factories\PostFactory;
@@ -1547,6 +1549,77 @@ describe('Laravel integration', function () {
                     ->expectAttribute('livewire.component.class', Counter::class);
             },
         );
+    });
+
+    it('can handle a nested lazy livewire component', function () {
+        $workspace = ExpectSentPayloads::get('/livewire-lazy-nesting');
+
+        $workspace->assertSent(traces: 1);
+
+        $trace = $workspace->lastTrace()->expectLaravelRequestLifecycle();
+
+        $requestSpan = $trace->expectSpan(SpanType::Request)
+            ->expectAttribute('http.response.status_code', 200);
+
+        $trace->expectSpans(
+            LaravelSpanType::LivewireComponent,
+            function (ExpectSpan $span) use ($requestSpan, &$nestingSpan) {
+                $nestingSpan = $span
+                    ->expectParentId($requestSpan)
+                    ->expectAttribute('livewire.component.name', 'lazy-nesting')
+                    ->expectAttribute('livewire.component.class', LazyNesting::class)
+                    ->expectHasAttribute('livewire.component.phase.mounting')
+                    ->expectHasAttribute('livewire.component.phase.rendering')
+                    ->expectHasAttribute('livewire.component.phase.dehydrating');
+            },
+            function (ExpectSpan $span) use (&$lazySpan) {
+                $lazySpan = $span
+                    ->expectAttribute('livewire.component.name', 'lazy')
+                    ->expectAttribute('livewire.component.class', LazyComponent::class)
+                    ->expectHasAttribute('livewire.component.phase.mounting')
+                    ->expectMissingAttribute('livewire.component.phase.rendering')
+                    ->expectHasAttribute('livewire.component.phase.dehydrating');
+            },
+        );
+
+        $trace->expectSpans(
+            LaravelSpanType::LivewireComponentMounting,
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($nestingSpan)
+                ->expectAttribute('livewire.component.name', 'lazy-nesting'),
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($lazySpan)
+                ->expectAttribute('livewire.component.name', 'lazy'),
+        );
+
+        // A lazy component renders a placeholder instead of its view, Livewire never fires a render event for it.
+        $renderingSpan = $trace->expectSpan(LaravelSpanType::LivewireComponentRendering)
+            ->expectParentId($nestingSpan)
+            ->expectAttribute('livewire.component.name', 'lazy-nesting');
+
+        $trace->expectSpans(
+            LaravelSpanType::LivewireComponentDehydrating,
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($lazySpan)
+                ->expectAttribute('livewire.component.name', 'lazy'),
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($nestingSpan)
+                ->expectAttribute('livewire.component.name', 'lazy-nesting'),
+        );
+
+        $trace->expectSpans(
+            SpanType::View,
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($renderingSpan)
+                ->expectAttribute('view.name', 'livewire.lazy-nesting'),
+            fn (ExpectSpan $span) => $span
+                ->expectAttribute('view.name', 'livewire.lazy-placeholder'),
+            fn (ExpectSpan $span) => $span
+                ->expectParentId($requestSpan)
+                ->expectAttribute('view.name', 'components.layouts.app'),
+        );
+
+        $trace->expectAllSpansClosed();
     });
 
     it('can handle a livewire mount exception', function () {
