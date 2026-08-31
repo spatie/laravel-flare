@@ -261,11 +261,15 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $this->moveState(
+        $moved = $this->moveState(
             $componentState,
             from: [LivewireComponentPhase::Mounting, LivewireComponentPhase::Hydrating, LivewireComponentPhase::Calling],
             to: LivewireComponentPhase::Calling
         );
+
+        if ($moved === false) {
+            return;
+        }
 
         if ($this->splitByPhase === false) {
             return;
@@ -294,11 +298,15 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $this->moveState(
+        $moved = $this->moveState(
             $componentState,
             from: [LivewireComponentPhase::Mounting, LivewireComponentPhase::Hydrating, LivewireComponentPhase::Calling],
             to: LivewireComponentPhase::Rendering,
         );
+
+        if ($moved === false) {
+            return;
+        }
 
         if ($componentState->isSingleFileComponent && ($viewFile = $this->livewireComponentFinder->findSingleFileComponentFile($component->getName()))) {
             $componentState->span->addAttribute('view.file', str_replace(base_path() . DIRECTORY_SEPARATOR, '', $viewFile));
@@ -330,11 +338,20 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $this->moveState(
+        $moved = $this->moveState(
             $componentState,
-            from: [LivewireComponentPhase::Rendering],
+            from: [
+                LivewireComponentPhase::Mounting,
+                LivewireComponentPhase::Hydrating,
+                LivewireComponentPhase::Calling,
+                LivewireComponentPhase::Rendering,
+            ],
             to: LivewireComponentPhase::Dehydrating,
         );
+
+        if ($moved === false) {
+            return;
+        }
 
         if ($this->splitByPhase === false) {
             return;
@@ -358,7 +375,9 @@ class LivewireRecorder extends SpansRecorder
             return;
         }
 
-        $this->moveState(
+        unset($this->componentStates[$component->id()]);
+
+        $moved = $this->moveState(
             $componentState,
             from: [
                 LivewireComponentPhase::Mounting,
@@ -370,9 +389,11 @@ class LivewireRecorder extends SpansRecorder
             to: LivewireComponentPhase::Destroyed,
         );
 
-        $this->endSpan();
+        if ($moved === false) {
+            return;
+        }
 
-        unset($this->componentStates[$component->id()]);
+        $this->endSpan();
     }
 
     protected function updateEntryPoint(
@@ -401,13 +422,16 @@ class LivewireRecorder extends SpansRecorder
         }
     }
 
+    /**
+     * @param array<LivewireComponentPhase> $from
+     */
     protected function moveState(
         LivewireComponentState $state,
         array $from,
         LivewireComponentPhase $to,
-    ): void {
+    ): bool {
         if (! in_array($state->phase, $from)) {
-            return;
+            return false;
         }
 
         $endTime = null;
@@ -435,5 +459,7 @@ class LivewireRecorder extends SpansRecorder
 
         $state->currentPhaseStartTime = $endTime;
         $state->phase = $to;
+
+        return true;
     }
 }

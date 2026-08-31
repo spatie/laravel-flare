@@ -10,6 +10,8 @@ use Spatie\LaravelFlare\Facades\Flare;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Workbench\App\Livewire\Counter;
 use Workbench\App\Livewire\Inline;
+use Workbench\App\Livewire\LazyComponent;
+use Workbench\App\Livewire\LazyNesting;
 use Workbench\App\Livewire\MountException;
 use Workbench\App\Livewire\Nested;
 use Workbench\App\Livewire\NestedViewException;
@@ -62,6 +64,8 @@ class WorkbenchServiceProvider extends ServiceProvider
         Livewire::component('mount-exception', MountException::class);
         Livewire::component('view-exception', ViewException::class);
         Livewire::component('nested-view-exception', NestedViewException::class);
+        Livewire::component('lazy', LazyComponent::class);
+        Livewire::component('lazy-nesting', LazyNesting::class);
     }
 
     private function runningOnLaravel10(): bool

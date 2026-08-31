@@ -32,6 +32,7 @@ use Workbench\App\Jobs\ReleaseJob;
 use Workbench\App\Jobs\SuccesJob;
 use Workbench\App\Livewire\Counter;
 use Workbench\App\Livewire\MountException;
+use Workbench\App\Livewire\LazyNesting;
 use Workbench\App\Livewire\Nested;
 use Workbench\App\Livewire\NestedViewException;
 use Workbench\App\Livewire\ViewException;
@@ -294,6 +295,7 @@ Route::get('trigger-batch', function () {
 
 Route::get('livewire', Counter::class);
 Route::get('livewire-nested', Nested::class);
+Route::get('livewire-lazy-nesting', LazyNesting::class);
 Route::get('livewire-inline', Inline::class);
 Route::get('livewire-mount-exception', MountException::class);
 Route::get('livewire-view-exception', ViewException::class);
