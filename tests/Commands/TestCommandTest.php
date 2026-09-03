@@ -50,3 +50,18 @@ it('fails when the log channel exists but is not in the default stack', function
         ->expectsOutputToContain('is not part of your default logging stack')
         ->assertFailed();
 });
+
+it('explains how to configure the log channel on Laravel Cloud', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'laravel-cloud-socket');
+
+    $_SERVER['LARAVEL_CLOUD'] = '1';
+
+    $this->artisan('flare:test --logs')
+        ->expectsOutputToContain('LOG_STACK=laravel-cloud-socket,flare')
+        ->assertFailed();
+
+    unset($_SERVER['LARAVEL_CLOUD']);
+});
