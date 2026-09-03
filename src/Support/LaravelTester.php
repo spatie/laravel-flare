@@ -83,10 +83,6 @@ class LaravelTester extends SymfonyTester
 
     protected function preCheckEntity(FlareEntityType $type): bool
     {
-        if (! parent::preCheckEntity($type)) {
-            return false;
-        }
-
         return match ($type) {
             FlareEntityType::Errors => $this->checkErrorHandler(),
             FlareEntityType::Logs => $this->checkLogChannel(),
