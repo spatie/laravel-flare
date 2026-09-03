@@ -132,13 +132,38 @@ class LaravelTester extends SymfonyTester
         $isActive = $defaultChannel === $flareChannelName
             || (($channels[$defaultChannel]['driver'] ?? null) === 'stack' && in_array($flareChannelName, $channels[$defaultChannel]['channels'] ?? []));
 
-        if (! $isActive) {
-            $this->writeLine("❌ The `{$flareChannelName}` log channel exists but is not part of your default logging stack. Please add it to your `{$defaultChannel}` channel in `config/logging.php`.", self::STYLE_ERROR);
+        if ($isActive) {
+            return true;
+        }
+
+        if ($this->runningOnLaravelCloud()) {
+            $this->writeLaravelCloudLogChannelInstructions($flareChannelName);
 
             return false;
         }
 
-        return true;
+        $this->writeLine("❌ The `{$flareChannelName}` log channel exists but is not part of your default logging stack. Please add it to your `{$defaultChannel}` channel in `config/logging.php`.", self::STYLE_ERROR);
+
+        return false;
+    }
+
+    protected function runningOnLaravelCloud(): bool
+    {
+        return ($_ENV['LARAVEL_CLOUD'] ?? false) === '1'
+            || ($_SERVER['LARAVEL_CLOUD'] ?? false) === '1';
+    }
+
+    protected function writeLaravelCloudLogChannelInstructions(string $flareChannelName): void
+    {
+        $this->writeLine("❌ The `{$flareChannelName}` log channel exists but is not part of your default logging stack.", self::STYLE_ERROR);
+        $this->writeNewline();
+        $this->io->writeln('<fg=default;bg=default>Laravel Cloud sets its own log channel and overrides the one in your config.</>');
+        $this->io->writeln('<fg=default;bg=default>These settings send your logs to both the Laravel Cloud dashboard and Flare.</>');
+        $this->io->writeln('<fg=default;bg=default>Add them on <fg=green>cloud.laravel.com</> under Application Settings -> General, in the</>');
+        $this->io->writeln('<fg=default;bg=default>Custom environment variables section:</>');
+        $this->writeNewline();
+        $this->io->writeln('<fg=default;bg=default>    <fg=green>LOG_CHANNEL</>=<fg=blue>stack</></>');
+        $this->io->writeln("<fg=default;bg=default>    <fg=green>LOG_STACK</>=<fg=blue>laravel-cloud-socket,{$flareChannelName}</></>");
     }
 
     protected function hasReportableFlareCallback(): bool
