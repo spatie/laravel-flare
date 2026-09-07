@@ -4,7 +4,6 @@ namespace Spatie\LaravelFlare\Support;
 
 use Closure;
 use Composer\InstalledVersions;
-use Illuminate\Console\OutputStyle;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
@@ -55,19 +54,6 @@ class LaravelTester extends SymfonyTester
             input: $input,
             output: $output
         );
-    }
-
-    protected function writeDebugSections(): void
-    {
-        $output = $this->output instanceof OutputStyle
-            ? $this->output->getOutput()
-            : $this->output;
-
-        foreach ($this->debugSections() as $label => $value) {
-            $this->writeLine($label, self::STYLE_INFO);
-            $output->write(print_r($value, true));
-            $this->writeNewline();
-        }
     }
 
     /** @return array<string, mixed> */
