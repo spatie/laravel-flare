@@ -2,6 +2,16 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.5.0 - 2026-09-07
+
+### What's Changed
+
+* Test against Livewire 4.4 so CI can install it by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/60
+* Enable Flare logging by default by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/61
+* Explain the Laravel Cloud log channel setup in flare:test by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/59
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.4.1...3.5.0
+
 ## 3.4.1 - 2026-08-31
 
 ### What's Changed
