@@ -76,7 +76,7 @@ class FlareConfig extends BaseFlareConfig
             overriddenGroupings: config('flare.overridden_groupings'),
             trace: config('flare.trace'),
             traceLimits: config('flare.trace_limits'),
-            log: config('flare.log'),
+            log: config('flare.log', true),
             minimalLogLevel: config('flare.minimal_log_level'),
             sender: config('flare.sender.class'),
             senderConfig: config('flare.sender.config', []),
