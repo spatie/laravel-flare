@@ -5,6 +5,10 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler;
 use Spatie\LaravelFlare\Facades\Flare;
 
+afterEach(function () {
+    unset($_SERVER['LARAVEL_CLOUD']);
+});
+
 it('can execute the test command', function () {
     setupFlare();
 
@@ -62,8 +66,6 @@ it('explains how to configure the log channel on Laravel Cloud', function () {
     $this->artisan('flare:test --logs')
         ->expectsOutputToContain('LOG_STACK=laravel-cloud-socket,flare')
         ->assertFailed();
-
-    unset($_SERVER['LARAVEL_CLOUD']);
 });
 
 it('dumps the logging and flare configuration when running with -vvv', function () {
