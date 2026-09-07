@@ -5,6 +5,13 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler;
 use Spatie\LaravelFlare\Facades\Flare;
 
+afterEach(function () {
+    unset($_SERVER['LARAVEL_CLOUD']);
+
+    putenv('SHELL_VERBOSITY');
+    unset($_ENV['SHELL_VERBOSITY'], $_SERVER['SHELL_VERBOSITY']);
+});
+
 it('can execute the test command', function () {
     setupFlare();
 
@@ -49,4 +56,40 @@ it('fails when the log channel exists but is not in the default stack', function
     $this->artisan('flare:test --logs')
         ->expectsOutputToContain('is not part of your default logging stack')
         ->assertFailed();
+});
+
+it('explains how to configure the log channel on Laravel Cloud', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'laravel-cloud-socket');
+
+    $_SERVER['LARAVEL_CLOUD'] = '1';
+
+    $this->artisan('flare:test --logs')
+        ->expectsOutputToContain('LOG_STACK=laravel-cloud-socket,flare')
+        ->assertFailed();
+});
+
+it('dumps the logging and flare configuration when running with -vvv', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'flare');
+
+    $this->artisan('flare:test --logs -vvv')
+        ->expectsOutputToContain('Flare config')
+        ->expectsOutputToContain('flare.php config')
+        ->expectsOutputToContain('logging.php config')
+        ->expectsOutputToContain('<redacted>');
+});
+
+it('does not dump the configuration without -vvv', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'flare');
+
+    $this->artisan('flare:test --logs')
+        ->doesntExpectOutputToContain('logging.php config');
 });
