@@ -73,8 +73,8 @@ it('dumps the logging and flare configuration when running with -vvv', function 
     config()->set('logging.default', 'flare');
 
     $this->artisan('flare:test --logs -vvv')
-        ->expectsOutputToContain('Logging configuration')
-        ->expectsOutputToContain('Flare configuration')
+        ->expectsOutputToContain('Flare config')
+        ->expectsOutputToContain('Logging config')
         ->expectsOutputToContain('<redacted>');
 });
 
@@ -85,5 +85,5 @@ it('does not dump the configuration without -vvv', function () {
     config()->set('logging.default', 'flare');
 
     $this->artisan('flare:test --logs')
-        ->doesntExpectOutputToContain('Logging configuration');
+        ->doesntExpectOutputToContain('Logging config');
 });

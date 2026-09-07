@@ -18,6 +18,6 @@ class TestCommand extends Command
             'output' => $this->output,
         ]);
 
-        return $tester->run() ? Command::SUCCESS : Command::FAILURE;
+        return $tester->run($this->output->isDebug()) ? Command::SUCCESS : Command::FAILURE;
     }
 }
