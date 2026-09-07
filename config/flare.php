@@ -201,10 +201,13 @@ return [
     |--------------------------------------------------------------------------
     |
     | Logging show you an overview of log entries within your application.
+    | Logs are only sent when a channel using the `flare` driver is part of
+    | your logging stack in `config/logging.php`. You can disable the
+    | collection of logs by setting `FLARE_LOG=false`.
     |
     */
 
-    'log' => env('FLARE_LOG', false),
+    'log' => env('FLARE_LOG', true),
 
     /*
     |--------------------------------------------------------------------------
