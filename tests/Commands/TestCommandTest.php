@@ -65,3 +65,25 @@ it('explains how to configure the log channel on Laravel Cloud', function () {
 
     unset($_SERVER['LARAVEL_CLOUD']);
 });
+
+it('dumps the logging and flare configuration when running with -vvv', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'flare');
+
+    $this->artisan('flare:test --logs -vvv')
+        ->expectsOutputToContain('Logging configuration')
+        ->expectsOutputToContain('Flare configuration')
+        ->expectsOutputToContain('<redacted>');
+});
+
+it('does not dump the configuration without -vvv', function () {
+    setupFlare();
+
+    config()->set('logging.channels.flare', ['driver' => 'flare']);
+    config()->set('logging.default', 'flare');
+
+    $this->artisan('flare:test --logs')
+        ->doesntExpectOutputToContain('Logging configuration');
+});

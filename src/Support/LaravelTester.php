@@ -6,6 +6,7 @@ use Closure;
 use Composer\InstalledVersions;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Console\OutputStyle;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Foundation\Exceptions\ReportableHandler;
 use Laravel\SerializableClosure\Support\ReflectionClosure;
@@ -27,6 +28,8 @@ use Spatie\FlareClient\Time\Time;
 use Spatie\LaravelFlare\Commands\TestCommand;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\VarDumper\Cloner\VarCloner;
+use Symfony\Component\VarDumper\Dumper\CliDumper;
 
 class LaravelTester extends SymfonyTester
 {
@@ -54,6 +57,44 @@ class LaravelTester extends SymfonyTester
             input: $input,
             output: $output
         );
+    }
+
+    public function run(): bool
+    {
+        if ($this->output->isDebug()) {
+            $this->writeConfiguration();
+        }
+
+        return parent::run();
+    }
+
+    protected function writeConfiguration(): void
+    {
+        $flare = $this->repository->get('flare', []);
+
+        if (isset($flare['key'])) {
+            $flare['key'] = '<redacted>';
+        }
+
+        $this->writeLine('Logging configuration', self::STYLE_INFO);
+        $this->writeDump($this->repository->get('logging', []));
+        $this->writeNewline();
+
+        $this->writeLine('Flare configuration', self::STYLE_INFO);
+        $this->writeDump($flare);
+        $this->writeNewline();
+    }
+
+    protected function writeDump(mixed $value): void
+    {
+        $output = $this->output instanceof OutputStyle
+            ? $this->output->getOutput()
+            : $this->output;
+
+        $dumper = new CliDumper();
+        $dumper->setColors($output->isDecorated());
+
+        $output->write($dumper->dump((new VarCloner())->cloneVar($value), true));
     }
 
     protected function environmentInfo(): array
