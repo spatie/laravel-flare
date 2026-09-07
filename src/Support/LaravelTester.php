@@ -73,9 +73,16 @@ class LaravelTester extends SymfonyTester
     /** @return array<string, mixed> */
     protected function debugSections(): array
     {
+        $flare = $this->repository->get('flare', []);
+
+        if (isset($flare['key'])) {
+            $flare['key'] = '<redacted>';
+        }
+
         return [
             ...parent::debugSections(),
-            'Logging config' => $this->repository->get('logging', []),
+            'flare.php config' => $flare,
+            'logging.php config' => $this->repository->get('logging', []),
         ];
     }
 
