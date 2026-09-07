@@ -7,6 +7,9 @@ use Spatie\LaravelFlare\Facades\Flare;
 
 afterEach(function () {
     unset($_SERVER['LARAVEL_CLOUD']);
+
+    putenv('SHELL_VERBOSITY');
+    unset($_ENV['SHELL_VERBOSITY'], $_SERVER['SHELL_VERBOSITY']);
 });
 
 it('can execute the test command', function () {
