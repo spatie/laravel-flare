@@ -10,7 +10,7 @@ Most applications upgrade by editing `config/flare.php` and adding a `flare` log
 
 A few new concepts are referenced throughout this guide.
 
-* **First class logging.** A dedicated logger sends log entries to Flare in the OpenTelemetry log format. You opt in by enabling `log` in `config/flare.php` and adding a `flare` log channel.
+* **First class logging.** A dedicated logger sends log entries to Flare in the OpenTelemetry log format. You opt in by adding a `flare` log channel to your logging stack.
 * **Dynamic sampling.** A new `DynamicSampler` selects a sample rate per entry point (route, command, job) using `SamplingRule` definitions, without requiring a custom sampler.
 * **Lifecycle.** A new `Lifecycle` class manages the application start, subtask boundaries (Octane, queue workers), termination, flushing, and reset behavior. The previous `TracingKernel`, `Flare::reset()`, and `Flare::sendReportsImmediately()` are gone.
 * **Entry points.** A new `EntryPoint` value object resolved by `EntryPointResolver` describes the request, command, or job that initiated a trace. It replaces the loose `entryPointClass` arguments and the array context previously passed to samplers, and feeds the new `flare.entry_point.handler.*` attributes.
@@ -30,7 +30,7 @@ Notable keys.
 * `send_logs_as_events` was removed. Log shipping is now controlled by the `log` key (see [Logging setup](#logging-setup) below).
 * `attribute_providers` was removed. The user, console, and request providers are wired up automatically. 
 * `trace` defaults to `true` (previously `false`). Set it explicitly if you don't want tracing on by default.
-* `log` was added to enable or disable the new log shipping feature. Defaults to `false`.
+* `log` was added to enable or disable the new log shipping feature. Defaults to `true`. Logs are only sent when a channel using the `flare` driver is part of your logging stack.
 * `minimal_log_level` was added (Monolog `Level` instance, or `null` to send every level).
 * For job collection, the ignore list moved from `ignore` to `ignored_classes`.
 
@@ -41,12 +41,9 @@ Flare now has a dedicated log shipping pipeline. To use it.
 
 1. Install the [Flare Daemon](https://github.com/spatie/flare-daemon) (this is not required but recommended).
 
-2. Enable logging and switch the sender to the daemon in `config/flare.php`.
+2. If you use the daemon, switch the sender in `config/flare.php`.
 
     ```php
-    'log' => true,
-
-   // Only needed if using the daemon. 
     'sender' => [
         'class' => \Spatie\FlareClient\Senders\DaemonSender::class,
     ],
