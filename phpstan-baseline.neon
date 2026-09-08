@@ -7,12 +7,6 @@ parameters:
 			path: src/AttributesProviders/LaravelJobAttributesProvider.php
 
 		-
-			message: '#^Property Illuminate\\Http\\Client\\Events\\ConnectionFailed\:\:\$exception \(Illuminate\\Http\\Client\\ConnectionException\) in isset\(\) is not nullable\.$#'
-			identifier: isset.property
-			count: 1
-			path: src/Recorders/ExternalHttpRecorder/ExternalHttpRecorder.php
-
-		-
 			message: '#^Instanceof between Illuminate\\Routing\\Route and Illuminate\\Routing\\Route will always evaluate to true\.$#'
 			identifier: instanceof.alwaysTrue
 			count: 1

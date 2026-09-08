@@ -2,6 +2,7 @@
 
 use Composer\InstalledVersions;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ConnectException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Queue\CallQueuedClosure;
@@ -830,7 +831,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('url.full', 'https://does-not-exist-invalid-domain-12345.com')
             ->expectMissingAttribute('http.response.status_code')
             ->expectMissingAttribute('http.response.body.size')
-            ->expectAttribute('error.type', ConnectionException::class);
+            ->expectAttribute('error.type', ConnectException::class);
 
         $workspace->lastReport()
             ->expectExceptionClass(ConnectionException::class);
