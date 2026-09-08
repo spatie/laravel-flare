@@ -1,10 +1,17 @@
 <?php
 
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Jobs\SyncJob;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Flare;
+use Spatie\FlareClient\FlareConfig;
+use Spatie\FlareClient\Sampling\SamplingRule as BaseSamplingRule;
+use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
+use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
+use Spatie\LaravelFlare\Sampling\SamplingRule;
 
 it('can trace jobs executions', function () {
     $flare = setupFlare(alwaysSampleTraces: true);
@@ -82,3 +89,27 @@ it('can trace and at the same time report job exceptions', function () {
 
     FakeApi::lastReport()->expectTrackingUuid('fake-uuid');
 });
+
+it('lets a queue sampling rule decide per job instead of inheriting the dispatcher decision', function (BaseSamplingRule $rule) {
+    FakeIds::setup()->nextTraceId('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+
+    $flare = setupFlare(fn (FlareConfig $config) => $config->trace(true)->sampleTracesDynamic(
+        baseRate: 0,
+        rules: [$rule],
+    ), isUsingSubtasks: true);
+
+    $job = new SyncJob(app(), json_encode([
+        'displayName' => 'App\\Jobs\\SendNewsletter',
+        'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
+        'data' => ['commandName' => 'App\\Jobs\\SendNewsletter', 'command' => ''],
+        Ids::FLARE_TRACE_PARENT => '00-1234567890abcdef1234567890abcdef-fedcba9876543210-00',
+    ]), 'redis', 'sync');
+
+    $span = app(JobRecorder::class)->recordProcessing(new JobProcessing('redis', $job));
+
+    expect($flare->tracer->isSampling())->toBeTrue();
+    expect($span->traceId)->toBe('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+})->with([
+    'queue name' => fn () => SamplingRule::forQueueName('sync', 1.0),
+    'queue connection' => fn () => SamplingRule::forQueueConnection('redis', 1.0),
+]);
