@@ -31,18 +31,40 @@ class ExternalHttpRecorder extends BaseExternalHttpRecorder
             $event->request->url(),
             $event->request->method(),
             strlen($event->request->body()),
-            $event->request->headers()
+            $this->flattenHeaders($event->request->headers())
         ));
 
         $this->dispatcher->listen(ResponseReceived::class, fn (ResponseReceived $event) => $this->recordReceived(
             $event->response->status(),
             $this->getResponseLength($event->response),
-            $event->response->headers(),
+            $this->flattenHeaders($event->response->headers()),
         ));
 
         $this->dispatcher->listen(ConnectionFailed::class, fn (ConnectionFailed $event) => $this->recordConnectionFailed(
             isset($event->exception) ? $event->exception::class : ConnectionException::class // Only Laravel 11+
         ));
+    }
+
+    /**
+     * @param array<string, array<string>> $headers
+     *
+     * @return array<string, string>
+     */
+    protected function flattenHeaders(array $headers): array
+    {
+        $flattened = [];
+
+        foreach ($headers as $name => $values) {
+            $value = implode(', ', $values);
+
+            if ($value === '') {
+                continue;
+            }
+
+            $flattened[$name] = $value;
+        }
+
+        return $flattened;
     }
 
     /**
