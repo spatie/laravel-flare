@@ -2,6 +2,15 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.6.0 - 2026-09-08
+
+### What's Changed
+
+* Record external HTTP requests from a Guzzle middleware by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/63
+* Require flare-client-php 3.5.0 for per job queue sampling by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/64
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.5.0...3.6.0
+
 ## 3.5.0 - 2026-09-07
 
 ### What's Changed
