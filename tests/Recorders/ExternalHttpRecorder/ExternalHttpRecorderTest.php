@@ -165,8 +165,7 @@ it('closes the span when a request fails but carries a response', function () {
     // Guzzle reports a transfer that died after the response headers arrived
     // through an exception carrying the partial response. Which exception class
     // that is differs between Guzzle 7 and 8, both expose `getResponse`.
-    $exception = new class('Transfer closed with outstanding read data remaining') extends RuntimeException
-    {
+    $exception = new class('Transfer closed with outstanding read data remaining') extends RuntimeException {
         public function getResponse(): PsrResponse
         {
             return new PsrResponse(200, ['Content-Length' => '10'], 'partial');
