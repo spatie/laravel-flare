@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Contracts\Queue\Job;
+use Illuminate\Queue\Events\JobInterrupted;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobTimedOut;
 use Illuminate\Queue\Jobs\SyncJob;
@@ -187,6 +189,52 @@ it('flushes the subtask trace when the job times out', function () {
         ->expectEnded()
         ->expectAttribute('laravel.job.timed_out', true);
 });
+
+it('records a job interruption as a span event without ending the span', function () {
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
+
+    $job = fakeSyncJob();
+
+    $recorder = app(JobRecorder::class);
+    $recorder->recordProcessing(new JobProcessing('redis', $job));
+    $recorder->recordInterrupted(new JobInterrupted('redis', $job, SIGTERM));
+    $recorder->recordProcessed(new JobProcessed('redis', $job));
+
+    $flare->tracer->endTrace();
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job)
+        ->expectEnded()
+        ->expectAttribute('laravel.job.success', true)
+        ->expectSpanEventCount(1)
+        ->expectSpanEvent(0)
+        ->expectName('Job interrupted')
+        ->expectType(SpanEventType::Custom)
+        ->expectAttribute('laravel.job.interrupted', true)
+        ->expectAttribute('laravel.job.signal', SIGTERM);
+})->skip(
+    fn () => ! class_exists(JobInterrupted::class),
+    'JobInterrupted was only added in Laravel 13.31',
+);
+
+it('ignores a job interruption when no job span is open', function () {
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
+
+    expect(app(JobRecorder::class)->recordInterrupted(
+        new JobInterrupted('redis', fakeSyncJob(), SIGTERM)
+    ))->toBeNull();
+
+    $flare->tracer->endTrace();
+})->skip(
+    fn () => ! class_exists(JobInterrupted::class),
+    'JobInterrupted was only added in Laravel 13.31',
+);
 
 function fakeSyncJob(): Job
 {

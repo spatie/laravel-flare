@@ -4,15 +4,18 @@ namespace Spatie\LaravelFlare\Recorders\JobRecorder;
 
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobExceptionOccurred;
+use Illuminate\Queue\Events\JobInterrupted;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobTimedOut;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\EntryPoint\EntryPointResolver;
 use Spatie\FlareClient\Enums\LifecycleStage;
+use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanStatusCode;
 use Spatie\FlareClient\Recorders\JobRecorder\JobRecorder as BaseJobRecorder;
 use Spatie\FlareClient\Spans\Span;
+use Spatie\FlareClient\Spans\SpanEvent;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Support\Ids;
 use Spatie\FlareClient\Support\Lifecycle;
@@ -55,6 +58,10 @@ class JobRecorder extends BaseJobRecorder
         $this->dispatcher->listen(JobProcessed::class, [$this, 'recordProcessed']);
         $this->dispatcher->listen(JobExceptionOccurred::class, [$this, 'recordExceptionOccurred']);
         $this->dispatcher->listen(JobTimedOut::class, [$this, 'recordTimedOut']);
+
+        if (class_exists(JobInterrupted::class)) {
+            $this->dispatcher->listen(JobInterrupted::class, [$this, 'recordInterrupted']);
+        }
     }
 
     public function recordProcessing(JobProcessing $event): ?Span
@@ -127,6 +134,42 @@ class JobRecorder extends BaseJobRecorder
         }
 
         return $span;
+    }
+
+    /**
+     * A worker that receives a termination signal while running an Interruptible job hands the
+     * signal to the job and lets it finish, so the job still ends through JobProcessed or
+     * JobExceptionOccurred. Only the signal is recorded here, the span stays open.
+     */
+    public function recordInterrupted(JobInterrupted $event): ?SpanEvent
+    {
+        $span = $this->stack === []
+            ? null
+            : $this->stack[array_key_last($this->stack)];
+
+        if ($span === null) {
+            return null;
+        }
+
+        if (count($span->events) >= $this->tracer->limits['max_span_events_per_span']) {
+            $span->droppedEventsCount++;
+
+            return null;
+        }
+
+        $spanEvent = new SpanEvent(
+            name: 'Job interrupted',
+            timestamp: $this->tracer->time->getCurrentTime(),
+            attributes: [
+                'flare.span_event_type' => SpanEventType::Custom,
+                'laravel.job.interrupted' => true,
+                'laravel.job.signal' => $event->signal,
+            ],
+        );
+
+        $span->addEvent($spanEvent);
+
+        return $spanEvent;
     }
 
     /**
