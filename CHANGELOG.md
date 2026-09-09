@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-flare` will be documented in this file
 
+## 3.6.1 - 2026-09-09
+
+### What's Changed
+
+* Show the pretty package version in the flare:test output by @rubenvanassche in https://github.com/spatie/laravel-flare/pull/65
+
+**Full Changelog**: https://github.com/spatie/laravel-flare/compare/3.6.0...3.6.1
+
 ## 3.6.0 - 2026-09-08
 
 ### What's Changed
