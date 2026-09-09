@@ -1,6 +1,9 @@
 name: Run tests
 
-on: [push, pull_request]
+on:
+    push:
+        branches: [main]
+    pull_request:
 
 jobs:
     php-tests:
@@ -19,7 +22,7 @@ jobs:
                       livewire: 3.*
                     - laravel: 13.*
                       php: 8.2
-                    - livewire: 4.*
+                    - livewire: 4.4.*
                       php: 8.2
                     - laravel: 10.*
                       php: 8.4
