@@ -1,8 +1,13 @@
 <?php
 
+use Illuminate\Contracts\Queue\Job;
+use Illuminate\Queue\Events\JobInterrupted;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Events\JobTimedOut;
 use Illuminate\Queue\Jobs\SyncJob;
 use Spatie\FlareClient\Enums\SpanEventType;
+use Spatie\FlareClient\Enums\SpanStatusCode;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareConfig;
@@ -113,3 +118,129 @@ it('lets a queue sampling rule decide per job instead of inheriting the dispatch
     'queue name' => fn () => SamplingRule::forQueueName('sync', 1.0),
     'queue connection' => fn () => SamplingRule::forQueueConnection('redis', 1.0),
 ]);
+
+it('ends the job span as a failure when the job times out', function () {
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
+
+    $job = fakeSyncJob();
+
+    $recorder = app(JobRecorder::class);
+    $recorder->recordProcessing(new JobProcessing('redis', $job));
+    $recorder->recordTimedOut(new JobTimedOut('redis', $job, 60));
+
+    $flare->tracer->endTrace();
+
+    $span = FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job)
+        ->expectEnded()
+        ->expectAttribute('laravel.job.success', false)
+        ->expectAttribute('laravel.job.timed_out', true)
+        ->expectAttribute('laravel.job.timeout', 60)
+        ->expectAttribute('laravel.job.released', false)
+        ->expectAttribute('laravel.job.deleted', false);
+
+    expect($span->span['status']['code'])->toBe(SpanStatusCode::Error);
+    expect($span->span['status']['message'])->toBe('Job timed out after 60 seconds');
+})->skip(
+    fn () => (new ReflectionClass(JobTimedOut::class))->getConstructor()->getNumberOfParameters() < 3,
+    'The timeout was only added to JobTimedOut in Laravel 13',
+);
+
+it('ends the job span as a failure when the job times out without a known timeout', function () {
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
+
+    $job = fakeSyncJob();
+
+    $recorder = app(JobRecorder::class);
+    $recorder->recordProcessing(new JobProcessing('redis', $job));
+    $recorder->recordTimedOut(new JobTimedOut('redis', $job));
+
+    $flare->tracer->endTrace();
+
+    $span = FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectAttribute('laravel.job.timed_out', true)
+        ->expectMissingAttribute('laravel.job.timeout');
+
+    expect($span->span['status']['code'])->toBe(SpanStatusCode::Error);
+    expect($span->span['status']['message'])->toBe('Job timed out');
+});
+
+it('flushes the subtask trace when the job times out', function () {
+    setupFlare(alwaysSampleTraces: true, isUsingSubtasks: true);
+
+    $job = fakeSyncJob();
+
+    $recorder = app(JobRecorder::class);
+    $recorder->recordProcessing(new JobProcessing('redis', $job));
+    $recorder->recordTimedOut(new JobTimedOut('redis', $job));
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job)
+        ->expectEnded()
+        ->expectAttribute('laravel.job.timed_out', true);
+});
+
+it('records a job interruption as a span event without ending the span', function () {
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
+
+    $job = fakeSyncJob();
+
+    $recorder = app(JobRecorder::class);
+    $recorder->recordProcessing(new JobProcessing('redis', $job));
+    $recorder->recordInterrupted(new JobInterrupted('redis', $job, SIGTERM));
+    $recorder->recordProcessed(new JobProcessed('redis', $job));
+
+    $flare->tracer->endTrace();
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job)
+        ->expectEnded()
+        ->expectAttribute('laravel.job.success', true)
+        ->expectSpanEventCount(1)
+        ->expectSpanEvent(0)
+        ->expectName('Job interrupted')
+        ->expectType(SpanEventType::Custom)
+        ->expectAttribute('laravel.job.interrupted', true)
+        ->expectAttribute('laravel.job.signal', SIGTERM);
+})->skip(
+    fn () => ! class_exists(JobInterrupted::class),
+    'JobInterrupted was only added in Laravel 13.31',
+);
+
+it('ignores a job interruption when no job span is open', function () {
+    $flare = setupFlare(alwaysSampleTraces: true);
+
+    $flare->tracer->startTrace();
+
+    expect(app(JobRecorder::class)->recordInterrupted(
+        new JobInterrupted('redis', fakeSyncJob(), SIGTERM)
+    ))->toBeNull();
+
+    $flare->tracer->endTrace();
+})->skip(
+    fn () => ! class_exists(JobInterrupted::class),
+    'JobInterrupted was only added in Laravel 13.31',
+);
+
+function fakeSyncJob(): Job
+{
+    return new SyncJob(app(), json_encode([
+        'displayName' => 'App\\Jobs\\SendNewsletter',
+        'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
+        'data' => ['commandName' => 'App\\Jobs\\SendNewsletter', 'command' => ''],
+    ]), 'redis', 'default');
+}
