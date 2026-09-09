@@ -1,6 +1,10 @@
 <?php
 
 use Illuminate\Cache\Events\CacheFailedOver;
+use Illuminate\Cache\Events\CacheFlushed;
+use Illuminate\Cache\Events\CacheFlushFailed;
+use Illuminate\Cache\Events\CacheLocksFlushed;
+use Illuminate\Cache\Events\CacheLocksFlushFailed;
 use Illuminate\Cache\Events\KeyForgetFailed;
 use Illuminate\Cache\Events\KeyWriteFailed;
 use Illuminate\Cache\Repository;
@@ -211,6 +215,100 @@ it('records a cache store failing over and never filters it on the ignored keys'
 })->skip(
     fn () => ! class_exists(CacheFailedOver::class),
     'CacheFailedOver requires Laravel 12 or higher',
+);
+
+it('records a cache flush', function () {
+    Cache::clear();
+
+    setupFlare();
+
+    Route::get('exception', function () {
+        Cache::clear();
+
+        throw new Exception('This is a failed operation');
+    });
+
+    get('exception')->assertStatus(500);
+
+    $cacheSpanEvents = array_values(array_filter(
+        FakeApi::lastReport()->toArray()['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Cache,
+    ));
+
+    expect($cacheSpanEvents)->toHaveCount(1);
+
+    expect($cacheSpanEvents[0]['attributes'])
+        ->toHaveKey('cache.store', 'array')
+        ->toHaveKey('cache.operation', CacheOperation::Flush)
+        ->toHaveKey('cache.result', CacheResult::Success)
+        ->not()->toHaveKey('cache.key');
+})->skip(
+    fn () => ! class_exists(CacheFlushed::class),
+    'CacheFlushed requires Laravel 12 or higher',
+);
+
+it('records a failed cache flush', function () {
+    Cache::clear();
+
+    setupFlare();
+
+    Route::get('exception', function () {
+        event(new CacheFlushFailed('array'));
+
+        throw new Exception('This is a failed operation');
+    });
+
+    get('exception')->assertStatus(500);
+
+    $cacheSpanEvents = array_values(array_filter(
+        FakeApi::lastReport()->toArray()['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Cache,
+    ));
+
+    expect($cacheSpanEvents)->toHaveCount(1);
+
+    expect($cacheSpanEvents[0]['attributes'])
+        ->toHaveKey('cache.store', 'array')
+        ->toHaveKey('cache.operation', CacheOperation::Flush)
+        ->toHaveKey('cache.result', CacheResult::Failure);
+})->skip(
+    fn () => ! class_exists(CacheFlushFailed::class),
+    'CacheFlushFailed requires Laravel 12 or higher',
+);
+
+it('records flushed and failed to flush cache locks', function () {
+    Cache::clear();
+
+    setupFlare();
+
+    Route::get('exception', function () {
+        event(new CacheLocksFlushed('array'));
+        event(new CacheLocksFlushFailed('array'));
+
+        throw new Exception('This is a failed operation');
+    });
+
+    get('exception')->assertStatus(500);
+
+    $cacheSpanEvents = array_values(array_filter(
+        FakeApi::lastReport()->toArray()['events'],
+        fn (array $event) => $event['type'] === SpanEventType::Cache,
+    ));
+
+    expect($cacheSpanEvents)->toHaveCount(2);
+
+    expect($cacheSpanEvents[0]['attributes'])
+        ->toHaveKey('cache.store', 'array')
+        ->toHaveKey('cache.operation', CacheOperation::Flush)
+        ->toHaveKey('cache.result', CacheResult::Success);
+
+    expect($cacheSpanEvents[1]['attributes'])
+        ->toHaveKey('cache.store', 'array')
+        ->toHaveKey('cache.operation', CacheOperation::Flush)
+        ->toHaveKey('cache.result', CacheResult::Failure);
+})->skip(
+    fn () => ! class_exists(CacheLocksFlushed::class),
+    'CacheLocksFlushed requires Laravel 13 or higher',
 );
 
 dataset('cache recorder', function () {
