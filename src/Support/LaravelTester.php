@@ -3,7 +3,6 @@
 namespace Spatie\LaravelFlare\Support;
 
 use Closure;
-use Composer\InstalledVersions;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Foundation\Application;
@@ -77,7 +76,7 @@ class LaravelTester extends SymfonyTester
         return [
             ...parent::environmentInfo(),
             ['Laravel', $this->app->version()],
-            ['spatie/laravel-flare', InstalledVersions::getVersion('spatie/laravel-flare') ?? 'Unknown'],
+            ['spatie/laravel-flare', Telemetry::getVersion()],
         ];
     }
 
