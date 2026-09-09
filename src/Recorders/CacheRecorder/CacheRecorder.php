@@ -3,7 +3,11 @@
 namespace Spatie\LaravelFlare\Recorders\CacheRecorder;
 
 use Illuminate\Cache\Events\CacheFailedOver;
+use Illuminate\Cache\Events\CacheFlushed;
+use Illuminate\Cache\Events\CacheFlushFailed;
 use Illuminate\Cache\Events\CacheHit;
+use Illuminate\Cache\Events\CacheLocksFlushed;
+use Illuminate\Cache\Events\CacheLocksFlushFailed;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyForgetFailed;
 use Illuminate\Cache\Events\KeyForgotten;
@@ -65,6 +69,30 @@ class CacheRecorder extends BaseCacheRecorder
             $this->dispatcher->listen(CacheFailedOver::class, fn (CacheFailedOver $event) => $this->recordFailedOver(
                 $event->storeName,
                 $event->exception,
+            ));
+        }
+
+        if (class_exists(CacheFlushed::class)) {
+            $this->dispatcher->listen(CacheFlushed::class, fn (CacheFlushed $event) => $this->recordFlushed(
+                $event->storeName,
+            ));
+        }
+
+        if (class_exists(CacheFlushFailed::class)) {
+            $this->dispatcher->listen(CacheFlushFailed::class, fn (CacheFlushFailed $event) => $this->recordFlushFailed(
+                $event->storeName,
+            ));
+        }
+
+        if (class_exists(CacheLocksFlushed::class)) {
+            $this->dispatcher->listen(CacheLocksFlushed::class, fn (CacheLocksFlushed $event) => $this->recordLocksFlushed(
+                $event->storeName,
+            ));
+        }
+
+        if (class_exists(CacheLocksFlushFailed::class)) {
+            $this->dispatcher->listen(CacheLocksFlushFailed::class, fn (CacheLocksFlushFailed $event) => $this->recordLocksFlushFailed(
+                $event->storeName,
             ));
         }
     }
