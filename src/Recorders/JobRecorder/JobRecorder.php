@@ -6,6 +6,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Events\Looping;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\EntryPoint\EntryPointResolver;
 use Spatie\FlareClient\Enums\LifecycleStage;
@@ -52,6 +53,20 @@ class JobRecorder extends BaseJobRecorder
         $this->dispatcher->listen(JobProcessing::class, [$this, 'recordProcessing']);
         $this->dispatcher->listen(JobProcessed::class, [$this, 'recordProcessed']);
         $this->dispatcher->listen(JobExceptionOccurred::class, [$this, 'recordExceptionOccurred']);
+        $this->dispatcher->listen(Looping::class, [$this, 'recordLooping']);
+    }
+
+    public function recordLooping(Looping $event): void
+    {
+        // A job can end without JobProcessed or JobExceptionOccurred, for example when
+        // deleting a failed job throws. The worker is between jobs now, so end the
+        // subtask it left open; otherwise every later report is queued instead of sent.
+        if (! $this->lifecycle->usesSubtasks || $this->lifecycle->getStage() !== LifecycleStage::Subtask) {
+            return;
+        }
+
+        $this->stack = [];
+        $this->lifecycle->endSubtask();
     }
 
     public function recordProcessing(JobProcessing $event): ?Span

@@ -1,7 +1,10 @@
 <?php
 
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Queue\Events\Looping;
 use Illuminate\Queue\Jobs\SyncJob;
+use Spatie\FlareClient\Enums\LifecycleStage;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Flare;
@@ -113,3 +116,27 @@ it('lets a queue sampling rule decide per job instead of inheriting the dispatch
     'queue name' => fn () => SamplingRule::forQueueName('sync', 1.0),
     'queue connection' => fn () => SamplingRule::forQueueConnection('redis', 1.0),
 ]);
+
+it('ends a subtask that was left open when the worker loops to the next job', function () {
+    $flare = setupFlare(alwaysSampleTraces: true, isUsingSubtasks: true);
+
+    $job = new SyncJob(app(), json_encode([
+        'displayName' => 'App\\Jobs\\SendNewsletter',
+        'job' => 'Illuminate\\Queue\\CallQueuedHandler@call',
+        'data' => ['commandName' => 'App\\Jobs\\SendNewsletter', 'command' => ''],
+    ]), 'redis', 'sync');
+
+    // The job ends without JobProcessed or JobExceptionOccurred, e.g. when deleting a failed job throws.
+    event(new JobProcessing('redis', $job));
+
+    expect($flare->lifecycle->getStage())->toBe(LifecycleStage::Subtask);
+
+    event(new Looping('redis', 'default'));
+
+    expect($flare->lifecycle->getStage())->toBe(LifecycleStage::Idle);
+
+    event(new JobProcessing('redis', $job));
+    event(new JobProcessed('redis', $job));
+
+    expect($flare->lifecycle->getStage())->toBe(LifecycleStage::Idle);
+});
