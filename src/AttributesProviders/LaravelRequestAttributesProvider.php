@@ -51,6 +51,32 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
         }
     }
 
+    /**
+     * Censors the session and remember me cookies. Laravel decrypts cookies before
+     * Flare reads them, so these hold the plain session ID and remember token. The
+     * Cookie header is censored by default for the same reason.
+     */
+    protected function getCookies(): array
+    {
+        $cookies = parent::getCookies();
+
+        if (empty($cookies)) {
+            return [];
+        }
+
+        $sessionCookie = config('session.cookie');
+
+        $loginCookies = array_filter(
+            array_map('strval', array_keys($cookies['http.request.cookies'])),
+            fn (string $name) => $name === $sessionCookie || str_starts_with($name, 'remember_'),
+        );
+
+        $cookies['http.request.cookies'] = (new Redactor(censorBodyFields: $loginCookies))
+            ->censorBody($cookies['http.request.cookies']);
+
+        return $cookies;
+    }
+
     protected function isRunningLiveWire(LaravelRequest $request): bool
     {
         return $request->hasHeader('x-livewire') && $request->hasHeader('referer');

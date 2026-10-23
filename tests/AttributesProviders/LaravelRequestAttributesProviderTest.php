@@ -28,3 +28,25 @@ it('returns the cookies', function () {
 
     expect($attributes['http.request.cookies'])->toBe(['cookie' => 'noms']);
 });
+
+it('censors the session and remember me cookies', function () {
+    config()->set('session.cookie', 'my_app_session');
+
+    $request = Request::create('/route', 'GET', [], [
+        'my_app_session' => 'session-id',
+        'remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d' => 'remember-token',
+        'theme' => 'dark',
+    ]);
+
+    $attributes = (new LaravelRequestAttributesProvider(
+        new Redactor(),
+        app(LivewireComponentFinder::class),
+        $request,
+    ))->toArray();
+
+    expect($attributes['http.request.cookies'])->toBe([
+        'my_app_session' => '<CENSORED:string>',
+        'remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d' => '<CENSORED:string>',
+        'theme' => 'dark',
+    ]);
+});
