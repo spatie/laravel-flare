@@ -74,8 +74,9 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
     }
 
     /**
-     * Livewire sends each component's state as a JSON encoded snapshot, which the
-     * redactor cannot look into. Its updates are keyed by dotted property paths.
+     * Censors one Livewire component. Its state is a JSON string in `snapshot`, so
+     * censorBody() cannot see inside it. Its `updates` are keyed by property paths
+     * like `user.password`, which a censored `user` field does not match.
      *
      * @param array<string, mixed> $component
      *
