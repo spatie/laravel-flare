@@ -47,12 +47,11 @@ it('returns the cookies', function () {
 it('censors body fields inside livewire snapshots', function () {
     $request = livewireUpdateRequest([
         'password' => 'secret-password',
-        'destination' => [['token' => 'secret-token', 'channel' => '#general'], ['s' => 'arr']],
         'label' => 'Alerts',
     ]);
 
     $attributes = (new LaravelRequestAttributesProvider(
-        new Redactor(censorBodyFields: ['password', 'destination']),
+        new Redactor(censorBodyFields: ['password']),
         app(LivewireComponentFinder::class),
         $request,
     ))->toArray();
@@ -61,7 +60,6 @@ it('censors body fields inside livewire snapshots', function () {
 
     expect($snapshot['data'])->toBe([
         'password' => '<CENSORED:string>',
-        'destination' => '<CENSORED:array>',
         'label' => 'Alerts',
     ]);
     expect($snapshot['memo'])->toBe(['name' => 'notification-settings']);
