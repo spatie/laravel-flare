@@ -13,10 +13,8 @@ function livewireUpdateRequest(array $snapshotData, array $updates = []): Reques
                 'snapshot' => json_encode([
                     'data' => $snapshotData,
                     'memo' => ['name' => 'notification-settings'],
-                    'checksum' => 'abc',
                 ]),
                 'updates' => $updates,
-                'calls' => [],
             ],
         ],
     ]));
