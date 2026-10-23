@@ -81,7 +81,7 @@ class LivewireAttributesProvider implements AttributesProvider
                 'component_class' => $componentClass,
                 'component_alias' => $componentAlias,
                 'component_id' => $componentId,
-                'data' => $this->redactor->censorBody($this->resolveData()),
+                'data' => $this->resolveData(),
                 'updates' => $this->resolveUpdates($updates),
             ],
         ];
