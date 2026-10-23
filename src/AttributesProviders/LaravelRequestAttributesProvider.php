@@ -64,10 +64,12 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
             return [];
         }
 
-        $loginCookies = array_values(array_filter(
+        $sessionCookie = config('session.cookie');
+
+        $loginCookies = array_filter(
             array_map('strval', array_keys($cookies['http.request.cookies'])),
-            fn (string $name) => $name === config('session.cookie') || str_starts_with($name, 'remember_'),
-        ));
+            fn (string $name) => $name === $sessionCookie || str_starts_with($name, 'remember_'),
+        );
 
         $cookies['http.request.cookies'] = (new Redactor(censorBodyFields: $loginCookies))
             ->censorBody($cookies['http.request.cookies']);
