@@ -51,6 +51,30 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
         }
     }
 
+    /**
+     * Laravel decrypts cookies before Flare reads them. The session cookie then holds
+     * the plain session ID and the remember me cookie a login token, and either one
+     * is enough to sign in as the user.
+     */
+    protected function getCookies(): array
+    {
+        $cookies = parent::getCookies();
+
+        if (empty($cookies)) {
+            return [];
+        }
+
+        $loginCookies = array_values(array_filter(
+            array_map('strval', array_keys($cookies['http.request.cookies'])),
+            fn (string $name) => $name === config('session.cookie') || str_starts_with($name, 'remember_'),
+        ));
+
+        $cookies['http.request.cookies'] = (new Redactor(censorBodyFields: $loginCookies))
+            ->censorBody($cookies['http.request.cookies']);
+
+        return $cookies;
+    }
+
     protected function isRunningLiveWire(LaravelRequest $request): bool
     {
         return $request->hasHeader('x-livewire') && $request->hasHeader('referer');
