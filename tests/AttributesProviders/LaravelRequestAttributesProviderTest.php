@@ -5,6 +5,23 @@ use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LaravelRequestAttributesProvider;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
+function livewireUpdateRequest(array $snapshotData, array $updates = []): Request
+{
+    return Request::create('/livewire/update', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+        'components' => [
+            [
+                'snapshot' => json_encode([
+                    'data' => $snapshotData,
+                    'memo' => ['name' => 'notification-settings'],
+                    'checksum' => 'abc',
+                ]),
+                'updates' => $updates,
+                'calls' => [],
+            ],
+        ],
+    ]));
+}
+
 it('returns the url', function () {
     $request = Request::create('/route', 'GET');
 
@@ -28,23 +45,6 @@ it('returns the cookies', function () {
 
     expect($attributes['http.request.cookies'])->toBe(['cookie' => 'noms']);
 });
-
-function livewireUpdateRequest(array $snapshotData, array $updates = []): Request
-{
-    return Request::create('/livewire/update', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
-        'components' => [
-            [
-                'snapshot' => json_encode([
-                    'data' => $snapshotData,
-                    'memo' => ['name' => 'notification-settings'],
-                    'checksum' => 'abc',
-                ]),
-                'updates' => $updates,
-                'calls' => [],
-            ],
-        ],
-    ]));
-}
 
 it('censors body fields inside livewire snapshots', function () {
     $request = livewireUpdateRequest([
