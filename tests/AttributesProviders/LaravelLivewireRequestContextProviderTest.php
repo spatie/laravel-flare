@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LivewireAttributesProvider;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeLivewireManager;
 
@@ -254,7 +255,7 @@ it('censors body fields in the component data', function () {
     $attributes = (new LivewireAttributesProvider(
         app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
         $providedRequest,
-        redactor: new \Spatie\FlareClient\Support\Redactor(censorBodyFields: ['password']),
+        redactor: new Redactor(censorBodyFields: ['password']),
     ))->toArray();
 
     expect($attributes['livewire.components'][0]['data'])->toBe([
