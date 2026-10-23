@@ -118,7 +118,7 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
         $censored = $this->redactor->censorBody(Arr::undot([$property => $value]));
 
         foreach (explode('.', $property) as $segment) {
-            if (! is_array($censored) || ! array_key_exists($segment, $censored)) {
+            if (! is_array($censored)) {
                 return $censored;
             }
 
