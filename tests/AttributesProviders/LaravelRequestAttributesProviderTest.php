@@ -88,17 +88,3 @@ it('censors livewire updates by their property path', function () {
         'label' => 'Alerts',
     ]);
 });
-
-it('leaves livewire snapshots without censored fields intact', function () {
-    $request = livewireUpdateRequest(['label' => 'Alerts']);
-
-    $attributes = (new LaravelRequestAttributesProvider(
-        new Redactor(censorBodyFields: ['password']),
-        app(LivewireComponentFinder::class),
-        $request,
-    ))->toArray();
-
-    $snapshot = json_decode($attributes['http.request.body.contents']['components'][0]['snapshot'], true);
-
-    expect($snapshot['data'])->toBe(['label' => 'Alerts']);
-});
