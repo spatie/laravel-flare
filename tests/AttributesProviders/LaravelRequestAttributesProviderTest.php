@@ -30,10 +30,10 @@ it('returns the cookies', function () {
 });
 
 it('censors the session and remember me cookies', function () {
-    config()->set('session.cookie', 'laravel_session');
+    config()->set('session.cookie', 'my_app_session');
 
     $request = Request::create('/route', 'GET', [], [
-        'laravel_session' => 'session-id',
+        'my_app_session' => 'session-id',
         'remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d' => 'remember-token',
         'theme' => 'dark',
     ]);
@@ -45,7 +45,7 @@ it('censors the session and remember me cookies', function () {
     ))->toArray();
 
     expect($attributes['http.request.cookies'])->toBe([
-        'laravel_session' => '<CENSORED:string>',
+        'my_app_session' => '<CENSORED:string>',
         'remember_web_59ba36addc2b2f9401580f014c7f58ea4e30989d' => '<CENSORED:string>',
         'theme' => 'dark',
     ]);
