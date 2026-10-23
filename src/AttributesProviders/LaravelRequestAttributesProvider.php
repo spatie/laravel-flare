@@ -93,7 +93,7 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
                     continue;
                 }
 
-                $component['updates'][$property] = $this->censorLivewireProperty($property, $value);
+                $component['updates'][$property] = $this->censorLivewireUpdate($property, $value);
             }
         }
 
@@ -113,7 +113,7 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
         return json_encode($decoded) ?: '';
     }
 
-    protected function censorLivewireProperty(string $property, mixed $value): mixed
+    protected function censorLivewireUpdate(string $property, mixed $value): mixed
     {
         $censored = $this->redactor->censorBody(Arr::undot([$property => $value]));
 
