@@ -89,9 +89,11 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
 
         if (is_array($component['updates'] ?? null)) {
             foreach ($component['updates'] as $property => $value) {
-                if (is_string($property)) {
-                    $component['updates'][$property] = $this->censorLivewireProperty($property, $value);
+                if (! is_string($property)) {
+                    continue;
                 }
+
+                $component['updates'][$property] = $this->censorLivewireProperty($property, $value);
             }
         }
 
