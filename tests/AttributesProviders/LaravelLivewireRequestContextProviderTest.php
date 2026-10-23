@@ -210,28 +210,6 @@ it('combines data into one payload', function () {
     ], $livewire[0]['data']);
 });
 
-
-// Helpers
-function createRequestPayload(array $fingerprint, array $updates = [], array $serverMemo = []): array
-{
-    $providedRequest = null;
-
-    Route::post('livewire', function (Request $request) use (&$providedRequest) {
-        $providedRequest = $request;
-    })->name('livewire.message');
-
-    test()->postJson('livewire', [
-        'fingerprint' => $fingerprint,
-        'serverMemo' => $serverMemo,
-        'updates' => $updates,
-    ], ['X-Livewire' => 1])->assertOk();
-
-    return (new LivewireAttributesProvider(
-        app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
-        $providedRequest,
-    ))->toArray();
-}
-
 it('censors body fields in the component data', function () {
     $providedRequest = null;
 
@@ -263,3 +241,25 @@ it('censors body fields in the component data', function () {
         'label' => 'Alerts',
     ]);
 });
+
+
+// Helpers
+function createRequestPayload(array $fingerprint, array $updates = [], array $serverMemo = []): array
+{
+    $providedRequest = null;
+
+    Route::post('livewire', function (Request $request) use (&$providedRequest) {
+        $providedRequest = $request;
+    })->name('livewire.message');
+
+    test()->postJson('livewire', [
+        'fingerprint' => $fingerprint,
+        'serverMemo' => $serverMemo,
+        'updates' => $updates,
+    ], ['X-Livewire' => 1])->assertOk();
+
+    return (new LivewireAttributesProvider(
+        app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
+        $providedRequest,
+    ))->toArray();
+}
