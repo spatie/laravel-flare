@@ -64,7 +64,9 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
         }
 
         $payload['http.request.body.contents']['components'] = array_map(
-            fn (mixed $component) => is_array($component) ? $this->censorLivewireComponent($component) : $component,
+            fn (mixed $component) => is_array($component)
+                ? $this->censorLivewireComponent($component)
+                : $component,
             $components,
         );
 
