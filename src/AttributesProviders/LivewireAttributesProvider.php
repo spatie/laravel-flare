@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Spatie\FlareClient\Contracts\AttributesProvider;
+use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 
 class LivewireAttributesProvider implements AttributesProvider
@@ -15,6 +16,7 @@ class LivewireAttributesProvider implements AttributesProvider
         protected LivewireComponentFinder $livewireComponentFinder,
         protected Request $request,
         protected array $ignoreLivewireComponents = [],
+        protected Redactor $redactor = new Redactor(),
     ) {
     }
 
@@ -49,7 +51,7 @@ class LivewireAttributesProvider implements AttributesProvider
 
                 $data[] = [
                     'component_class' => $class ?? null,
-                    'data' => $snapshot['data'],
+                    'data' => $this->redactor->censorBody($snapshot['data']),
                     'memo' => $snapshot['memo'],
                     'updates' => $this->resolveUpdates($component['updates']),
                     'calls' => $component['calls'],
@@ -79,7 +81,7 @@ class LivewireAttributesProvider implements AttributesProvider
                 'component_class' => $componentClass,
                 'component_alias' => $componentAlias,
                 'component_id' => $componentId,
-                'data' => $this->resolveData(),
+                'data' => $this->redactor->censorBody($this->resolveData()),
                 'updates' => $this->resolveUpdates($updates),
             ],
         ];
