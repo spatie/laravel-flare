@@ -12,6 +12,16 @@
 
 The official documentation for Flare can be found on the [Flare website](https://flareapp.io/docs/integration/laravel-customizations/introduction).
 
+### SQL connection timing
+
+Query collection also records `Database connection` spans when Laravel resolves a lazy PDO connection. These use the existing `custom` span type and the query recorder's tracing and error-reporting settings. Read, write, and direct connections (where supported by Laravel) are distinguished by `laravel.db.connection.role`. Existing connector closures are preserved; recording does not open connections early or execute SQL.
+
+Connection spans contain only the driver, Laravel connection name, and connection role. Failed attempts close with an error status and rethrow the original exception without adding its message or connection configuration to the span.
+
+This relies on Laravel's `ConnectionEstablished` event, which announces the Laravel connection wrapper, not an open PDO connection. Laravel 10.14 does not emit this event. Laravel 11.47 and 12.42 emit it for new wrappers, but not reconnects; reconnect tracing requires Laravel 12.43+ or 13. Connections created before the recorder boots, already-open PDO instances, and connections in active transactions are left untouched. Direct connections are wrapped only when their raw getter and setter are available.
+
+Query durations remain exactly those reported by Laravel, including lazy connection setup in the first query. Query spans are reconstructed after execution, so connection spans share the surrounding parent rather than being nested under that query. Their durations can overlap and should not be added together. Redis connections are not covered.
+
 ## Support us
 
 [<img src="https://spatie.be/github-ad-image/laravel-flare.jpg" width="419px" />](https://spatie.be/github-ad-click/laravel-flare)
