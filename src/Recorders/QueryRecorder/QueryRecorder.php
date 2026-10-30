@@ -41,21 +41,23 @@ class QueryRecorder extends BaseQueryRecorder
             return;
         }
 
-        $pdo = $connection->getRawPdo();
+        $this->wrapPdoResolver($connection, 'Pdo', 'write');
+        $this->wrapPdoResolver($connection, 'ReadPdo', 'read');
+        $this->wrapPdoResolver($connection, 'DirectPdo', 'direct');
+    }
+
+    protected function wrapPdoResolver(Connection $connection, string $accessor, string $role): void
+    {
+        $getter = "getRaw{$accessor}";
+        $setter = "set{$accessor}";
+
+        if (! method_exists($connection, $getter) || ! method_exists($connection, $setter)) {
+            return;
+        }
+
+        $pdo = $connection->{$getter}();
         if ($pdo instanceof Closure) {
-            $connection->setPdo($this->traceConnection($pdo, $connection, 'write'));
-        }
-
-        $readPdo = $connection->getRawReadPdo();
-        if ($readPdo instanceof Closure) {
-            $connection->setReadPdo($this->traceConnection($readPdo, $connection, 'read'));
-        }
-
-        if (method_exists($connection, 'getRawDirectPdo') && method_exists($connection, 'setDirectPdo')) {
-            $directPdo = $connection->getRawDirectPdo();
-            if ($directPdo instanceof Closure) {
-                $connection->setDirectPdo($this->traceConnection($directPdo, $connection, 'direct'));
-            }
+            $connection->{$setter}($this->traceConnection($pdo, $connection, $role));
         }
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Schema;
 use Spatie\FlareClient\Enums\SpanStatusCode;
 use Spatie\FlareClient\Enums\SpanType;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
+use Spatie\FlareClient\Tests\Shared\FakeTime;
 use Spatie\FlareClient\Time\TimeHelper;
 use Spatie\LaravelFlare\FlareConfig;
 
@@ -51,6 +52,8 @@ it('traces queries', function () {
 });
 
 it('traces lazy connections once without changing inclusive query timings', function () {
+    FakeTime::setup('2019-01-01 12:34:56');
+    $this->beforeApplicationDestroyed(fn () => FakeTime::reset());
     $flare = setupFlare(alwaysSampleTraces: true);
     DB::purge();
     $queries = [];
