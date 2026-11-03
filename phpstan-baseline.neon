@@ -97,6 +97,18 @@ parameters:
 			path: src/Recorders/CommandRecorder/CommandRecorder.php
 
 		-
+			message: '#^Parameter \#1 \$milliseconds of static method Spatie\\FlareClient\\Time\\TimeHelper\:\:milliseconds\(\) expects float\|int, float\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Recorders/QueryRecorder/QueryRecorder.php
+
+		-
+			message: '#^Parameter \#1 \$milliseconds of static method Spatie\\FlareClient\\Time\\TimeHelper\:\:milliseconds\(\) expects float\|int, float\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Recorders/RedisCommandRecorder/RedisCommandRecorder.php
+
+		-
 			message: '#^Property Spatie\\FlareClient\\Support\\CollectsResolver\:\:\$middlewares \(array\<class\-string\<Spatie\\FlareClient\\FlareMiddleware\\FlareMiddleware\>, array\<string, mixed\>\>\) does not accept array\<string, array\<string, mixed\>\>\.$#'
 			identifier: assign.propertyType
 			count: 2
@@ -119,4 +131,3 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: src/Views/ViewFrameMapper.php
-
