@@ -28,6 +28,10 @@ class QueryRecorder extends BaseQueryRecorder
 
     public function recordEvent(QueryExecuted $event): ?Span
     {
+        if ($event->time === null) {
+            return null;
+        }
+
         return $this->record(
             sql: $event->sql,
             duration: TimeHelper::milliseconds($event->time),

@@ -67,6 +67,22 @@ it('can report queries', function () {
         ]);
 });
 
+it('skips unknown query durations but records measured zero durations', function () {
+    $flare = setupFlare(alwaysSampleTraces: true);
+    $flare->tracer->startTrace();
+
+    DB::connection()->logQuery('SELECT 1', [], null);
+    DB::connection()->logQuery('SELECT 2', [], 0.0);
+
+    $flare->tracer->endTrace();
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(SpanType::Query)
+        ->expectAttribute('db.statement', 'SELECT 2')
+        ->expectEnded();
+});
+
 it('can stop recording bindings', function () {
     $flare = setupFlare(fn (FlareConfig $config) => $config->collectQueries(includeBindings: false));
 

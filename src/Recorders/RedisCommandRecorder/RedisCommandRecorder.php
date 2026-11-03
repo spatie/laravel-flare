@@ -40,6 +40,10 @@ class RedisCommandRecorder extends BaseRedisCommandRecorder
         $this->redisManager->enableEvents();
 
         $this->dispatcher->listen(CommandExecuted::class, function (CommandExecuted $event) {
+            if ($event->time === null) {
+                return;
+            }
+
             $connection = $this->resolvedConnections[$event->connectionName] ?? null;
 
 

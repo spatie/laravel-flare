@@ -47,6 +47,9 @@ jobs:
 
             -  name: Install dependencies
                shell: bash
+               env:
+                   # The compatibility matrix intentionally installs historical vulnerable versions.
+                   COMPOSER_POLICY_ADVISORIES_BLOCK: '0'
                run: |
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer require "livewire/livewire:${{ matrix.livewire }}" --dev --no-interaction --no-update

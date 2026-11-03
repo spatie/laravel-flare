@@ -7,12 +7,6 @@ parameters:
 			path: src/AttributesProviders/LaravelJobAttributesProvider.php
 
 		-
-			message: '#^Instanceof between Illuminate\\Routing\\Route and Illuminate\\Routing\\Route will always evaluate to true\.$#'
-			identifier: instanceof.alwaysTrue
-			count: 1
-			path: src/AttributesProviders/LaravelRouteAttributesProvider.php
-
-		-
 			message: '#^Call to an undefined method Livewire\\LivewireManager\:\:getClass\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -125,5 +119,4 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: src/Views/ViewFrameMapper.php
-
 
