@@ -45,6 +45,17 @@
             "phpstan/extension-installer": true,
             "pestphp/pest-plugin": true,
             "php-http/discovery": false
+        },
+        "policy": {
+            "advisories": {
+                "ignore-id": {
+                    "PKSA-mdq4-51ck-6kdq": "Laravel 11 CRLF injection in default email rule. Fixed in 12.60+/13.10+ only, not backported to 11.x (end of life). Ignored so the Laravel 11 test matrix can install.",
+                    "PKSA-m5cs-t1y6-qpcs": "Laravel 11 temporary signed URL path confusion. Fixed in 12.61.1+/13.12+ only, not backported to 11.x (end of life). Ignored so the Laravel 11 test matrix can install.",
+                    "PKSA-3r5d-mb8f-1qw9": "Laravel 11 CRLF injection in default email rule. Fixed in 12.60+/13.10+ only, not backported to 11.x (end of life). Ignored so the Laravel 11 test matrix can install.",
+                    "PKSA-b41t-wbzk-9q51": "Laravel TokenGuard authentication bypass. Fixed in 12.68/13.29, not in 10/11. Ignored for the supported Laravel 10/11 test matrix.",
+                    "PKSA-d5tc-s1qs-h781": "Laravel debug-page XSS. Fixed in 12.69/13.30, not in 10/11. Ignored for the supported Laravel 10/11 test matrix."
+                }
+            }
         }
     },
     "extra": {

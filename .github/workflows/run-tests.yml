@@ -47,9 +47,6 @@ jobs:
 
             -  name: Install dependencies
                shell: bash
-               env:
-                   # Laravel 10/11 have unpatched advisories but remain in the compatibility matrix.
-                   COMPOSER_POLICY_ADVISORIES_BLOCK: ${{ (matrix.laravel == '10.*' || matrix.laravel == '11.*') && '0' || '1' }}
                run: |
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer require "livewire/livewire:${{ matrix.livewire }}" --dev --no-interaction --no-update
