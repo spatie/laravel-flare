@@ -122,6 +122,10 @@ Route::view('view-error', 'error', );
 // Queries
 
 Route::get('query', function () {
+    // Older Laravel versions open SQLite eagerly when configuring foreign keys.
+    config()->set('database.connections.sqlite.foreign_key_constraints', null);
+    DB::purge();
+
     $post = Post::first();
 
     return "Hello ".$post->name;
