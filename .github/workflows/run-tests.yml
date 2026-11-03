@@ -14,12 +14,12 @@ jobs:
             matrix:
                 php: [8.2, 8.3, 8.4, 8.5]
                 laravel: [10.*, 11.*, 12.*, 13.*]
-                livewire: [3.*, 4.4.*]
+                livewire: ['^3.6.0', 4.4.*]
                 stability: [prefer-lowest, prefer-stable]
                 os: [ubuntu-latest, windows-latest]
                 exclude:
                     - laravel: 13.*
-                      livewire: 3.*
+                      livewire: '^3.6.0'
                     - laravel: 13.*
                       php: 8.2
                     - livewire: 4.4.*
@@ -48,8 +48,8 @@ jobs:
             -  name: Install dependencies
                shell: bash
                env:
-                   # The compatibility matrix intentionally installs historical vulnerable versions.
-                   COMPOSER_POLICY_ADVISORIES_BLOCK: '0'
+                   # Laravel 10/11 have unpatched advisories but remain in the compatibility matrix.
+                   COMPOSER_POLICY_ADVISORIES_BLOCK: ${{ (matrix.laravel == '10.*' || matrix.laravel == '11.*') && '0' || '1' }}
                run: |
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer require "livewire/livewire:${{ matrix.livewire }}" --dev --no-interaction --no-update
