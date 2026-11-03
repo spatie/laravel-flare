@@ -122,7 +122,8 @@ Route::view('view-error', 'error', );
 // Queries
 
 Route::get('query', function () {
-    // Older Laravel versions open SQLite eagerly when configuring foreign keys.
+    // On Laravel 10/11, SQLite's foreign-key setup opens PDO before our recorder can attach.
+    // Skip that setup and discard the existing connection so this test exercises a lazy connection.
     config()->set('database.connections.sqlite.foreign_key_constraints', null);
     DB::purge();
 
