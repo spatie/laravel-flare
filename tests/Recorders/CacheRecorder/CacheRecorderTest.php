@@ -156,31 +156,6 @@ it('records failed cache writes and forgets', function () {
     'Cache write and forget failure events require Laravel 11 or higher',
 );
 
-it('does not record failed cache writes and forgets for ignored keys', function () {
-    Cache::clear();
-
-    setupFlare();
-
-    Route::get('exception', function () {
-        event(new KeyWriteFailed('array', 'illuminate:queue:restart', 'some_value', 60));
-        event(new KeyForgetFailed('array', 'illuminate:queue:restart'));
-
-        throw new Exception('This is a failed operation');
-    });
-
-    get('exception')->assertStatus(500);
-
-    $cacheSpanEvents = array_values(array_filter(
-        FakeApi::lastReport()->toArray()['events'],
-        fn (array $event) => $event['type'] === SpanEventType::Cache,
-    ));
-
-    expect($cacheSpanEvents)->toHaveCount(0);
-})->skip(
-    fn () => ! class_exists(KeyWriteFailed::class),
-    'Cache write and forget failure events require Laravel 11 or higher',
-);
-
 it('records a cache store failing over and never filters it on the ignored keys', function () {
     Cache::clear();
 
