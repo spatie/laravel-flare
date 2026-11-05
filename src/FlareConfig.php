@@ -71,6 +71,10 @@ class FlareConfig extends BaseFlareConfig
             censorBodyFields: config('flare.censor.body_fields'),
             censorCookies: config('flare.censor.cookies', false),
             censorSession: config('flare.censor.session', false),
+            censorCookieNames: array_values(array_filter([
+                config('session.cookie'),
+                ...config('flare.censor.cookie_names', ['remember_*']),
+            ])),
             report: config('flare.report'),
             reportErrorLevels: config('flare.report_error_levels'),
             overriddenGroupings: config('flare.overridden_groupings'),

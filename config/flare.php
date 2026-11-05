@@ -48,8 +48,10 @@ return [
     |--------------------------------------------------------------------------
     |
     | It is possible to censor sensitive data from the reports and sent to
-    | Flare. Below you can specify which fields and header should be
-    | censored. It is also possible to hide the client's IP address.
+    | Flare. Below you can specify which fields, headers and cookies should
+    | be censored. A trailing `*` in a cookie name matches every cookie
+    | starting with that name. The session cookie is always censored. It
+    | is also possible to hide the client's IP address.
     |
     */
 
@@ -65,6 +67,9 @@ return [
             'Set-Cookie',
             'X-CSRF-TOKEN',
             'X-XSRF-TOKEN',
+        ],
+        'cookie_names' => [
+            'remember_*',
         ],
         'client_ips' => false,
         'cookies' => false,
