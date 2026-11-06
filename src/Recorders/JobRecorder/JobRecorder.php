@@ -180,7 +180,7 @@ class JobRecorder extends BaseJobRecorder
     {
         $timeout = get_object_vars($event)['timeout'] ?? null;
 
-        return is_int($timeout) ? $timeout : null;
+        return is_numeric($timeout) ? (int) $timeout : null;
     }
 
     /** @return array<int, class-string> */
