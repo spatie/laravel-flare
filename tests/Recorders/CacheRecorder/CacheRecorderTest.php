@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Cache\Events\CacheFailedOver;
 use Illuminate\Cache\Events\KeyForgetFailed;
 use Illuminate\Cache\Events\KeyWriteFailed;
 use Illuminate\Cache\Repository;
@@ -154,38 +153,6 @@ it('records failed cache writes and forgets', function () {
 })->skip(
     fn () => ! class_exists(KeyWriteFailed::class),
     'Cache write and forget failure events require Laravel 11 or higher',
-);
-
-it('records a cache store failing over and never filters it on the ignored keys', function () {
-    Cache::clear();
-
-    setupFlare(fn (FlareConfig $config) => $config->collectCacheEvents(
-        ignoredKeys: ['//'],
-    ));
-
-    Route::get('exception', function () {
-        event(new CacheFailedOver('redis', new RuntimeException('Connection refused')));
-
-        throw new Exception('This is a failed operation');
-    });
-
-    get('exception')->assertStatus(500);
-
-    $cacheSpanEvents = array_values(array_filter(
-        FakeApi::lastReport()->toArray()['events'],
-        fn (array $event) => $event['type'] === SpanEventType::Cache,
-    ));
-
-    expect($cacheSpanEvents)->toHaveCount(1);
-
-    expect($cacheSpanEvents[0]['attributes'])
-        ->toHaveKey('cache.store', 'redis')
-        ->toHaveKey('cache.result', CacheResult::Failure)
-        ->toHaveKey('exception.message', 'Connection refused')
-        ->toHaveKey('exception.type', RuntimeException::class);
-})->skip(
-    fn () => ! class_exists(CacheFailedOver::class),
-    'CacheFailedOver requires Laravel 12 or higher',
 );
 
 dataset('cache recorder', function () {

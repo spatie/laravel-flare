@@ -2,7 +2,6 @@
 
 namespace Spatie\LaravelFlare\Recorders\CacheRecorder;
 
-use Illuminate\Cache\Events\CacheFailedOver;
 use Illuminate\Cache\Events\CacheHit;
 use Illuminate\Cache\Events\CacheMissed;
 use Illuminate\Cache\Events\KeyForgetFailed;
@@ -58,13 +57,6 @@ class CacheRecorder extends BaseCacheRecorder
             $this->dispatcher->listen(KeyForgetFailed::class, fn (KeyForgetFailed $event) => $this->recordKeyForgetFailed(
                 $event->key,
                 $event->storeName ?? null,
-            ));
-        }
-
-        if (class_exists(CacheFailedOver::class)) {
-            $this->dispatcher->listen(CacheFailedOver::class, fn (CacheFailedOver $event) => $this->recordFailedOver(
-                $event->storeName,
-                $event->exception,
             ));
         }
     }
