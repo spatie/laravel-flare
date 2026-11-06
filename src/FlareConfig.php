@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare;
 
 use BackedEnum;
+use Illuminate\Support\Arr;
 use Spatie\FlareClient\Api;
 use Spatie\FlareClient\Contracts\FlareCollectType;
 use Spatie\FlareClient\Enums\CollectType;
@@ -73,7 +74,7 @@ class FlareConfig extends BaseFlareConfig
             censorSession: config('flare.censor.session', false),
             censorCookieNames: array_values(array_filter([
                 config('session.cookie'),
-                ...config('flare.censor.cookie_names', ['remember_*']),
+                ...Arr::wrap(config('flare.censor.cookie_names', ['remember_*'])),
             ])),
             report: config('flare.report'),
             reportErrorLevels: config('flare.report_error_levels'),
