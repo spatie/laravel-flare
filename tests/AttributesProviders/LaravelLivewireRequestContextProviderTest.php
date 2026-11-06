@@ -252,7 +252,7 @@ function createRequestPayload(array $fingerprint, array $updates = [], array $se
         $providedRequest = $request;
     })->name('livewire.message');
 
-    test()->postJson('livewire', [
+    test()->postJson('http://localhost/livewire', [
         'fingerprint' => $fingerprint,
         'serverMemo' => $serverMemo,
         'updates' => $updates,

@@ -168,6 +168,7 @@ class FlareConfig extends BaseFlareConfig
             CollectType::Views->value => [
                 'with_traces' => ViewRecorder::DEFAULT_WITH_TRACES,
                 'with_errors' => ViewRecorder::DEFAULT_WITH_ERRORS,
+                'max_items_with_errors' => ViewRecorder::DEFAULT_MAX_ITEMS_WITH_ERRORS,
             ],
             CollectType::Filesystem->value => [
                 'with_traces' => FilesystemRecorder::DEFAULT_WITH_TRACES,
