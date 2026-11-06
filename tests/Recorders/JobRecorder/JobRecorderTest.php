@@ -5,7 +5,9 @@ use Illuminate\Queue\Events\JobInterrupted;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobTimedOut;
+use Illuminate\Queue\Events\Looping;
 use Illuminate\Queue\Jobs\SyncJob;
+use Spatie\FlareClient\Enums\LifecycleStage;
 use Spatie\FlareClient\Enums\SpanEventType;
 use Spatie\FlareClient\Enums\SpanStatusCode;
 use Spatie\FlareClient\Enums\SpanType;
@@ -13,6 +15,7 @@ use Spatie\FlareClient\Flare;
 use Spatie\FlareClient\FlareConfig;
 use Spatie\FlareClient\Sampling\SamplingRule as BaseSamplingRule;
 use Spatie\FlareClient\Support\Ids;
+use Spatie\FlareClient\Support\Lifecycle;
 use Spatie\FlareClient\Tests\Shared\FakeApi;
 use Spatie\FlareClient\Tests\Shared\FakeIds;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
@@ -260,6 +263,46 @@ it('ignores a job interruption when no job span is open', function () {
     fn () => ! class_exists(JobInterrupted::class),
     'JobInterrupted was only added in Laravel 13.31',
 );
+
+it('ends a leftover subtask before the worker reserves the next job', function () {
+    setupFlare(alwaysSampleTraces: true, isUsingSubtasks: true);
+
+    $job = fakeSyncJob();
+
+    $recorder = app(JobRecorder::class);
+    $recorder->recordProcessing(new JobProcessing('redis', $job));
+
+    expect(app(Lifecycle::class)->getStage())->toBe(LifecycleStage::Subtask);
+
+    event(new Looping('redis', 'default'));
+
+    expect(app(Lifecycle::class)->getStage())->toBe(LifecycleStage::Idle);
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job);
+
+    $recorder->recordProcessing(new JobProcessing('redis', $job));
+    $recorder->recordProcessed(new JobProcessed('redis', $job));
+
+    FakeApi::lastTrace()
+        ->expectSpanCount(1)
+        ->expectSpan(0)
+        ->expectType(SpanType::Job)
+        ->expectEnded()
+        ->expectAttribute('laravel.job.success', true);
+});
+
+it('does nothing on looping when no subtask is open', function () {
+    setupFlare(alwaysSampleTraces: true, isUsingSubtasks: true);
+
+    event(new Looping('redis', 'default'));
+
+    expect(app(Lifecycle::class)->getStage())->toBe(LifecycleStage::Idle);
+
+    FakeApi::assertTracesSent(0);
+});
 
 function fakeSyncJob(): Job
 {
