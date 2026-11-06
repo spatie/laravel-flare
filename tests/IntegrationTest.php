@@ -646,8 +646,8 @@ describe('Laravel integration', function () {
         $requestSpan = $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.response.status_code', 200);
 
-        $trace->expectSpanCount(1, LaravelSpanType::DatabaseConnection)
-            ->expectSpan(LaravelSpanType::DatabaseConnection)
+        $trace->expectSpanCount(1, SpanType::DatabaseConnection)
+            ->expectSpan(SpanType::DatabaseConnection)
             ->expectEnded()
             ->expectParentId($requestSpan)
             ->expectAttribute('db.system', 'sqlite')

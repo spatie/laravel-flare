@@ -187,16 +187,9 @@ class CollectsResolver extends BaseCollectsResolver
     protected function queries(array $options): void
     {
         $options['recorder'] ??= QueryRecorder::class;
+        $options['database_connection_recorder'] ??= DatabaseConnectionRecorder::class;
 
         parent::queries($options);
-
-        $this->addRecorder(DatabaseConnectionRecorder::class, $this->only($options, [
-            'with_traces',
-            'with_errors',
-            'max_items_with_errors',
-            'find_origin',
-            'find_origin_threshold',
-        ]));
     }
 
     protected function transactions(array $options): void

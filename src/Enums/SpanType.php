@@ -7,7 +7,6 @@ use Spatie\FlareClient\Contracts\FlareSpanType;
 enum SpanType: string implements FlareSpanType
 {
     case Response = 'laravel_response';
-    case DatabaseConnection = 'laravel_database_connection';
 
     case LivewireComponent = 'laravel_livewire_component';
     case LivewireComponentMounting = 'laravel_livewire_component_mounting';

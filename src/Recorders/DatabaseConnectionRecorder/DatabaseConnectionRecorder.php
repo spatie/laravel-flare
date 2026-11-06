@@ -6,20 +6,13 @@ use Closure;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Events\ConnectionEstablished;
-use Spatie\FlareClient\Enums\SpanStatusCode;
-use Spatie\FlareClient\Recorders\SpansRecorder;
+use Spatie\FlareClient\Recorders\DatabaseConnectionRecorder\DatabaseConnectionRecorder as BaseDatabaseConnectionRecorder;
 use Spatie\FlareClient\Support\BackTracer;
 use Spatie\FlareClient\Tracer;
-use Spatie\LaravelFlare\Enums\SpanType;
 use Throwable;
 
-class DatabaseConnectionRecorder extends SpansRecorder
+class DatabaseConnectionRecorder extends BaseDatabaseConnectionRecorder
 {
-    public static function type(): string
-    {
-        return 'laravel_database_connection';
-    }
-
     public function __construct(
         Tracer $tracer,
         BackTracer $backTracer,
@@ -57,35 +50,41 @@ class DatabaseConnectionRecorder extends SpansRecorder
         }
 
         $pdo = $connection->{$getter}();
-        if ($pdo instanceof Closure) {
-            $connection->{$setter}($this->traceConnection($pdo, $connection, $role));
+
+        if (! $pdo instanceof Closure) {
+            return;
         }
+
+        $connection->{$setter}($this->traceConnection($pdo, $connection, $role));
     }
 
     protected function traceConnection(Closure $resolver, Connection $connection, string $role): Closure
     {
         return function () use ($resolver, $connection, $role) {
-            $span = $this->startSpan(
-                name: 'Database connection',
+            $span = $this->recordStart(
+                databaseName: $connection->getDatabaseName(),
+                driverName: $connection->getDriverName(),
                 attributes: [
-                    'flare.span_type' => SpanType::DatabaseConnection,
-                    'db.system' => $connection->getDriverName(),
                     'laravel.db.connection' => $connection->getName(),
                     'laravel.db.connection.role' => $role,
                 ],
             );
 
             try {
-                return $resolver();
+                $pdo = $resolver();
             } catch (Throwable $exception) {
-                $span?->setStatus(SpanStatusCode::Error);
+                if ($span !== null) {
+                    $this->recordFailed();
+                }
 
                 throw $exception;
-            } finally {
-                if ($span !== null) {
-                    $this->endSpan();
-                }
             }
+
+            if ($span !== null) {
+                $this->recordEnd();
+            }
+
+            return $pdo;
         };
     }
 }
