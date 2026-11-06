@@ -8,6 +8,7 @@ use Illuminate\Queue\Events\JobInterrupted;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Queue\Events\JobTimedOut;
+use Illuminate\Queue\Events\Looping;
 use Spatie\Backtrace\Arguments\ReduceArgumentPayloadAction;
 use Spatie\FlareClient\EntryPoint\EntryPointResolver;
 use Spatie\FlareClient\Enums\LifecycleStage;
@@ -58,6 +59,7 @@ class JobRecorder extends BaseJobRecorder
         $this->dispatcher->listen(JobProcessed::class, [$this, 'recordProcessed']);
         $this->dispatcher->listen(JobExceptionOccurred::class, [$this, 'recordExceptionOccurred']);
         $this->dispatcher->listen(JobTimedOut::class, [$this, 'recordTimedOut']);
+        $this->dispatcher->listen(Looping::class, [$this, 'endLeftoverSubtask']);
 
         if (class_exists(JobInterrupted::class)) {
             $this->dispatcher->listen(JobInterrupted::class, [$this, 'recordInterrupted']);
@@ -170,6 +172,28 @@ class JobRecorder extends BaseJobRecorder
         $span->addEvent($spanEvent);
 
         return $spanEvent;
+    }
+
+    /**
+     * The worker dispatches Looping before it reserves the next job. When the lifecycle is still
+     * in the subtask stage at that point, the previous job ended without JobProcessed or
+     * JobExceptionOccurred, for example because deleting the failed job threw. The subtask is
+     * ended here so its trace and the reports queued since then are sent, and the next job
+     * starts with a clean recorder.
+     */
+    public function endLeftoverSubtask(): void
+    {
+        if (! $this->lifecycle->usesSubtasks) {
+            return;
+        }
+
+        if ($this->lifecycle->getStage() !== LifecycleStage::Subtask) {
+            return;
+        }
+
+        $this->stack = [];
+
+        $this->lifecycle->endSubtask();
     }
 
     /**
