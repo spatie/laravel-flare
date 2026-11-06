@@ -38,9 +38,9 @@ it('traces queries', function () {
         ->expectName('Query - SELECT * FROM users WHERE id = ?')
         ->expectEnded()
         ->expectType(SpanType::Query)
-        ->expectAttribute('db.system', 'sqlite')
-        ->expectAttribute('db.name', DB::connection()->getDatabaseName())
-        ->expectAttribute('db.statement', 'SELECT * FROM users WHERE id = ?')
+        ->expectAttribute('db.system.name', 'sqlite')
+        ->expectAttribute('db.namespace', DB::connection()->getDatabaseName())
+        ->expectAttribute('db.query.text', 'SELECT * FROM users WHERE id = ?')
         ->expectAttribute('laravel.db.connection', DB::connection()->getName())
         ->expectAttribute('db.sql.bindings', [42]);
 });
@@ -59,9 +59,9 @@ it('can report queries', function () {
     expect($report['events'][0])
         ->toHaveKey('type', SpanType::Query)
         ->toHaveKey('attributes', [
-            'db.system' => 'sqlite',
-            'db.name' => DB::connection()->getDatabaseName(),
-            'db.statement' => 'SELECT * FROM users WHERE id = ?',
+            'db.system.name' => 'sqlite',
+            'db.namespace' => DB::connection()->getDatabaseName(),
+            'db.query.text' => 'SELECT * FROM users WHERE id = ?',
             'laravel.db.connection' => DB::connection()->getName(),
             'db.sql.bindings' => ['42'],
         ]);
@@ -89,9 +89,9 @@ it('will add origin attributes when a threshold is met and tracing', function ()
     $report = $flare->report(new Exception('Report this'))->toArray();
 
     expect($report['events'][0]['attributes'])->toHaveKeys([
-        'code.filepath',
-        'code.lineno',
-        'code.function',
+        'code.file.path',
+        'code.line.number',
+        'code.function.name',
     ]);
 });
 
@@ -105,9 +105,9 @@ it('will not add origin attributes when a threshold is met and only reporting', 
     $report = $flare->report(new Exception('Report this'))->toArray();
 
     expect($report['events'][0]['attributes'])->not()->toHaveKeys([
-        'code.filepath',
-        'code.lineno',
-        'code.function',
+        'code.file.path',
+        'code.line.number',
+        'code.function.name',
     ]);
 });
 
@@ -121,9 +121,9 @@ it('will not add origin attributes when a threshold is not met', function () {
     $report = $flare->report(new Exception('Report this'))->toArray();
 
     expect($report['events'][0]['attributes'])->not()->toHaveKeys([
-        'code.filepath',
-        'code.lineno',
-        'code.function',
+        'code.file.path',
+        'code.line.number',
+        'code.function.name',
     ]);
 });
 
@@ -137,9 +137,9 @@ it('will not add origin attributes when the trace origin feature is disabled', f
     $report = $flare->report(new Exception('Report this'))->toArray();
 
     expect($report['events'][0]['attributes'])->not()->toHaveKeys([
-        'code.filepath',
-        'code.lineno',
-        'code.function',
+        'code.file.path',
+        'code.line.number',
+        'code.function.name',
     ]);
 });
 
@@ -154,8 +154,8 @@ it('will always add origin attributes when no threshold is set', function () {
     $report = $flare->report(new Exception('Report this'))->toArray();
 
     expect($report['events'][0]['attributes'])->toHaveKeys([
-        'code.filepath',
-        'code.lineno',
-        'code.function',
+        'code.file.path',
+        'code.line.number',
+        'code.function.name',
     ]);
 });

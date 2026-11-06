@@ -648,9 +648,9 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(SpanType::Query)
             ->expectParentId($requestSpan)
-            ->expectAttribute('db.system', 'sqlite')
-            ->expectHasAttribute('db.name')
-            ->expectAttribute('db.statement', 'select * from "posts" limit 1')
+            ->expectAttribute('db.system.name', 'sqlite')
+            ->expectHasAttribute('db.namespace')
+            ->expectAttribute('db.query.text', 'select * from "posts" limit 1')
             ->expectAttribute('db.sql.bindings', [])
             ->expectAttribute('laravel.db.connection', 'sqlite');
     });
@@ -669,16 +669,16 @@ describe('Laravel integration', function () {
             SpanType::Query,
             fn (ExpectSpan $span) => $span
                 ->expectParentId($requestSpan)
-                ->expectAttribute('db.system', 'sqlite')
-                ->expectHasAttribute('db.name')
-                ->expectAttribute('db.statement', 'select * from "posts" where "id" = ? limit 1')
+                ->expectAttribute('db.system.name', 'sqlite')
+                ->expectHasAttribute('db.namespace')
+                ->expectAttribute('db.query.text', 'select * from "posts" where "id" = ? limit 1')
                 ->expectAttribute('db.sql.bindings', [1])
                 ->expectAttribute('laravel.db.connection', 'sqlite'),
             fn (ExpectSpan $span) => $span
                 ->expectParentId($requestSpan)
-                ->expectAttribute('db.system', 'sqlite')
-                ->expectHasAttribute('db.name')
-                ->expectAttribute('db.statement', 'select * from "posts" where "name" = ? limit 1')
+                ->expectAttribute('db.system.name', 'sqlite')
+                ->expectHasAttribute('db.namespace')
+                ->expectAttribute('db.query.text', 'select * from "posts" where "name" = ? limit 1')
                 ->expectAttribute('db.sql.bindings', ['John'])
                 ->expectAttribute('laravel.db.connection', 'sqlite')
         );
