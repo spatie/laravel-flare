@@ -652,7 +652,7 @@ describe('Laravel integration', function () {
             ->expectParentId($requestSpan)
             ->expectAttribute('db.system', 'sqlite')
             ->expectAttribute('laravel.db.connection', 'sqlite')
-            ->expectAttribute('laravel.db.connection.role', 'write');
+            ->expectAttribute('laravel.db.connection_role', 'write');
 
         $trace->expectSpan(SpanType::Query)
             ->expectEnded()
@@ -662,7 +662,10 @@ describe('Laravel integration', function () {
             ->expectAttribute('db.statement', 'select * from "posts" limit 1')
             ->expectAttribute('db.sql.bindings', [])
             ->expectAttribute('laravel.db.connection', 'sqlite');
-    });
+    })->skip(
+        version_compare(InstalledVersions::getVersion('laravel/framework'), '12.0.0', '<'),
+        'Laravel 10 and 11 open the SQLite PDO before the connection recorder can wrap it'
+    );
 
     it('can handle a route with multiple queries', function () {
         $workspace = ExpectSentPayloads::get('/multiple-queries');

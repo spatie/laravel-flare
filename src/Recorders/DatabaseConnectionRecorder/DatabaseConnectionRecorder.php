@@ -66,7 +66,7 @@ class DatabaseConnectionRecorder extends BaseDatabaseConnectionRecorder
                 driverName: $connection->getDriverName(),
                 attributes: [
                     'laravel.db.connection' => $connection->getName(),
-                    'laravel.db.connection.role' => $role,
+                    'laravel.db.connection_role' => $role,
                 ],
             );
 

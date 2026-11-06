@@ -40,7 +40,7 @@ it('traces lazy database connections once', function () {
         ->expectAttribute('db.system', 'sqlite')
         ->expectAttribute('db.name', ':memory:')
         ->expectAttribute('laravel.db.connection', 'testing')
-        ->expectAttribute('laravel.db.connection.role', 'write');
+        ->expectAttribute('laravel.db.connection_role', 'write');
 });
 
 it('closes failed connection attempts without recording the exception', function () {
