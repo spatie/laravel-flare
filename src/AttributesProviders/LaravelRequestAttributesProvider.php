@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Arr;
 use Spatie\FlareClient\AttributesProviders\SymfonyRequestAttributesProvider;
 use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
@@ -55,9 +56,10 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
     }
 
     /**
-     * Livewire sends the state of each component as a JSON string in `components.*.snapshot`.
-     * The redactor cannot look inside a string, so the snapshots are decoded here and the
-     * regular body censoring then reaches the component data.
+     * Livewire sends the state of each component as a JSON string in `components.*.snapshot`
+     * and the changed properties as dotted paths in `components.*.updates`. The redactor
+     * cannot look inside a string or a dotted key, so the snapshot is decoded and the
+     * updates are expanded here. The regular body censoring then reaches both.
      */
     protected function getInputBag(): InputBag|ParameterBag
     {
@@ -82,17 +84,13 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
                 continue;
             }
 
-            if (! is_string($component['snapshot'] ?? null)) {
-                continue;
+            if (is_string($component['snapshot'] ?? null)) {
+                $input['components'][$index]['snapshot'] = json_decode($component['snapshot'], true) ?? $component['snapshot'];
             }
 
-            $snapshot = json_decode($component['snapshot'], true);
-
-            if (! is_array($snapshot)) {
-                continue;
+            if (is_array($component['updates'] ?? null)) {
+                $input['components'][$index]['updates'] = Arr::undot($component['updates']);
             }
-
-            $input['components'][$index]['snapshot'] = $snapshot;
         }
 
         return new InputBag($input);

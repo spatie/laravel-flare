@@ -57,14 +57,14 @@ it('censors livewire updates by their property path', function () {
     );
 
     $attributes = (new LaravelRequestAttributesProvider(
-        new Redactor(censorBodyFields: ['password', 'destination']),
+        new Redactor(censorBodyFields: ['password', 'token']),
         app(LivewireComponentFinder::class),
         $request,
     ))->toArray();
 
     expect($attributes['http.request.body.contents']['components'][0]['updates'])->toBe([
         'password' => '<CENSORED:string>',
-        'destination.token' => '<CENSORED:string>',
+        'destination' => ['token' => '<CENSORED:string>'],
         'label' => 'Alerts',
     ]);
 });
