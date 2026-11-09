@@ -3,6 +3,7 @@
 namespace Spatie\LaravelFlare\AttributesProviders;
 
 use Illuminate\Http\Request as LaravelRequest;
+use Illuminate\Support\Arr;
 use Spatie\FlareClient\AttributesProviders\SymfonyRequestAttributesProvider;
 use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\Support\LivewireComponentFinder;
@@ -40,6 +41,7 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
                 livewireComponentFinder: $this->livewireComponentFinder,
                 request: $this->request,
                 ignoreLivewireComponents: $this->ignoreLivewireComponents,
+                redactor: $this->redactor,
             );
 
             return [
@@ -49,6 +51,82 @@ class LaravelRequestAttributesProvider extends SymfonyRequestAttributesProvider
         } catch (Throwable) {
             return $attributes;
         }
+    }
+
+    protected function getRequest(): array
+    {
+        $payload = parent::getRequest();
+
+        $components = $payload['http.request.body.contents']['components'] ?? null;
+
+        if (! is_array($components)) {
+            return $payload;
+        }
+
+        $payload['http.request.body.contents']['components'] = array_map(
+            fn (mixed $component) => is_array($component)
+                ? $this->censorLivewireComponent($component)
+                : $component,
+            $components,
+        );
+
+        return $payload;
+    }
+
+    /**
+     * Censors one Livewire component. Its state is a JSON string in `snapshot`, so
+     * censorBody() cannot see inside it. Its `updates` are keyed by property paths
+     * like `user.password`, which a censored `user` field does not match.
+     *
+     * @param array<string, mixed> $component
+     *
+     * @return array<string, mixed>
+     */
+    protected function censorLivewireComponent(array $component): array
+    {
+        if (is_string($component['snapshot'] ?? null)) {
+            $component['snapshot'] = $this->censorLivewireSnapshot($component['snapshot']);
+        }
+
+        if (is_array($component['updates'] ?? null)) {
+            foreach ($component['updates'] as $property => $value) {
+                if (! is_string($property)) {
+                    continue;
+                }
+
+                $component['updates'][$property] = $this->censorLivewireUpdate($property, $value);
+            }
+        }
+
+        return $component;
+    }
+
+    protected function censorLivewireSnapshot(string $snapshot): string
+    {
+        $decoded = json_decode($snapshot, true);
+
+        if (! is_array($decoded) || ! is_array($decoded['data'] ?? null)) {
+            return $snapshot;
+        }
+
+        $decoded['data'] = $this->redactor->censorBody($decoded['data']);
+
+        return json_encode($decoded) ?: '';
+    }
+
+    protected function censorLivewireUpdate(string $property, mixed $value): mixed
+    {
+        $censored = $this->redactor->censorBody(Arr::undot([$property => $value]));
+
+        foreach (explode('.', $property) as $segment) {
+            if (! is_array($censored)) {
+                return $censored;
+            }
+
+            $censored = $censored[$segment];
+        }
+
+        return $censored;
     }
 
     protected function isRunningLiveWire(LaravelRequest $request): bool

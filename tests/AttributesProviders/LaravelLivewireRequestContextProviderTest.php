@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LivewireAttributesProvider;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeLivewireManager;
 
@@ -207,6 +208,38 @@ it('combines data into one payload', function () {
         "stringable" => "Test",
         "wireable" => ['a', 'b'],
     ], $livewire[0]['data']);
+});
+
+it('censors body fields in the component data', function () {
+    $providedRequest = null;
+
+    Route::post('livewire', function (Request $request) use (&$providedRequest) {
+        $providedRequest = $request;
+    })->name('livewire.message');
+
+    test()->postJson('livewire', [
+        'components' => [
+            [
+                'snapshot' => json_encode([
+                    'data' => ['password' => 'secret-password', 'label' => 'Alerts'],
+                    'memo' => ['name' => 'component-a'],
+                ]),
+                'updates' => [],
+                'calls' => [],
+            ],
+        ],
+    ], ['X-Livewire' => 1])->assertOk();
+
+    $attributes = (new LivewireAttributesProvider(
+        app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
+        $providedRequest,
+        redactor: new Redactor(censorBodyFields: ['password']),
+    ))->toArray();
+
+    expect($attributes['livewire.components'][0]['data'])->toBe([
+        'password' => '<CENSORED:string>',
+        'label' => 'Alerts',
+    ]);
 });
 
 
