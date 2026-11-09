@@ -18,6 +18,7 @@ use Spatie\LaravelFlare\FlareMiddleware\AddViewInformation;
 use Spatie\LaravelFlare\Recorders\CacheRecorder\CacheRecorder;
 use Spatie\LaravelFlare\Recorders\CommandRecorder\CommandRecorder;
 use Spatie\LaravelFlare\Recorders\ContextRecorder\ContextRecorder;
+use Spatie\LaravelFlare\Recorders\DatabaseConnectionRecorder\DatabaseConnectionRecorder;
 use Spatie\LaravelFlare\Recorders\ExternalHttpRecorder\ExternalHttpRecorder;
 use Spatie\LaravelFlare\Recorders\FilesystemRecorder\FilesystemRecorder;
 use Spatie\LaravelFlare\Recorders\JobRecorder\JobRecorder;
@@ -186,6 +187,7 @@ class CollectsResolver extends BaseCollectsResolver
     protected function queries(array $options): void
     {
         $options['recorder'] ??= QueryRecorder::class;
+        $options['database_connection_recorder'] ??= DatabaseConnectionRecorder::class;
 
         parent::queries($options);
     }
