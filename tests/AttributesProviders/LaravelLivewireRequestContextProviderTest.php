@@ -2,7 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Spatie\FlareClient\Support\Redactor;
 use Spatie\LaravelFlare\AttributesProviders\LivewireAttributesProvider;
+use Spatie\LaravelFlare\Support\LivewireComponentFinder;
 use Spatie\LaravelFlare\Tests\TestClasses\FakeLivewireManager;
 
 beforeEach(function () {
@@ -119,8 +121,9 @@ it('preserves per-component updates for multi-component requests', function () {
     ], ['X-Livewire' => 1])->assertOk();
 
     $attributes = (new LivewireAttributesProvider(
-        app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
+        app(LivewireComponentFinder::class),
         $providedRequest,
+        new Redactor(),
     ))->toArray();
 
     $components = $attributes['livewire.components'];
@@ -210,6 +213,38 @@ it('combines data into one payload', function () {
 });
 
 
+it('censors body fields in the component data', function () {
+    $providedRequest = null;
+
+    Route::post('livewire', function (Request $request) use (&$providedRequest) {
+        $providedRequest = $request;
+    })->name('livewire.message');
+
+    test()->postJson('livewire', [
+        'components' => [
+            [
+                'snapshot' => json_encode([
+                    'data' => ['password' => 'secret-password', 'label' => 'Alerts'],
+                    'memo' => ['name' => 'component-a'],
+                ]),
+                'updates' => [],
+                'calls' => [],
+            ],
+        ],
+    ], ['X-Livewire' => 1])->assertOk();
+
+    $attributes = (new LivewireAttributesProvider(
+        app(LivewireComponentFinder::class),
+        $providedRequest,
+        new Redactor(censorBodyFields: ['password']),
+    ))->toArray();
+
+    expect($attributes['livewire.components'][0]['data'])->toBe([
+        'password' => '<CENSORED:string>',
+        'label' => 'Alerts',
+    ]);
+});
+
 // Helpers
 function createRequestPayload(array $fingerprint, array $updates = [], array $serverMemo = []): array
 {
@@ -226,7 +261,8 @@ function createRequestPayload(array $fingerprint, array $updates = [], array $se
     ], ['X-Livewire' => 1])->assertOk();
 
     return (new LivewireAttributesProvider(
-        app(\Spatie\LaravelFlare\Support\LivewireComponentFinder::class),
+        app(LivewireComponentFinder::class),
         $providedRequest,
+        new Redactor(),
     ))->toArray();
 }
