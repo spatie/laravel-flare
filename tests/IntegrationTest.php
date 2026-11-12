@@ -66,7 +66,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('user_agent.original', 'GuzzleHttp/'.ClientInterface::MAJOR_VERSION)
             ->expectAttribute('http.request.body.size', 0)
             ->expectHasAttribute('client.address')
-            ->expectHasAttribute('http.request.headers')
+            ->expectAttribute('http.request.header.host', ['127.0.0.1:8000'])
             ->expectHasAttribute('http.request.session')
             ->expectAttribute('http.route', '/')
             ->expectAttribute('laravel.route.parameters', [])
@@ -74,13 +74,10 @@ describe('Laravel integration', function () {
             ->expectHasAttribute('laravel.route.action')
             ->expectHasAttribute('laravel.route.action_type')
             ->expectHasAttribute('flare.peak_memory_usage')
-            ->expectAttribute('http.response.headers', function ($value) {
-                expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type');
-                expect($value)->toHaveKey('cache-control');
-                expect($value)->toHaveKey('date');
-                expect($value)->toHaveKey('set-cookie', "<CENSORED:string>");
-            })
+            ->expectHasAttribute('http.response.header.content-type')
+            ->expectHasAttribute('http.response.header.cache-control')
+            ->expectHasAttribute('http.response.header.date')
+            ->expectAttribute('http.response.header.set-cookie', ['<CENSORED:string>'])
             ->expectHasAttribute('http.response.body.size')
             ->expectAttribute('http.response.status_code', 200);
 
@@ -273,7 +270,9 @@ describe('Laravel integration', function () {
 
         $workspace->lastReport()
             ->expectExceptionClass(Exception::class)
-            ->expectMessage('Failing before middleware');
+            ->expectMessage('Failing before middleware')
+            ->expectAttribute('http.request.headers', fn ($value) => expect($value)->toHaveKey('host', '127.0.0.1:8000'))
+            ->expectMissingAttribute('http.request.header.host');
     });
 
     it('can handle a route failing in after middleware', function () {
@@ -301,10 +300,7 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.route', 'json-response')
-            ->expectAttribute('http.response.headers', function ($value) {
-                expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type', 'application/json');
-            })
+            ->expectAttribute('http.response.header.content-type', ['application/json'])
             ->expectAttribute('http.response.body.size', 13)
             ->expectAttribute('http.response.status_code', 200);
     });
@@ -318,10 +314,7 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.route', 'string-response')
-            ->expectAttribute('http.response.headers', function ($value) {
-                expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type');
-            })
+            ->expectHasAttribute('http.response.header.content-type')
             ->expectAttribute('http.response.body.size', 11)
             ->expectAttribute('http.response.status_code', 200);
     });
@@ -335,10 +328,7 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.route', 'download-response')
-            ->expectAttribute('http.response.headers', function ($value) {
-                expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-disposition', 'attachment; filename=composer.json');
-            })
+            ->expectAttribute('http.response.header.content-disposition', ['attachment; filename=composer.json'])
             ->expectAttribute('http.response.body.size', 0)
             ->expectAttribute('http.response.status_code', 200);
     });
@@ -352,10 +342,7 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.route', 'typed-response')
-            ->expectAttribute('http.response.headers', function ($value) {
-                expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type');
-            })
+            ->expectHasAttribute('http.response.header.content-type')
             ->expectAttribute('http.response.body.size', 11)
             ->expectAttribute('http.response.status_code', 200);
     });
@@ -372,10 +359,7 @@ describe('Laravel integration', function () {
             ->expectAttribute('flare.entry_point.handler.name', 'view: welcome')
             ->expectAttribute('flare.entry_point.handler.type', 'laravel_view')
             ->expectAttribute('http.route', 'view-response-routed')
-            ->expectAttribute('http.response.headers', function ($value) {
-                expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type');
-            })
+            ->expectHasAttribute('http.response.header.content-type')
             ->expectAttribute('http.response.body.size', fn ($value) => expect($value)->toBeGreaterThan(0))
             ->expectAttribute('http.response.status_code', 200);
 
@@ -394,10 +378,7 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(SpanType::Request)
             ->expectAttribute('http.route', 'view-response')
-            ->expectAttribute('http.response.headers', function ($value) {
-                expect($value)->toBeArray();
-                expect($value)->toHaveKey('content-type');
-            })
+            ->expectHasAttribute('http.response.header.content-type')
             ->expectAttribute('http.response.body.size', fn ($value) => expect($value)->toBeGreaterThan(0))
             ->expectAttribute('http.response.status_code', 200);
 
@@ -648,9 +629,9 @@ describe('Laravel integration', function () {
 
         $trace->expectSpan(SpanType::Query)
             ->expectParentId($requestSpan)
-            ->expectAttribute('db.system', 'sqlite')
-            ->expectHasAttribute('db.name')
-            ->expectAttribute('db.statement', 'select * from "posts" limit 1')
+            ->expectAttribute('db.system.name', 'sqlite')
+            ->expectHasAttribute('db.namespace')
+            ->expectAttribute('db.query.text', 'select * from "posts" limit 1')
             ->expectAttribute('db.sql.bindings', [])
             ->expectAttribute('laravel.db.connection', 'sqlite');
     });
@@ -669,16 +650,16 @@ describe('Laravel integration', function () {
             SpanType::Query,
             fn (ExpectSpan $span) => $span
                 ->expectParentId($requestSpan)
-                ->expectAttribute('db.system', 'sqlite')
-                ->expectHasAttribute('db.name')
-                ->expectAttribute('db.statement', 'select * from "posts" where "id" = ? limit 1')
+                ->expectAttribute('db.system.name', 'sqlite')
+                ->expectHasAttribute('db.namespace')
+                ->expectAttribute('db.query.text', 'select * from "posts" where "id" = ? limit 1')
                 ->expectAttribute('db.sql.bindings', [1])
                 ->expectAttribute('laravel.db.connection', 'sqlite'),
             fn (ExpectSpan $span) => $span
                 ->expectParentId($requestSpan)
-                ->expectAttribute('db.system', 'sqlite')
-                ->expectHasAttribute('db.name')
-                ->expectAttribute('db.statement', 'select * from "posts" where "name" = ? limit 1')
+                ->expectAttribute('db.system.name', 'sqlite')
+                ->expectHasAttribute('db.namespace')
+                ->expectAttribute('db.query.text', 'select * from "posts" where "name" = ? limit 1')
                 ->expectAttribute('db.sql.bindings', ['John'])
                 ->expectAttribute('laravel.db.connection', 'sqlite')
         );

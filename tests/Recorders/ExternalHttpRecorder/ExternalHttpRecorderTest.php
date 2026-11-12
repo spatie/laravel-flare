@@ -219,7 +219,7 @@ it('closes every span of a pooled request', function () {
         ->expectAllSpansClosed();
 });
 
-it('records headers as strings, like every other header attribute', function () {
+it('records every header as a list of its values', function () {
     $flare = setupFlare(alwaysSampleTraces: true);
 
     Http::fake([
@@ -237,7 +237,8 @@ it('records headers as strings, like every other header attribute', function () 
 
     $attributes = FakeApi::lastTrace()->expectSpan(0)->attributes();
 
-    expect($attributes['http.request.headers']['X-Test'])->toBe('first, second');
-    expect($attributes['http.response.headers']['X-Multiple'])->toBe('one, two');
-    expect($attributes['http.response.headers']['Content-Type'])->toBe('application/json');
+    expect($attributes)
+        ->toHaveKey('http.request.header.x-test', ['first', 'second'])
+        ->toHaveKey('http.response.header.x-multiple', ['one', 'two'])
+        ->toHaveKey('http.response.header.content-type', ['application/json']);
 });
